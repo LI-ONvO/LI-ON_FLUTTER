@@ -1,0 +1,2 @@
+# LI-ON_FLUTTER
+대덕소프트웨어마이스터고등학교의 자격증 AI 학습 계획을 제공 서비스 LI-ON flutter 앱입니다
