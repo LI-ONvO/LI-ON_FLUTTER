@@ -16,7 +16,7 @@ class AppTextStyle {
 
   static TextStyle semiBold = baseTextStyle.copyWith(
     fontWeight: FontWeight.w700,
-    fontSize: 24,
+    fontSize: 20,
   );
 
   static TextStyle section = baseTextStyle.copyWith(
