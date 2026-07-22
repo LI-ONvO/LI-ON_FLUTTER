@@ -29,6 +29,11 @@ class AppTextStyle {
     fontSize: 15,
   );
 
+  static TextStyle button = baseTextStyle.copyWith(
+    fontWeight: FontWeight.w700,
+    fontSize: 14,
+  );
+
   static TextStyle mainText = baseTextStyle.copyWith(
     fontWeight: FontWeight.w400,
     fontSize: 14,
