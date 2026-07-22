@@ -19,12 +19,20 @@ class CustomElevatedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDisabled = onPressed == null;
+    final Color resolvedBackgroundColor = isDisabled
+        ? backgroundColor.withValues(alpha: 0.4)
+        : backgroundColor;
+    final Color resolvedForegroundColor = isDisabled
+        ? foregroundColor.withValues(alpha: 0.6)
+        : foregroundColor;
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          disabledBackgroundColor: backgroundColor,
+          backgroundColor: resolvedBackgroundColor,
+          disabledBackgroundColor: resolvedBackgroundColor,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
           minimumSize: const Size(0, 44),
           shape: RoundedRectangleBorder(
@@ -34,7 +42,7 @@ class CustomElevatedButton extends StatelessWidget {
         onPressed: onPressed,
         child: Text(
           text,
-          style: AppTextStyle.button.copyWith(color: foregroundColor),
+          style: AppTextStyle.button.copyWith(color: resolvedForegroundColor),
         ),
       ),
     );
