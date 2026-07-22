@@ -17,6 +17,8 @@ const List<_NavItem> _navItems = [
   _NavItem(label: '프로필', asset: 'assets/icons/nav/nav_profile.svg'),
 ];
 
+const int _navItemCount = 5;
+
 class CustomBottomNavBar extends StatefulWidget {
   final int initialIndex;
   final ValueChanged<int>? onTap;
@@ -25,7 +27,10 @@ class CustomBottomNavBar extends StatefulWidget {
     super.key,
     this.initialIndex = 0,
     this.onTap,
-  });
+  }) : assert(
+         initialIndex >= 0 && initialIndex < _navItemCount,
+         'initialIndex must be between 0 and ${_navItemCount - 1}',
+       );
 
   @override
   State<CustomBottomNavBar> createState() => _CustomBottomNavBarState();
@@ -33,6 +38,15 @@ class CustomBottomNavBar extends StatefulWidget {
 
 class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
   late int _currentIndex = widget.initialIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    assert(
+      _navItems.length == _navItemCount,
+      '_navItemCount must match _navItems.length',
+    );
+  }
 
   void _handleTap(int index) {
     setState(() => _currentIndex = index);
@@ -48,13 +62,14 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
         border: Border(top: BorderSide(color: AppColors.background, width: 1)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           for (int i = 0; i < _navItems.length; i++)
-            _NavBarItem(
-              item: _navItems[i],
-              selected: i == _currentIndex,
-              onTap: () => _handleTap(i),
+            Expanded(
+              child: _NavBarItem(
+                item: _navItems[i],
+                selected: i == _currentIndex,
+                onTap: () => _handleTap(i),
+              ),
             ),
         ],
       ),
