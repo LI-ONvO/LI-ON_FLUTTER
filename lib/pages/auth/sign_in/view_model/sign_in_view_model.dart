@@ -55,9 +55,12 @@ class SignInViewModel extends Notifier<SignInState> {
       state = state.copyWith(verificationCode: value);
 
   void markSubmitted() {
-    state = state.copyWith(autovalidateMode: AutovalidateMode.onUserInteraction);
+    state = state.copyWith(
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+    );
   }
 }
 
-final signInViewModelProvider =
-    NotifierProvider<SignInViewModel, SignInState>(SignInViewModel.new);
+final signInViewModelProvider = NotifierProvider<SignInViewModel, SignInState>(
+  SignInViewModel.new,
+);

@@ -22,7 +22,7 @@ class CustomCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14,vertical: 19),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 19),
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(12),

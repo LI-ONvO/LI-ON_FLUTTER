@@ -34,9 +34,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   void _goToSignUp() {
-    Navigator.of(context).push(
-      CupertinoPageRoute(builder: (context) => const SignInPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(CupertinoPageRoute(builder: (context) => const SignInPage()));
   }
 
   @override
