@@ -17,9 +17,12 @@ class BaseScaffold extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: appBar,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: child,
+      body: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: child,
+        ),
       ),
       bottomNavigationBar: bottomBar == null
           ? null

@@ -67,37 +67,44 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
         ],
       ),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: AppSpacing.space6),
-              const AuthHeader(),
-              const SizedBox(height: AppSpacing.space6),
-              Column(
-                spacing: AppSpacing.space2,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  EmailField(
-                    autovalidateMode: formState.autovalidateMode,
-                    onChanged: viewModel.setEmail,
-                  ),
-                  CustomTextField(
-                    key: const Key('passwordField'),
-                    label: '비밀번호',
-                    hintText: '비밀번호 입력',
-                    obscureText: true,
-                    validator: Validators.password,
-                    autovalidateMode: formState.autovalidateMode,
-                    onChanged: viewModel.setPassword,
-                  ),
-                ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Center(child: AuthHeader()),
+                    const SizedBox(height: AppSpacing.space6),
+                    Column(
+                      spacing: AppSpacing.space2,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        EmailField(
+                          autovalidateMode: formState.autovalidateMode,
+                          onChanged: viewModel.setEmail,
+                        ),
+                        CustomTextField(
+                          key: const Key('passwordField'),
+                          label: '비밀번호',
+                          hintText: '비밀번호 입력',
+                          obscureText: true,
+                          validator: Validators.password,
+                          autovalidateMode: formState.autovalidateMode,
+                          onChanged: viewModel.setPassword,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
