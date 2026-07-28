@@ -67,34 +67,36 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
         ],
       ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            const Spacer(flex: 5),
-            const AuthHeader(),
-            const SizedBox(height: AppSpacing.space6),
-            Column(
-              spacing: AppSpacing.space2,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                EmailField(
-                  autovalidateMode: formState.autovalidateMode,
-                  onChanged: viewModel.setEmail,
-                ),
-                CustomTextField(
-                  key: const Key('passwordField'),
-                  label: '비밀번호',
-                  hintText: '비밀번호 입력',
-                  obscureText: true,
-                  validator: Validators.password,
-                  autovalidateMode: formState.autovalidateMode,
-                  onChanged: viewModel.setPassword,
-                ),
-              ],
-            ),
-            const Spacer(flex: 6),
-          ],
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: AppSpacing.space6),
+              const AuthHeader(),
+              const SizedBox(height: AppSpacing.space6),
+              Column(
+                spacing: AppSpacing.space2,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  EmailField(
+                    autovalidateMode: formState.autovalidateMode,
+                    onChanged: viewModel.setEmail,
+                  ),
+                  CustomTextField(
+                    key: const Key('passwordField'),
+                    label: '비밀번호',
+                    hintText: '비밀번호 입력',
+                    obscureText: true,
+                    validator: Validators.password,
+                    autovalidateMode: formState.autovalidateMode,
+                    onChanged: viewModel.setPassword,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
