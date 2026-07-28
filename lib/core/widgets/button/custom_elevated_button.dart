@@ -33,16 +33,31 @@ class CustomElevatedButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: resolvedBackgroundColor,
           disabledBackgroundColor: resolvedBackgroundColor,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
+          padding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.space3,
+            horizontal: AppSpacing.space4,
+          ),
           minimumSize: const Size(0, 44),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.space2),
           ),
+          elevation: 0,
+        ).copyWith(
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.pressed)) {
+              return Colors.black.withValues(alpha: 0.16);
+            }
+            if (states.contains(WidgetState.hovered) ||
+                states.contains(WidgetState.focused)) {
+              return Colors.black.withValues(alpha: 0.08);
+            }
+            return null;
+          }),
         ),
         onPressed: onPressed,
         child: Text(
           text,
-          style: AppTextStyle.button.copyWith(color: resolvedForegroundColor),
+          style: AppTextStyle.section.copyWith(color: resolvedForegroundColor),
         ),
       ),
     );

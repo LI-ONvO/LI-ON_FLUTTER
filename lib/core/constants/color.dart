@@ -16,4 +16,5 @@ abstract final class AppColors {
   static const Color background = Color(0xFFF3F4F6);
   static const Color surface = Color(0xFFF9FAFB);
   static const Color heading = Color(0xFF374151);
+  static const Color placeholder = Color(0xFF9CA3AF);
 }
