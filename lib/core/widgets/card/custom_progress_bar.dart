@@ -3,16 +3,14 @@ import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 
 class CustomProgressBar extends StatelessWidget {
-  final double percent;
+  final double? percent;
 
-  const CustomProgressBar({
-    super.key,
-    this.percent = 0.0,
-  });
+  const CustomProgressBar({super.key, this.percent});
 
   @override
   Widget build(BuildContext context) {
-    final double clampedPercent = percent.clamp(0.0, 1.0);
+    final bool showPercent = percent != null;
+    final double clampedPercent = (percent ?? 0.0).clamp(0.0, 1.0);
 
     return SizedBox(
       width: double.infinity,
@@ -43,11 +41,13 @@ class CustomProgressBar extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(width: 10),
-          Text(
-            '${(clampedPercent * 100).round()}%',
-            style: AppTextStyle.button.copyWith(color: AppColors.primary),
-          ),
+          if (showPercent) ...[
+            const SizedBox(width: 10),
+            Text(
+              '${(clampedPercent * 100).round()}%',
+              style: AppTextStyle.button.copyWith(color: AppColors.primary),
+            ),
+          ],
         ],
       ),
     );

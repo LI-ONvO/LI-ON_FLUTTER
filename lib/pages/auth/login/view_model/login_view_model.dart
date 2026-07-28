@@ -39,7 +39,9 @@ class LoginViewModel extends Notifier<LoginState> {
   void setPassword(String value) => state = state.copyWith(password: value);
 
   void markSubmitted() {
-    state = state.copyWith(autovalidateMode: AutovalidateMode.onUserInteraction);
+    state = state.copyWith(
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+    );
   }
 }
 

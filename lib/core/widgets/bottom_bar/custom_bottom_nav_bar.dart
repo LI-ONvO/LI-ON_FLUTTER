@@ -23,14 +23,11 @@ class CustomBottomNavBar extends StatefulWidget {
   final int initialIndex;
   final ValueChanged<int>? onTap;
 
-  const CustomBottomNavBar({
-    super.key,
-    this.initialIndex = 0,
-    this.onTap,
-  }) : assert(
-         initialIndex >= 0 && initialIndex < _navItemCount,
-         'initialIndex must be between 0 and ${_navItemCount - 1}',
-       );
+  const CustomBottomNavBar({super.key, this.initialIndex = 0, this.onTap})
+    : assert(
+        initialIndex >= 0 && initialIndex < _navItemCount,
+        'initialIndex must be between 0 and ${_navItemCount - 1}',
+      );
 
   @override
   State<CustomBottomNavBar> createState() => _CustomBottomNavBarState();

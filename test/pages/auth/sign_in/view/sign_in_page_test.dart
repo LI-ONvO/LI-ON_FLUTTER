@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:li_on/pages/auth/sign_in/view/sign_in_page.dart';
+
+import '../../../../support/widget_test_helpers.dart';
 
 Finder _fieldInput(Key fieldKey) {
   return find.descendant(
@@ -10,19 +11,9 @@ Finder _fieldInput(Key fieldKey) {
   );
 }
 
-bool _isSubmitEnabled(WidgetTester tester) {
-  final ElevatedButton button = tester.widget<ElevatedButton>(
-    find.byType(ElevatedButton),
-  );
-  return button.onPressed != null;
-}
-
 void main() {
-  Future<void> pumpSignInPage(WidgetTester tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: SignInPage())),
-    );
-  }
+  Future<void> pumpSignInPage(WidgetTester tester) =>
+      pumpApp(tester, const SignInPage());
 
   Future<void> fillAllFields(
     WidgetTester tester, {
@@ -53,7 +44,7 @@ void main() {
     testWidgets('처음에는 비활성화 상태다', (tester) async {
       await pumpSignInPage(tester);
 
-      expect(_isSubmitEnabled(tester), isFalse);
+      expect(isElevatedButtonEnabled(tester), isFalse);
     });
 
     testWidgets('일부 필드만 채우면 비활성화 상태를 유지한다', (tester) async {
@@ -65,7 +56,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(_isSubmitEnabled(tester), isFalse);
+      expect(isElevatedButtonEnabled(tester), isFalse);
     });
 
     testWidgets('최소 글자 수를 채우지 못하면 비활성화 상태를 유지한다', (tester) async {
@@ -79,7 +70,7 @@ void main() {
         verificationCode: '12345', // 5자, 최소 6자 미달
       );
 
-      expect(_isSubmitEnabled(tester), isFalse);
+      expect(isElevatedButtonEnabled(tester), isFalse);
     });
 
     testWidgets('최소 글자 수를 채우면 형식이 틀려도 활성화된다', (tester) async {
@@ -93,18 +84,18 @@ void main() {
         verificationCode: 'abcdef',
       );
 
-      expect(_isSubmitEnabled(tester), isTrue);
+      expect(isElevatedButtonEnabled(tester), isTrue);
     });
 
     testWidgets('채운 뒤 한 필드를 다시 비우면 비활성화된다', (tester) async {
       await pumpSignInPage(tester);
       await fillAllFields(tester);
-      expect(_isSubmitEnabled(tester), isTrue);
+      expect(isElevatedButtonEnabled(tester), isTrue);
 
       await tester.enterText(_fieldInput(const Key('emailField')), '');
       await tester.pump();
 
-      expect(_isSubmitEnabled(tester), isFalse);
+      expect(isElevatedButtonEnabled(tester), isFalse);
     });
   });
 
@@ -112,7 +103,10 @@ void main() {
     testWidgets('형식이 잘못된 값을 입력해도 에러 메시지를 보여주지 않는다', (tester) async {
       await pumpSignInPage(tester);
 
-      await tester.enterText(_fieldInput(const Key('emailField')), 'notanemail');
+      await tester.enterText(
+        _fieldInput(const Key('emailField')),
+        'notanemail',
+      );
       await tester.pump();
 
       expect(find.text('올바른 이메일 형식이 아닙니다'), findsNothing);

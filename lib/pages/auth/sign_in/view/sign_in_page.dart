@@ -23,7 +23,9 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   void _submit() {
-    final SignInViewModel viewModel = ref.read(signInViewModelProvider.notifier);
+    final SignInViewModel viewModel = ref.read(
+      signInViewModelProvider.notifier,
+    );
     submitAuthForm(
       context: context,
       formKey: _formKey,

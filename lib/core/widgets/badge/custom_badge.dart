@@ -18,7 +18,9 @@ class CustomBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color borderColor = selected ? AppColors.primary : AppColors.border;
-    final Color backgroundColor = selected ? AppColors.light : AppColors.surface;
+    final Color backgroundColor = selected
+        ? AppColors.light
+        : AppColors.surface;
     final Color textColor = selected ? AppColors.primary : AppColors.heading;
     return GestureDetector(
       onTap: onTap,
