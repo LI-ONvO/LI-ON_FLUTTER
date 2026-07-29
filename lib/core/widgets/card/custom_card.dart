@@ -7,6 +7,9 @@ class CustomCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
+  final Color? avatarBackgroundColor;
+  final Color? avatarTextColor;
+  final Widget? trailing;
 
   const CustomCard({
     super.key,
@@ -14,6 +17,9 @@ class CustomCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     this.onTap,
+    this.avatarBackgroundColor,
+    this.avatarTextColor,
+    this.trailing,
   });
 
   @override
@@ -35,12 +41,14 @@ class CustomCard extends StatelessWidget {
               height: 40,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: AppColors.light,
+                color: avatarBackgroundColor ?? AppColors.light,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 initial,
-                style: AppTextStyle.button.copyWith(color: AppColors.primary),
+                style: AppTextStyle.button.copyWith(
+                  color: avatarTextColor ?? AppColors.primary,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -63,6 +71,7 @@ class CustomCard extends StatelessWidget {
                 ],
               ),
             ),
+            if (trailing != null) ...[const SizedBox(width: 12), trailing!],
           ],
         ),
       ),

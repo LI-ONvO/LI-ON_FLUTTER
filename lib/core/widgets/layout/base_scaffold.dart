@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:li_on/core/constants/color.dart';
 
 class BaseScaffold extends StatelessWidget {
-  final Widget child;
   final PreferredSizeWidget? appBar;
+  final Widget child;
   final Widget? bottomBar;
   const BaseScaffold({
     super.key,
-    required this.child,
     required this.appBar,
+    required this.child,
     this.bottomBar,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.white,
       appBar: appBar,
       body: SafeArea(
         bottom: bottomBar == null,
