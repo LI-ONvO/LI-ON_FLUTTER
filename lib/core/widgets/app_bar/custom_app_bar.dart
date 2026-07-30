@@ -60,14 +60,19 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class AppBarBookmarkButton extends StatelessWidget {
+  final bool isBookmarked;
   final VoidCallback? onTap;
 
-  const AppBarBookmarkButton({super.key, this.onTap});
+  const AppBarBookmarkButton({
+    super.key,
+    this.isBookmarked = false,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return _AppBarIconButton(
-      icon: Icons.bookmark_border,
+      icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
       size: 20,
       onTap: onTap,
     );

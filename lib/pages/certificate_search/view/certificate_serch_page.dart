@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/constants/color.dart';
@@ -8,6 +9,7 @@ import 'package:li_on/core/widgets/bottom_bar/custom_bottom_nav_bar.dart';
 import 'package:li_on/core/widgets/card/custom_card.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/core/widgets/search_bar/custom_search_bar.dart';
+import 'package:li_on/pages/certificate_search/view/certificate_detail_page.dart';
 import 'package:li_on/pages/certificate_search/view_model/certificate_search_view_model.dart';
 
 class CertificateSearchPage extends ConsumerWidget {
@@ -87,7 +89,19 @@ class CertificateSearchPage extends ConsumerWidget {
                             size: 20,
                             color: AppColors.placeholder,
                           ),
-                          onTap: () {},
+                          onTap: () {
+                            if (ModalRoute.of(context)?.isCurrent != true) {
+                              return;
+                            }
+                            Navigator.of(context).push(
+                              CupertinoPageRoute(
+                                builder: (context) => CertificateDetailPage(
+                                  certificateId: certificate.id,
+                                  initialTitle: certificate.name,
+                                ),
+                              ),
+                            );
+                          },
                         );
                       },
                     ),
