@@ -38,7 +38,9 @@ class CertificateDetailPage extends ConsumerWidget {
       bottomBar: CustomElevatedButton(
         text: '로드맵 만들기',
         backgroundColor: AppColors.primary,
-        onPressed: () {},
+        // 로드맵 기능이 아직 없어 연결할 동작이 없다. null을 넘기면
+        // CustomElevatedButton이 자동으로 비활성 스타일을 적용한다.
+        onPressed: null,
       ),
       child: detailAsync.when(
         data: (detail) => detail == null
