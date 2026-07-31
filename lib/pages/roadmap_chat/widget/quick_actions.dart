@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
-import 'package:li_on/pages/roadmap_chat/provider/roadmap_chat_view_model.dart';
+import 'package:li_on/pages/roadmap_chat/model/chat_message.dart';
 
 class QuickActions extends StatelessWidget {
   final List<ChatQuickAction> actions;

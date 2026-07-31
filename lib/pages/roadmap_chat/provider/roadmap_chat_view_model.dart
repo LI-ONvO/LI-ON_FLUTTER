@@ -62,6 +62,7 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
           userText: trimmed,
         );
 
+    if (!ref.mounted) return;
     state = state.copyWith(
       messages: [...state.messages, reply],
       isBotTyping: false,

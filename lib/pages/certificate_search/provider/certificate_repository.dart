@@ -15,8 +15,8 @@ const List<Certificate> _dummyCertificates = [
 
 /// 자격증 상세 더미 데이터.
 /// key는 [_dummyCertificates]의 [Certificate.id]와 매칭된다.
-final Map<String, CertificateDetail> _dummyCertificateDetails = {
-  '1': const CertificateDetail(
+const Map<String, CertificateDetail> _dummyCertificateDetails = {
+  '1': CertificateDetail(
     id: 101,
     name: '정보처리기사',
     issuingOrg: '한국산업인력공단',
@@ -36,7 +36,7 @@ final Map<String, CertificateDetail> _dummyCertificateDetails = {
       ExamSubject(name: '정보시스템 구축관리', percent: 0.18),
     ],
   ),
-  '2': const CertificateDetail(
+  '2': CertificateDetail(
     id: 102,
     name: 'SQLD',
     issuingOrg: '한국데이터산업진흥원',
@@ -53,7 +53,7 @@ final Map<String, CertificateDetail> _dummyCertificateDetails = {
       ExamSubject(name: 'SQL 기본 및 활용', percent: 0.60),
     ],
   ),
-  '3': const CertificateDetail(
+  '3': CertificateDetail(
     id: 103,
     name: '전산회계 1급',
     issuingOrg: '한국세무사회',
@@ -70,7 +70,7 @@ final Map<String, CertificateDetail> _dummyCertificateDetails = {
       ExamSubject(name: '실무', percent: 0.70),
     ],
   ),
-  '4': const CertificateDetail(
+  '4': CertificateDetail(
     id: 104,
     name: '건축기사',
     issuingOrg: '한국산업인력공단',
@@ -90,7 +90,7 @@ final Map<String, CertificateDetail> _dummyCertificateDetails = {
       ExamSubject(name: '건축법규', percent: 0.20),
     ],
   ),
-  '5': const CertificateDetail(
+  '5': CertificateDetail(
     id: 105,
     name: '간호조무사',
     issuingOrg: '한국보건의료인국가시험원',
@@ -108,7 +108,7 @@ final Map<String, CertificateDetail> _dummyCertificateDetails = {
       ExamSubject(name: '공중보건학개론', percent: 0.30),
     ],
   ),
-  '6': const CertificateDetail(
+  '6': CertificateDetail(
     id: 106,
     name: '평생교육사',
     issuingOrg: '국가평생교육진흥원',
@@ -126,7 +126,7 @@ final Map<String, CertificateDetail> _dummyCertificateDetails = {
       ExamSubject(name: '평생교육경영론', percent: 0.35),
     ],
   ),
-  '7': const CertificateDetail(
+  '7': CertificateDetail(
     id: 107,
     name: '네트워크관리사',
     issuingOrg: '한국정보통신자격협회',
@@ -144,7 +144,7 @@ final Map<String, CertificateDetail> _dummyCertificateDetails = {
       ExamSubject(name: 'NOS', percent: 0.30),
     ],
   ),
-  '8': const CertificateDetail(
+  '8': CertificateDetail(
     id: 108,
     name: '재경관리사',
     issuingOrg: '삼일회계법인',
