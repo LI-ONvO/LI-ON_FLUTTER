@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:li_on/pages/certificate_search/data/certificate_repository.dart';
 import 'package:li_on/pages/certificate_search/model/certificate.dart';
+import 'package:li_on/pages/certificate_search/provider/certificate_repository.dart';
 
 export 'package:li_on/pages/certificate_search/model/certificate.dart';
 

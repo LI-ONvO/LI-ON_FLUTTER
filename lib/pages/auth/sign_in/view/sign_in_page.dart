@@ -10,7 +10,7 @@ import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/core/widgets/text_field/custom_text_field.dart';
 import 'package:li_on/core/widgets/text_field/email_field.dart';
-import 'package:li_on/pages/auth/sign_in/view_model/sign_in_view_model.dart';
+import 'package:li_on/pages/auth/sign_in/provider/sign_in_view_model.dart';
 
 class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
