@@ -6,7 +6,7 @@ import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
-import 'package:li_on/pages/onboarding/view_model/onboarding_view_model.dart';
+import 'package:li_on/pages/onboarding/provider/onboarding_view_model.dart';
 
 class OnboardingPage extends ConsumerWidget {
   const OnboardingPage({super.key});

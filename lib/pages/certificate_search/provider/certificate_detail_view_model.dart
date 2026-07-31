@@ -28,7 +28,9 @@ class CertificateDetailViewModel extends Notifier<CertificateDetailState> {
 
 /// autoDispose를 붙이지 않아, 화면을 나갔다 다시 들어와도 같은 [certificateId]의
 /// 북마크 상태는 유지된다 (다른 certificateId와는 [family]로 격리된다).
-final certificateDetailViewModelProvider = NotifierProvider.family<
-    CertificateDetailViewModel, CertificateDetailState, String>(
-  (certificateId) => CertificateDetailViewModel(certificateId),
-);
+final certificateDetailViewModelProvider =
+    NotifierProvider.family<
+      CertificateDetailViewModel,
+      CertificateDetailState,
+      String
+    >((certificateId) => CertificateDetailViewModel(certificateId));
