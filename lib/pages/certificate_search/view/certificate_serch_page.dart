@@ -9,8 +9,9 @@ import 'package:li_on/core/widgets/bottom_bar/custom_bottom_nav_bar.dart';
 import 'package:li_on/core/widgets/card/custom_card.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/core/widgets/search_bar/custom_search_bar.dart';
+import 'package:li_on/pages/certificate_search/provider/certificate_search_view_model.dart';
 import 'package:li_on/pages/certificate_search/view/certificate_detail_page.dart';
-import 'package:li_on/pages/certificate_search/view_model/certificate_search_view_model.dart';
+import 'package:li_on/pages/roadmap_chat/view/roadmap_chat_page.dart';
 
 class CertificateSearchPage extends ConsumerWidget {
   final String userName;
@@ -31,7 +32,19 @@ class CertificateSearchPage extends ConsumerWidget {
 
     return BaseScaffold(
       appBar: null,
-      bottomBar: const CustomBottomNavBar(),
+      bottomBar: CustomBottomNavBar(
+        onTap: (index) {
+          if (index != roadmapNavIndex) return;
+          if (ModalRoute.of(context)?.isCurrent != true) return;
+          Navigator.of(context).push(
+            CupertinoPageRoute(
+              // 학습 중인 자격증을 선택하는 기능이 아직 없어 임시로 고정값을 전달한다.
+              builder: (context) =>
+                  const RoadmapChatPage(certificateName: '정보처리기사'),
+            ),
+          );
+        },
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

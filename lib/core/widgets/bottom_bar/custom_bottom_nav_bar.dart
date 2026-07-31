@@ -19,6 +19,10 @@ const List<_NavItem> _navItems = [
 
 const int _navItemCount = 5;
 
+/// [_navItems]에서 '로드맵' 탭의 인덱스. 다른 화면에서 `onTap`으로 탭을
+/// 구분할 때 매직 넘버 대신 사용한다.
+const int roadmapNavIndex = 1;
+
 class CustomBottomNavBar extends StatefulWidget {
   final int initialIndex;
   final ValueChanged<int>? onTap;
