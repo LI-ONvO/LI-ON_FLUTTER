@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:li_on/core/constants/color.dart';
+
+part 'certificate.g.dart';
 
 const String allCategory = '전체';
 
@@ -20,6 +23,7 @@ const Map<String, Color> _categoryColors = {
   '교육': Color(0xFF7C3AED),
 };
 
+@JsonSerializable()
 class Certificate {
   final String id;
   final String initial;
@@ -32,6 +36,11 @@ class Certificate {
     required this.name,
     required this.category,
   });
+
+  factory Certificate.fromJson(Map<String, dynamic> json) =>
+      _$CertificateFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CertificateToJson(this);
 
   Color get accentColor => _categoryColors[category] ?? AppColors.primary;
 }

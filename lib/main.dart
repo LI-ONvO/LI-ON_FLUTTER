@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:li_on/pages/onboarding/view/onboarding_page.dart';
+import 'package:li_on/core/router/app_router.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
@@ -12,9 +12,9 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      home: OnboardingPage(),
+      routerConfig: appRouter,
     );
   }
 }

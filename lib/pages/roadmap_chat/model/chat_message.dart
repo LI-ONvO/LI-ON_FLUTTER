@@ -1,12 +1,23 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'chat_message.g.dart';
+
 enum ChatSender { bot, user }
 
+@JsonSerializable()
 class ChatQuickAction {
   final String id;
   final String label;
 
   const ChatQuickAction({required this.id, required this.label});
+
+  factory ChatQuickAction.fromJson(Map<String, dynamic> json) =>
+      _$ChatQuickActionFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ChatQuickActionToJson(this);
 }
 
+@JsonSerializable()
 class ChatMessage {
   final String id;
   final ChatSender sender;
@@ -21,6 +32,11 @@ class ChatMessage {
     required this.timestamp,
     this.actions = const [],
   });
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) =>
+      _$ChatMessageFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ChatMessageToJson(this);
 }
 
 /// "오전 9:12" 형식의 시각 표기.

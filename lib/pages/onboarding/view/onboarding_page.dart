@@ -33,19 +33,22 @@ class OnboardingPage extends ConsumerWidget {
             style: AppTextStyle.subText.copyWith(fontSize: 15),
           ),
           const SizedBox(height: AppSpacing.space3),
-          Wrap(
-            spacing: AppSpacing.space1,
-            runSpacing: AppSpacing.space1,
-            children: [
-              for (final field in onboardingFields)
-                CustomBadge(
-                  field: field,
-                  selected: state.selectedFields.contains(field),
-                  onTap: () => viewModel.toggleField(field),
-                ),
-            ],
+          Expanded(
+            child: SingleChildScrollView(
+              child: Wrap(
+                spacing: AppSpacing.space1,
+                runSpacing: AppSpacing.space1,
+                children: [
+                  for (final field in onboardingFields)
+                    CustomBadge(
+                      field: field,
+                      selected: state.selectedFields.contains(field),
+                      onTap: () => viewModel.toggleField(field),
+                    ),
+                ],
+              ),
+            ),
           ),
-          const Spacer(),
           CustomElevatedButton(
             onPressed: state.isFilled ? () {} : null,
             text: '다음',

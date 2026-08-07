@@ -19,60 +19,54 @@ const List<_NavItem> _navItems = [
 
 const int _navItemCount = 5;
 
-/// [_navItems]에서 '로드맵' 탭의 인덱스. 다른 화면에서 `onTap`으로 탭을
-/// 구분할 때 매직 넘버 대신 사용한다.
-const int roadmapNavIndex = 1;
+/// 선택 상태를 직접 들고 있지 않는 컨트롤드 위젯. 실제로 어떤 탭이 선택된
+/// 상태인지는 [AppShell]이 라우터의 현재 위치([currentIndex])로부터 결정해
+/// 전달하므로, 탭을 눌러도 실제 이동 없이 하이라이트만 바뀌는 문제가 생기지
+/// 않는다.
+class CustomBottomNavBar extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
 
-class CustomBottomNavBar extends StatefulWidget {
-  final int initialIndex;
-  final ValueChanged<int>? onTap;
-
-  const CustomBottomNavBar({super.key, this.initialIndex = 0, this.onTap})
-    : assert(
-        initialIndex >= 0 && initialIndex < _navItemCount,
-        'initialIndex must be between 0 and ${_navItemCount - 1}',
-      );
-
-  @override
-  State<CustomBottomNavBar> createState() => _CustomBottomNavBarState();
-}
-
-class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
-  late int _currentIndex = widget.initialIndex;
+  const CustomBottomNavBar({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  }) : assert(
+         currentIndex >= 0 && currentIndex < _navItemCount,
+         'currentIndex must be between 0 and ${_navItemCount - 1}',
+       );
 
   @override
-  void initState() {
-    super.initState();
+  Widget build(BuildContext context) {
     assert(
       _navItems.length == _navItemCount,
       '_navItemCount must match _navItems.length',
     );
-  }
-
-  void _handleTap(int index) {
-    setState(() => _currentIndex = index);
-    widget.onTap?.call(index);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(top: 9, bottom: 10),
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        border: Border(top: BorderSide(color: AppColors.background, width: 1)),
-      ),
-      child: Row(
-        children: [
-          for (int i = 0; i < _navItems.length; i++)
-            Expanded(
-              child: _NavBarItem(
-                item: _navItems[i],
-                selected: i == _currentIndex,
-                onTap: () => _handleTap(i),
+    // 화면 하단에 바로 붙는 위젯이라 기기의 홈 인디케이터 세이프 에어리어를
+    // 직접 챙긴다. 이 위젯을 감싸는 쪽(BaseScaffold 등)이 SafeArea를
+    // 대신 처리해줄 거라고 가정하지 않는다.
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.only(top: 9, bottom: 10),
+        decoration: const BoxDecoration(
+          color: AppColors.white,
+          border: Border(
+            top: BorderSide(color: AppColors.background, width: 1),
+          ),
+        ),
+        child: Row(
+          children: [
+            for (int i = 0; i < _navItems.length; i++)
+              Expanded(
+                child: _NavBarItem(
+                  item: _navItems[i],
+                  selected: i == currentIndex,
+                  onTap: () => onTap(i),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

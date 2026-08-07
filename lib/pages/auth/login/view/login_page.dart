@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
@@ -11,7 +12,6 @@ import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/core/widgets/text_field/custom_text_field.dart';
 import 'package:li_on/core/widgets/text_field/email_field.dart';
 import 'package:li_on/pages/auth/login/provider/login_view_model.dart';
-import 'package:li_on/pages/auth/sign_in/view/sign_in_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -34,9 +34,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   void _goToSignUp() {
-    Navigator.of(
-      context,
-    ).push(CupertinoPageRoute(builder: (context) => const SignInPage()));
+    context.push('/sign-in');
   }
 
   @override

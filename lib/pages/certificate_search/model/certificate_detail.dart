@@ -1,3 +1,8 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'certificate_detail.g.dart';
+
+@JsonSerializable()
 class ExamSubject {
   final String name;
 
@@ -10,15 +15,27 @@ class ExamSubject {
         percent >= 0 && percent <= 1,
         'percent는 0.0~1.0 사이의 비율이어야 합니다 (0-100 스케일이 아님).',
       );
+
+  factory ExamSubject.fromJson(Map<String, dynamic> json) =>
+      _$ExamSubjectFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ExamSubjectToJson(this);
 }
 
+@JsonSerializable()
 class CertificateField {
   final int id;
   final String name;
 
   const CertificateField({required this.id, required this.name});
+
+  factory CertificateField.fromJson(Map<String, dynamic> json) =>
+      _$CertificateFieldFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CertificateFieldToJson(this);
 }
 
+@JsonSerializable()
 class CertificateDetail {
   // 실제 API 응답 필드
   final int id;
@@ -53,6 +70,11 @@ class CertificateDetail {
     required this.examDuration,
     required this.subjects,
   });
+
+  factory CertificateDetail.fromJson(Map<String, dynamic> json) =>
+      _$CertificateDetailFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CertificateDetailToJson(this);
 
   /// 과목 수는 [subjects]로부터 파생시켜, 하드코딩된 값이 실제 과목 목록과
   /// 어긋나는 일이 없도록 한다.
