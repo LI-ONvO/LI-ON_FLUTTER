@@ -4,6 +4,7 @@ import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
+import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/pages/roadmap/calendar_add/model/calendar_schedule.dart';
 import 'package:li_on/pages/roadmap/calendar_add/provider/calendar_repository.dart';
 import 'package:li_on/pages/roadmap/calendar_add/widget/schedule_tile.dart';
@@ -24,16 +25,22 @@ class CalendarAddSheet extends ConsumerStatefulWidget {
 }
 
 class _CalendarAddSheetState extends ConsumerState<CalendarAddSheet> {
-  /// null이면 아직 일정 목록을 받지 못해 초기 선택이 정해지지 않은 상태.
+  /// null이면 아직 사용자가 선택을 건드리지 않은 상태다. 이때는 챗봇이
+  /// 추천한 기본 선택을 그대로 쓴다.
   Set<String>? _selectedIds;
   bool _isSubmitting = false;
 
-  void _toggle(String id) {
-    setState(() {
-      final Set<String> selected = {...?_selectedIds};
-      if (!selected.remove(id)) selected.add(id);
-      _selectedIds = selected;
-    });
+  Set<String> _defaultSelection(List<CalendarSchedule> schedules) {
+    return schedules
+        .where((schedule) => schedule.defaultSelected)
+        .map((schedule) => schedule.id)
+        .toSet();
+  }
+
+  void _toggle(Set<String> current, String id) {
+    final Set<String> next = {...current};
+    if (!next.remove(id)) next.add(id);
+    setState(() => _selectedIds = next);
   }
 
   void _toggleAll(List<CalendarSchedule> schedules, bool isAllSelected) {
@@ -46,9 +53,23 @@ class _CalendarAddSheetState extends ConsumerState<CalendarAddSheet> {
 
   Future<void> _submit(List<CalendarSchedule> selectedSchedules) async {
     setState(() => _isSubmitting = true);
-    await ref.read(calendarRepositoryProvider).addSchedules(selectedSchedules);
-    if (!mounted) return;
-    Navigator.of(context).pop(selectedSchedules.length);
+    try {
+      await ref
+          .read(calendarRepositoryProvider)
+          .addSchedules(selectedSchedules);
+      if (!mounted) return;
+      Navigator.of(context).pop(selectedSchedules.length);
+    } catch (_) {
+      if (!mounted) return;
+      CustomSnackbar.show(
+        context,
+        message: '일정을 추가하지 못했어요',
+        type: SnackbarType.error,
+      );
+    } finally {
+      // 저장에 실패해도 버튼이 계속 비활성으로 남지 않도록 되돌린다.
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -57,15 +78,10 @@ class _CalendarAddSheetState extends ConsumerState<CalendarAddSheet> {
       suggestedSchedulesProvider(widget.certificateName),
     );
     final List<CalendarSchedule> schedules = schedulesAsync.value ?? const [];
-    // 목록이 처음 도착한 시점에 챗봇이 추천한 항목을 기본 선택으로 채운다.
-    // 이후에는 사용자의 선택을 그대로 유지한다.
-    if (schedulesAsync.hasValue && _selectedIds == null) {
-      _selectedIds = schedules
-          .where((schedule) => schedule.defaultSelected)
-          .map((schedule) => schedule.id)
-          .toSet();
-    }
-    final Set<String> selectedIds = _selectedIds ?? const <String>{};
+    // 사용자가 아직 선택을 건드리지 않았으면 챗봇이 추천한 기본 선택을 쓴다.
+    // build에서 상태를 쓰지 않도록, 값을 계산만 하고 저장하지 않는다.
+    final Set<String> selectedIds =
+        _selectedIds ?? _defaultSelection(schedules);
     final bool isAllSelected =
         schedules.isNotEmpty && selectedIds.length == schedules.length;
     final List<CalendarSchedule> selectedSchedules = schedules
@@ -115,18 +131,29 @@ class _CalendarAddSheetState extends ConsumerState<CalendarAddSheet> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    SelectionCheckbox(
-                      selected: isAllSelected,
-                      onTap: schedules.isEmpty
-                          ? null
-                          : () => _toggleAll(schedules, isAllSelected),
+                const SizedBox(height: 6),
+                // 체크박스(20x20)만이 아니라 라벨을 포함한 줄 전체를 눌러도
+                // 토글되도록 감싼다.
+                GestureDetector(
+                  onTap: schedules.isEmpty
+                      ? null
+                      : () => _toggleAll(schedules, isAllSelected),
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        SelectionCheckbox(
+                          selected: isAllSelected,
+                          onTap: schedules.isEmpty
+                              ? null
+                              : () => _toggleAll(schedules, isAllSelected),
+                        ),
+                        const SizedBox(width: AppSpacing.space1),
+                        Text('전체 선택', style: AppTextStyle.mainText),
+                      ],
                     ),
-                    const SizedBox(width: AppSpacing.space1),
-                    Text('전체 선택', style: AppTextStyle.mainText),
-                  ],
+                  ),
                 ),
                 Flexible(
                   child: schedulesAsync.when(
@@ -142,7 +169,7 @@ class _CalendarAddSheetState extends ConsumerState<CalendarAddSheet> {
                           )
                         : ListView.separated(
                             padding: const EdgeInsets.only(
-                              top: AppSpacing.space2,
+                              top: AppSpacing.space0,
                             ),
                             shrinkWrap: true,
                             itemCount: schedules.length,
@@ -154,7 +181,7 @@ class _CalendarAddSheetState extends ConsumerState<CalendarAddSheet> {
                               return ScheduleTile(
                                 schedule: schedule,
                                 selected: selectedIds.contains(schedule.id),
-                                onTap: () => _toggle(schedule.id),
+                                onTap: () => _toggle(selectedIds, schedule.id),
                               );
                             },
                           ),

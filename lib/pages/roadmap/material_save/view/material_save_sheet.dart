@@ -5,6 +5,7 @@ import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
+import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/core/widgets/text_field/custom_text_field.dart';
 import 'package:li_on/pages/roadmap/material_save/model/material_resource.dart';
 import 'package:li_on/pages/roadmap/material_save/provider/material_repository.dart';
@@ -27,7 +28,8 @@ class MaterialSaveSheet extends ConsumerStatefulWidget {
 class _MaterialSaveSheetState extends ConsumerState<MaterialSaveSheet> {
   final TextEditingController _memoController = TextEditingController();
 
-  /// null이면 아직 카테고리 목록을 받지 못해 기본 선택이 정해지지 않은 상태.
+  /// null이면 아직 사용자가 카테고리를 고르지 않은 상태다.
+  /// 이때는 첫 번째 카테고리(해당 자격증)를 기본 선택으로 쓴다.
   String? _selectedCategory;
   bool _isSaving = false;
 
@@ -37,20 +39,29 @@ class _MaterialSaveSheetState extends ConsumerState<MaterialSaveSheet> {
     super.dispose();
   }
 
-  Future<void> _save(MaterialResource resource) async {
-    final String? category = _selectedCategory;
-    if (category == null) return;
-
+  Future<void> _save(MaterialResource resource, String category) async {
     setState(() => _isSaving = true);
-    await ref
-        .read(materialRepositoryProvider)
-        .saveMaterial(
-          resource: resource,
-          category: category,
-          memo: _memoController.text.trim(),
-        );
-    if (!mounted) return;
-    Navigator.of(context).pop(resource.title);
+    try {
+      await ref
+          .read(materialRepositoryProvider)
+          .saveMaterial(
+            resource: resource,
+            category: category,
+            memo: _memoController.text.trim(),
+          );
+      if (!mounted) return;
+      Navigator.of(context).pop(resource.title);
+    } catch (_) {
+      if (!mounted) return;
+      CustomSnackbar.show(
+        context,
+        message: '자료를 저장하지 못했어요',
+        type: SnackbarType.error,
+      );
+    } finally {
+      // 저장에 실패해도 버튼이 계속 비활성으로 남지 않도록 되돌린다.
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   Widget _label(String text) {
@@ -60,7 +71,7 @@ class _MaterialSaveSheetState extends ConsumerState<MaterialSaveSheet> {
     );
   }
 
-  Widget _form(MaterialSaveData data) {
+  Widget _form(MaterialSaveData data, String? selectedCategory) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -89,7 +100,7 @@ class _MaterialSaveSheetState extends ConsumerState<MaterialSaveSheet> {
               CustomBadge(
                 field: category,
                 compact: true,
-                selected: _selectedCategory == category,
+                selected: selectedCategory == category,
                 onTap: () => setState(() => _selectedCategory = category),
               ),
           ],
@@ -104,13 +115,13 @@ class _MaterialSaveSheetState extends ConsumerState<MaterialSaveSheet> {
       materialSaveDataProvider(widget.certificateName),
     );
     final MaterialSaveData? data = dataAsync.value;
-    // 목록이 처음 도착한 시점에 첫 카테고리(해당 자격증)를 기본 선택으로 둔다.
-    // 이후에는 사용자의 선택을 그대로 유지한다.
-    if (data != null &&
-        _selectedCategory == null &&
-        data.categories.isNotEmpty) {
-      _selectedCategory = data.categories.first;
-    }
+    // 사용자가 아직 고르지 않았으면 첫 카테고리(해당 자격증)를 기본으로 쓴다.
+    // build에서 상태를 쓰지 않도록, 값을 계산만 하고 저장하지 않는다.
+    final String? selectedCategory =
+        _selectedCategory ??
+        (data == null || data.categories.isEmpty
+            ? null
+            : data.categories.first);
 
     return SafeArea(
       top: false,
@@ -167,7 +178,7 @@ class _MaterialSaveSheetState extends ConsumerState<MaterialSaveSheet> {
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.only(top: AppSpacing.space3),
                       child: dataAsync.when(
-                        data: _form,
+                        data: (data) => _form(data, selectedCategory),
                         loading: () => const Padding(
                           padding: EdgeInsets.symmetric(
                             vertical: AppSpacing.space5,
@@ -194,9 +205,10 @@ class _MaterialSaveSheetState extends ConsumerState<MaterialSaveSheet> {
                     child: CustomElevatedButton(
                       text: '저장',
                       backgroundColor: AppColors.primary,
-                      onPressed: data == null || _isSaving
+                      onPressed:
+                          data == null || selectedCategory == null || _isSaving
                           ? null
-                          : () => _save(data.resource),
+                          : () => _save(data.resource, selectedCategory),
                     ),
                   ),
                 ],

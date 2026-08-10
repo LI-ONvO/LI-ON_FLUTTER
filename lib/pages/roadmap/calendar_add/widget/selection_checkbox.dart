@@ -11,24 +11,28 @@ class SelectionCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 20,
-        height: 20,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.white,
-          borderRadius: BorderRadius.circular(5),
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.border,
-            width: 2,
+    return Semantics(
+      checked: selected,
+      container: true,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          width: 20,
+          height: 20,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primary : AppColors.white,
+            borderRadius: BorderRadius.circular(5),
+            border: Border.all(
+              color: selected ? AppColors.primary : AppColors.border,
+              width: 2,
+            ),
           ),
+          child: selected
+              ? const Icon(Icons.check, size: 14, color: AppColors.white)
+              : null,
         ),
-        child: selected
-            ? const Icon(Icons.check, size: 14, color: AppColors.white)
-            : null,
       ),
     );
   }
