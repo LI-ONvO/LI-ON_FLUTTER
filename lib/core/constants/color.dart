@@ -9,6 +9,7 @@ abstract final class AppColors {
   static const Color subText = Color(0xFF6B7280);
   static const Color divider = Color(0xFFE5E7EB);
   static const Color success = Color(0xFF10B981);
+  static const Color successLight = Color(0xFFF0FDF4);
   static const Color danger = Color(0xFFEF4444);
   static const Color white = Color(0xFFFFFFFF);
   static const Color disabled = Color(0xFF93C5FD);

@@ -4,6 +4,11 @@ part 'chat_message.g.dart';
 
 enum ChatSender { bot, user }
 
+/// 화면에서 바텀시트를 띄우는 퀵 액션 id들.
+/// 나머지 액션은 뷰모델이 확인 메시지로만 처리한다.
+const String addToCalendarActionId = 'add_to_calendar';
+const String saveToMaterialsActionId = 'save_to_materials';
+
 @JsonSerializable()
 class ChatQuickAction {
   final String id;

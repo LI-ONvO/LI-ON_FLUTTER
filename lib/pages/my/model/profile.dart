@@ -3,7 +3,6 @@ import 'package:li_on/core/model/job_field.dart';
 
 part 'profile.g.dart';
 
-
 @JsonSerializable()
 class Profile {
   final int id;
