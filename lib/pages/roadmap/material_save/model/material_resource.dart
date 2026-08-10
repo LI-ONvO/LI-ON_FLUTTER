@@ -1,17 +1,11 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:li_on/core/model/material_resource_type.dart';
+
+// 자료 형태는 자료방 목록에서도 쓰므로 core로 옮겼다. 이 모델을 쓰는 쪽이
+// 형태까지 함께 받을 수 있도록 다시 내보낸다.
+export 'package:li_on/core/model/material_resource_type.dart';
 
 part 'material_resource.g.dart';
-
-/// 자료의 형태. 카드 오른쪽 배지로 노출된다.
-enum MaterialResourceType { link, file, note }
-
-extension MaterialResourceTypeLabel on MaterialResourceType {
-  String get label => switch (this) {
-    MaterialResourceType.link => '링크',
-    MaterialResourceType.file => '파일',
-    MaterialResourceType.note => '메모',
-  };
-}
 
 /// 로드맵 대화에서 추천받아 자료방에 저장할 수 있는 자료 한 건.
 @JsonSerializable()
