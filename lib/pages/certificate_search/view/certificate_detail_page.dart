@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
@@ -28,18 +29,24 @@ class CertificateDetailPage extends ConsumerWidget {
     final AsyncValue<CertificateDetail?> detailAsync = ref.watch(
       certificateDetailProvider(certificateId),
     );
+    // 상세 데이터가 로딩 중이어도 목록에서 넘겨받은 이름으로 로드맵을 열 수
+    // 있도록, 둘 중 먼저 확보되는 이름을 사용한다.
+    final String certificateName =
+        detailAsync.value?.name ?? initialTitle ?? '';
 
     return BaseScaffold(
       appBar: CustomAppBar(
-        title: detailAsync.value?.name ?? initialTitle ?? '',
+        title: certificateName,
         actions: [CertificateBookmarkButton(certificateId: certificateId)],
       ),
       bottomBar: CustomElevatedButton(
         text: '로드맵 만들기',
         backgroundColor: AppColors.primary,
-        // 로드맵 기능이 아직 없어 연결할 동작이 없다. null을 넘기면
-        // CustomElevatedButton이 자동으로 비활성 스타일을 적용한다.
-        onPressed: null,
+        onPressed: () {
+          if (certificateName.isEmpty) return;
+          if (ModalRoute.of(context)?.isCurrent != true) return;
+          context.push('/roadmap/chat/${Uri.encodeComponent(certificateName)}');
+        },
       ),
       child: detailAsync.when(
         data: (detail) => detail == null

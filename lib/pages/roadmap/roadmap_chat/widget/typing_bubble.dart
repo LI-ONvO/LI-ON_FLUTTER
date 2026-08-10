@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
-import 'package:li_on/pages/roadmap_chat/widget/chat_bubble.dart';
+import 'package:li_on/pages/roadmap/roadmap_chat/widget/chat_bubble.dart';
 
 class TypingBubble extends StatelessWidget {
   const TypingBubble({super.key});

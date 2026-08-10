@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:li_on/pages/roadmap_chat/model/chat_message.dart';
+import 'package:li_on/pages/roadmap/roadmap_chat/model/chat_message.dart';
 
 /// AI 로드맵 챗봇과의 메시지 교환을 추상화한다.
 /// 실제 API 연동 시에는 이 인터페이스를 구현하는 클래스를 새로 만들고
@@ -38,8 +38,8 @@ class DummyRoadmapChatRepository implements RoadmapChatRepository {
             '주차별 학습 계획을 캘린더에 추가하거나 자료방에 저장할 수 있어요.',
         timestamp: now,
         actions: const [
-          ChatQuickAction(id: 'add_to_calendar', label: '캘린더에 추가'),
-          ChatQuickAction(id: 'save_to_materials', label: '자료방에 저장'),
+          ChatQuickAction(id: addToCalendarActionId, label: '캘린더에 추가'),
+          ChatQuickAction(id: saveToMaterialsActionId, label: '자료방에 저장'),
         ],
       );
     }

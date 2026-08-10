@@ -12,12 +12,17 @@ class CustomBadge extends StatelessWidget {
   /// as opposed to the default outlined style used for multi-select fields.
   final bool filled;
 
+  /// 아웃라인 스타일을 필터 칩과 같은 높이(32)로 줄인다.
+  /// 바텀시트처럼 공간이 좁은 곳에서 사용한다. [filled]에는 영향이 없다.
+  final bool compact;
+
   const CustomBadge({
     super.key,
     required this.field,
     this.selected = false,
     this.onTap,
     this.filled = false,
+    this.compact = false,
   });
 
   @override
@@ -56,15 +61,24 @@ class CustomBadge extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(17, 12, 17, 14),
+        height: compact ? 32 : null,
+        alignment: compact ? Alignment.center : null,
+        padding: compact
+            ? const EdgeInsets.symmetric(horizontal: 15)
+            : const EdgeInsets.fromLTRB(17, 12, 17, 14),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(AppSpacing.space4),
+          borderRadius: BorderRadius.circular(
+            compact ? AppSpacing.space3 : AppSpacing.space4,
+          ),
           border: Border.all(color: borderColor),
         ),
         child: Text(
           field,
-          style: AppTextStyle.mainText.copyWith(color: textColor),
+          style: AppTextStyle.mainText.copyWith(
+            fontSize: compact ? 13 : null,
+            color: textColor,
+          ),
         ),
       ),
     );

@@ -19,6 +19,10 @@ class CustomTextField extends StatefulWidget {
   final bool showBorder;
   final EdgeInsetsGeometry contentPadding;
 
+  /// 여러 줄 입력창(메모 등)을 만들 때 사용한다. 기본값은 한 줄.
+  final int? maxLines;
+  final int? minLines;
+
   const CustomTextField({
     super.key,
     this.label,
@@ -38,6 +42,8 @@ class CustomTextField extends StatefulWidget {
       horizontal: 15,
       vertical: 16,
     ),
+    this.maxLines = 1,
+    this.minLines,
   });
 
   @override
@@ -84,7 +90,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
           onFieldSubmitted: widget.onSubmitted,
           autovalidateMode: widget.autovalidateMode,
           onTapOutside: (event) => FocusScope.of(context).unfocus(),
-          textAlignVertical: TextAlignVertical.center,
+          maxLines: widget.maxLines,
+          minLines: widget.minLines,
+          // 여러 줄 입력창은 커서가 위에서부터 시작해야 자연스럽다.
+          textAlignVertical: widget.maxLines == 1
+              ? TextAlignVertical.center
+              : TextAlignVertical.top,
           style: AppTextStyle.mainText.copyWith(color: AppColors.text),
           decoration: InputDecoration(
             hintText: widget.hintText,

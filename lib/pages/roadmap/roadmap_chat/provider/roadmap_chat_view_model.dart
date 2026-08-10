@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:li_on/pages/roadmap_chat/provider/roadmap_chat_repository.dart';
-import 'package:li_on/pages/roadmap_chat/model/chat_message.dart';
+import 'package:li_on/pages/roadmap/roadmap_chat/provider/roadmap_chat_repository.dart';
+import 'package:li_on/pages/roadmap/roadmap_chat/model/chat_message.dart';
 
-export 'package:li_on/pages/roadmap_chat/model/chat_message.dart';
+export 'package:li_on/pages/roadmap/roadmap_chat/model/chat_message.dart';
 
 class RoadmapChatState {
   final List<ChatMessage> messages;
@@ -66,6 +66,37 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
     state = state.copyWith(
       messages: [...state.messages, reply],
       isBotTyping: false,
+    );
+  }
+
+  /// 캘린더 추가 시트에서 일정을 저장한 뒤, 결과를 대화로 확인시켜 준다.
+  void notifySchedulesAdded(int count) {
+    if (count <= 0) return;
+    state = state.copyWith(
+      messages: [
+        ...state.messages,
+        ChatMessage(
+          id: 'bot-${DateTime.now().microsecondsSinceEpoch}',
+          sender: ChatSender.bot,
+          text: '$count개 일정을 캘린더에 추가했어요.',
+          timestamp: DateTime.now(),
+        ),
+      ],
+    );
+  }
+
+  /// 자료방 저장 시트에서 자료를 저장한 뒤, 결과를 대화로 확인시켜 준다.
+  void notifyMaterialSaved(String title) {
+    state = state.copyWith(
+      messages: [
+        ...state.messages,
+        ChatMessage(
+          id: 'bot-${DateTime.now().microsecondsSinceEpoch}',
+          sender: ChatSender.bot,
+          text: '자료방에 저장했어요: $title',
+          timestamp: DateTime.now(),
+        ),
+      ],
     );
   }
 

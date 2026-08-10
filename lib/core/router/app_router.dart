@@ -7,7 +7,8 @@ import 'package:li_on/pages/certificate_search/view/certificate_detail_page.dart
 import 'package:li_on/pages/certificate_search/view/certificate_serch_page.dart';
 import 'package:li_on/pages/my/view/my_page.dart';
 import 'package:li_on/pages/onboarding/view/onboarding_page.dart';
-import 'package:li_on/pages/roadmap_chat/view/roadmap_chat_page.dart';
+import 'package:li_on/pages/roadmap/chat_history/view/chat_history_page.dart';
+import 'package:li_on/pages/roadmap/roadmap_chat/view/roadmap_chat_page.dart';
 
 /// 앱의 진입 경로. 로그인 상태를 판별하는 기능이 아직 없어 우선 하단 탭
 /// 셸(프로필 탭)로 바로 진입한다. 로그인 게이팅이 생기면 '/login'으로 바꾼다.
@@ -30,6 +31,21 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => CertificateDetailPage(
         certificateId: state.pathParameters['certificateId']!,
         initialTitle: state.extra as String?,
+      ),
+    ),
+    GoRoute(
+      path: '/roadmap/history',
+      builder: (context, state) => const ChatHistoryPage(),
+    ),
+    // 대화 내역에서 고른 자격증의 로드맵 대화를 연다. 셸 브랜치의 '/roadmap'과
+    // 달리 자격증을 경로로 받으므로, 어떤 대화든 바로 이어서 볼 수 있다.
+    GoRoute(
+      path: '/roadmap/chat/:certificateName',
+      builder: (context, state) => RoadmapChatPage(
+        certificateName: state.pathParameters['certificateName']!,
+        // 대화 내역에서 들어온 경우, 앱바의 대화 내역 버튼이 새 화면을
+        // 쌓지 않고 이미 아래에 있는 대화 내역으로 돌아가게 한다.
+        openedFromHistory: state.uri.queryParameters['from'] == 'history',
       ),
     ),
     StatefulShellRoute.indexedStack(
