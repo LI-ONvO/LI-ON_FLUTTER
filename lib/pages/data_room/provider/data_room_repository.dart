@@ -3,7 +3,7 @@ import 'package:li_on/pages/data_room/model/saved_material.dart';
 
 /// 자료방을 처음 열었을 때 보이는 더미 데이터.
 /// 실제로는 서버에 저장해둔 자료 목록이 내려온다.
-List<SavedMaterial> _dummyMaterials() => [
+final List<SavedMaterial> _dummyMaterials = [
   SavedMaterial(
     id: '1',
     title: '필기 핵심요약 PDF',
@@ -69,10 +69,14 @@ abstract class DataRoomRepository {
 /// 실제 자료방 API가 준비되기 전까지 사용하는 메모리 저장소.
 /// 앱이 떠 있는 동안에만 유지되므로, 다시 실행하면 더미 데이터로 돌아간다.
 class InMemoryDataRoomRepository implements DataRoomRepository {
-  final List<SavedMaterial> _materials = _dummyMaterials();
+  /// 더미 목록을 그대로 쓰지 않고 복사해, 저장소를 새로 만들 때마다 같은
+  /// 자료로 시작하게 한다.
+  final List<SavedMaterial> _materials = [..._dummyMaterials];
 
-  /// 새로 저장하는 자료에 붙일 id. 더미 데이터의 id와 겹치지 않게 이어서 센다.
-  late int _nextId = _materials.length + 1;
+  /// 새로 저장하는 자료에 붙일 id. 저장소를 만들 때 한 번만 정하고 이후로는
+  /// 늘리기만 한다. 저장할 때마다 목록 길이로 다시 계산하면, 자료를 지운
+  /// 뒤에 저장할 때 아직 쓰고 있는 id를 다시 발급하게 된다.
+  int _nextId = _dummyMaterials.length + 1;
 
   @override
   Future<List<SavedMaterial>> fetchMaterials() async {

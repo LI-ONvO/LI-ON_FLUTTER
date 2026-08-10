@@ -5,23 +5,32 @@ import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// 'https://'처럼 실제로 스킴이 붙어 있는지 확인한다.
+///
+/// [Uri.hasScheme]을 쓰지 않는 이유: Dart는 'exam-archive.kr:8080/path'의
+/// 'exam-archive.kr'까지 스킴으로 인정하기 때문에, 포트가 붙은 주소에
+/// https를 붙이지 못하고 그대로 열려다 실패한다.
+final RegExp _schemePattern = RegExp(r'^[a-zA-Z][a-zA-Z0-9+.\-]*://');
+
+/// 저장된 주소를 실제로 열 수 있는 [Uri]로 바꾼다.
+/// 'exam-archive.kr/...'처럼 스킴이 없으면 https를 붙인다.
+Uri resolveMaterialUrl(String url) {
+  return Uri.parse(_schemePattern.hasMatch(url) ? url : 'https://$url');
+}
+
 /// 자료의 주소를 보여주고 브라우저로 열어주는 카드.
 class MaterialLinkCard extends StatelessWidget {
   final String url;
 
   const MaterialLinkCard({super.key, required this.url});
 
-  /// 저장된 주소에는 'exam-archive.kr/...'처럼 스킴이 없을 수 있어,
-  /// 없으면 https를 붙여 연다.
-  Uri get _uri {
-    final Uri parsed = Uri.parse(url);
-    return parsed.hasScheme ? parsed : Uri.parse('https://$url');
-  }
-
   Future<void> _open(BuildContext context) async {
     bool opened = false;
     try {
-      opened = await launchUrl(_uri, mode: LaunchMode.externalApplication);
+      opened = await launchUrl(
+        resolveMaterialUrl(url),
+        mode: LaunchMode.externalApplication,
+      );
     } catch (_) {
       opened = false;
     }
