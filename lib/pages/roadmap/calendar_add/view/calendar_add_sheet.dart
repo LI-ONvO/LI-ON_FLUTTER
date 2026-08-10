@@ -131,16 +131,16 @@ class _CalendarAddSheetState extends ConsumerState<CalendarAddSheet> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
                 // 체크박스(20x20)만이 아니라 라벨을 포함한 줄 전체를 눌러도
-                // 토글되도록 감싼다.
+                // 토글되도록 감싸고, 최소 탭 영역 48을 확보한다. 줄 높이에
+                // 여백이 포함되므로 위아래 SizedBox를 따로 두지 않는다.
                 GestureDetector(
                   onTap: schedules.isEmpty
                       ? null
                       : () => _toggleAll(schedules, isAllSelected),
                   behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: SizedBox(
+                    height: 48,
                     child: Row(
                       children: [
                         SelectionCheckbox(
@@ -168,9 +168,7 @@ class _CalendarAddSheetState extends ConsumerState<CalendarAddSheet> {
                             ),
                           )
                         : ListView.separated(
-                            padding: const EdgeInsets.only(
-                              top: AppSpacing.space0,
-                            ),
+                            padding: EdgeInsets.zero,
                             shrinkWrap: true,
                             itemCount: schedules.length,
                             separatorBuilder: (_, _) =>
