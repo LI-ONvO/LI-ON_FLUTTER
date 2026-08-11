@@ -38,10 +38,28 @@ class _MaterialSaveSheetState extends ConsumerState<MaterialSaveSheet> {
   bool _isSaving = false;
 
   @override
+  void initState() {
+    super.initState();
+    // 시트를 열 때 자료가 이미 불러와져 있으면 build의 ref.listen은 변화가
+    // 없어 울리지 않는다. 그 경우에도 제목이 비지 않도록 여기서 먼저 채운다.
+    _fillTitle(
+      ref.read(materialSaveDataProvider(widget.certificateName)).value,
+    );
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     _memoController.dispose();
     super.dispose();
+  }
+
+  /// 추천 제목으로 입력창을 한 번만 채운다.
+  /// 사용자가 고쳐둔 제목을 나중에 덮어쓰지 않게 한다.
+  void _fillTitle(MaterialSaveData? loaded) {
+    if (loaded == null || _titleFilled) return;
+    _titleFilled = true;
+    _titleController.text = loaded.resource.title;
   }
 
   Future<void> _save(MaterialResource resource, String category) async {
@@ -129,14 +147,9 @@ class _MaterialSaveSheetState extends ConsumerState<MaterialSaveSheet> {
   @override
   Widget build(BuildContext context) {
     final provider = materialSaveDataProvider(widget.certificateName);
-    // 추천 자료를 불러오면 제목 입력창을 그 제목으로 한 번만 채워준다.
-    // 사용자는 이 제목을 그대로 저장하거나 원하는 제목으로 고칠 수 있다.
-    ref.listen(provider, (previous, next) {
-      final MaterialSaveData? loaded = next.value;
-      if (loaded == null || _titleFilled) return;
-      _titleFilled = true;
-      _titleController.text = loaded.resource.title;
-    });
+    // 로딩이 끝나면 추천 제목으로 입력창을 채워준다. 사용자는 이 제목을
+    // 그대로 저장하거나 원하는 제목으로 고칠 수 있다.
+    ref.listen(provider, (previous, next) => _fillTitle(next.value));
 
     final AsyncValue<MaterialSaveData> dataAsync = ref.watch(provider);
     final MaterialSaveData? data = dataAsync.value;

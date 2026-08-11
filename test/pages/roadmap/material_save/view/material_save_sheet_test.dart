@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:li_on/pages/data_room/provider/data_room_view_model.dart';
+import 'package:li_on/pages/roadmap/material_save/provider/material_repository.dart';
 import 'package:li_on/pages/roadmap/material_save/view/material_save_sheet.dart';
+
+import '../../../../support/widget_test_helpers.dart';
 
 void main() {
   Future<ProviderContainer> pumpSheet(WidgetTester tester) async {
@@ -26,6 +29,32 @@ void main() {
 
     // 미리보기 카드와 제목 입력창 양쪽에 같은 제목이 보인다.
     expect(find.text('정보처리기사 필기 기출문제 모음'), findsNWidgets(2));
+  });
+
+  testWidgets('시트를 열기 전에 자료가 이미 불러와져 있어도 제목이 채워진다', (tester) async {
+    final ProviderContainer container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    // 시트가 열리기 전에 자료를 미리 받아두고, autoDispose로 사라지지 않게
+    // 구독을 잡아둔다. 이러면 첫 build에서 이미 data 상태라 ref.listen이
+    // 울리지 않는다.
+    final provider = materialSaveDataProvider('정보처리기사');
+    final subscription = container.listen(provider, (previous, next) {});
+    addTearDown(subscription.close);
+    await container.read(provider.future);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: Scaffold(body: MaterialSaveSheet(certificateName: '정보처리기사')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('정보처리기사 필기 기출문제 모음'), findsNWidgets(2));
+    expect(isElevatedButtonEnabled(tester), isTrue);
   });
 
   testWidgets('사용자가 정한 제목으로 자료방에 저장된다', (tester) async {

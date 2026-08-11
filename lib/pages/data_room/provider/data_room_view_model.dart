@@ -1,14 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_on/core/constants/material_category.dart';
 import 'package:li_on/pages/data_room/model/saved_material.dart';
 import 'package:li_on/pages/data_room/provider/data_room_repository.dart';
 
+export 'package:li_on/core/constants/material_category.dart';
 export 'package:li_on/pages/data_room/model/saved_material.dart';
-
-/// 어떤 카테고리로도 거르지 않는 필터 칩.
-const String allCategory = '전체';
-
-/// 어느 자격증에도 속하지 않는 자료를 담는 기본 카테고리.
-const String etcCategory = '기타';
 
 /// 자료방에 저장된 자료 목록. 로드맵에서 자료를 저장하면 [add]로 들어오고,
 /// 자료방 화면은 이 목록을 지켜보므로 저장 즉시 새 자료가 보인다.

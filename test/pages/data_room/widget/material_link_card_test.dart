@@ -20,7 +20,7 @@ void main() {
     );
   });
 
-  test('스킴이 이미 있는 주소는 그대로 둔다', () {
+  test('http·https 주소는 그대로 둔다', () {
     expect(
       resolveMaterialUrl('https://exam-archive.kr/x').toString(),
       'https://exam-archive.kr/x',
@@ -29,5 +29,13 @@ void main() {
       resolveMaterialUrl('http://exam-archive.kr:8080/x').toString(),
       'http://exam-archive.kr:8080/x',
     );
+    // 스킴 대소문자는 가리지 않는다.
+    expect(resolveMaterialUrl('HTTPS://exam-archive.kr/x')?.scheme, 'https');
+  });
+
+  test('웹 주소가 아닌 스킴은 열지 않는다', () {
+    expect(resolveMaterialUrl('file:///etc/passwd'), isNull);
+    expect(resolveMaterialUrl('myapp://open?token=abc'), isNull);
+    expect(resolveMaterialUrl('ftp://exam-archive.kr/x'), isNull);
   });
 }

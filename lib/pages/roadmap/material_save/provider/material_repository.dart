@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:li_on/pages/data_room/provider/data_room_view_model.dart';
+import 'package:li_on/core/constants/material_category.dart';
 import 'package:li_on/pages/roadmap/material_save/model/material_resource.dart';
 
 /// 로드맵 대화에서 추천받은 자료 더미 데이터.
