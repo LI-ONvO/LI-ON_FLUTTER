@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_on/core/constants/material_category.dart';
 import 'package:li_on/pages/roadmap/material_save/model/material_resource.dart';
-
-/// 어느 자격증에도 속하지 않는 자료를 담는 기본 카테고리.
-const String etcCategory = '기타';
 
 /// 로드맵 대화에서 추천받은 자료 더미 데이터.
 /// 실제로는 대화 내용을 분석한 결과가 내려온다.
@@ -15,7 +13,8 @@ MaterialResource _dummyResource(String certificateName) {
   );
 }
 
-/// 자료방 저장을 추상화한다.
+/// 저장 시트가 채워 넣을 추천 자료와 카테고리를 가져오는 방법을 추상화한다.
+/// 실제 저장은 자료방 쪽 저장소(dataRoomRepositoryProvider)가 맡는다.
 /// API 연동 시에는 이 인터페이스를 구현하는 클래스를 새로 만들고
 /// [materialRepositoryProvider]의 구현체만 교체하면 된다.
 abstract class MaterialRepository {
@@ -24,13 +23,6 @@ abstract class MaterialRepository {
 
   /// 자료를 분류할 수 있는 카테고리 목록.
   Future<List<String>> fetchCategories(String certificateName);
-
-  /// 자료를 메모·카테고리와 함께 자료방에 저장한다.
-  Future<void> saveMaterial({
-    required MaterialResource resource,
-    required String category,
-    String memo = '',
-  });
 }
 
 /// 실제 자료방 API가 준비되기 전까지 사용하는 더미 구현체.
@@ -47,15 +39,6 @@ class DummyMaterialRepository implements MaterialRepository {
   @override
   Future<List<String>> fetchCategories(String certificateName) async {
     return [certificateName, etcCategory];
-  }
-
-  @override
-  Future<void> saveMaterial({
-    required MaterialResource resource,
-    required String category,
-    String memo = '',
-  }) async {
-    await Future.delayed(const Duration(milliseconds: 300));
   }
 }
 

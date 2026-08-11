@@ -5,6 +5,8 @@ import 'package:li_on/pages/auth/login/view/login_page.dart';
 import 'package:li_on/pages/auth/sign_in/view/sign_in_page.dart';
 import 'package:li_on/pages/certificate_search/view/certificate_detail_page.dart';
 import 'package:li_on/pages/certificate_search/view/certificate_serch_page.dart';
+import 'package:li_on/pages/data_room/view/data_room_page.dart';
+import 'package:li_on/pages/data_room/view/material_detail_page.dart';
 import 'package:li_on/pages/my/view/my_page.dart';
 import 'package:li_on/pages/onboarding/view/onboarding_page.dart';
 import 'package:li_on/pages/roadmap/chat_history/view/chat_history_page.dart';
@@ -32,6 +34,13 @@ final GoRouter appRouter = GoRouter(
         certificateId: state.pathParameters['certificateId']!,
         initialTitle: state.extra as String?,
       ),
+    ),
+    // 자료방 목록에서 고른 자료의 상세. 셸 브랜치의 '/materials'와 달리 하단
+    // 탭바 없이 전체 화면으로 덮이도록 여기에 둔다.
+    GoRoute(
+      path: '/materials/:materialId',
+      builder: (context, state) =>
+          MaterialDetailPage(materialId: state.pathParameters['materialId']!),
     ),
     GoRoute(
       path: '/roadmap/history',
@@ -79,7 +88,7 @@ final GoRouter appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/materials',
-              builder: (context, state) => const ComingSoonPage(title: '자료방'),
+              builder: (context, state) => const DataRoomPage(),
             ),
           ],
         ),

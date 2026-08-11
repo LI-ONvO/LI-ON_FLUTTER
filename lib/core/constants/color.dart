@@ -11,6 +11,7 @@ abstract final class AppColors {
   static const Color success = Color(0xFF10B981);
   static const Color successLight = Color(0xFFF0FDF4);
   static const Color danger = Color(0xFFEF4444);
+  static const Color dangerLight = Color(0xFFFEF2F2);
   static const Color white = Color(0xFFFFFFFF);
   static const Color disabled = Color(0xFF93C5FD);
   static const Color border = Color(0xFFD1D5DB);
