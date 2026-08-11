@@ -6,6 +6,7 @@ import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/layout/app_bottom_sheet.dart';
 import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
+import 'package:li_on/pages/calendar/provider/calendar_view_model.dart';
 import 'package:li_on/pages/roadmap/calendar_add/model/calendar_schedule.dart';
 import 'package:li_on/pages/roadmap/calendar_add/provider/calendar_repository.dart';
 import 'package:li_on/pages/roadmap/calendar_add/widget/schedule_tile.dart';
@@ -55,6 +56,21 @@ class _CalendarAddSheetState extends ConsumerState<CalendarAddSheet> {
       await ref
           .read(calendarRepositoryProvider)
           .addSchedules(selectedSchedules);
+      // 캘린더 탭이 같은 일정을 바로 보여주도록, 탭이 지켜보는 저장소에도
+      // 똑같이 추가한다.
+      final CalendarEvents calendarEvents = ref.read(
+        calendarEventsProvider.notifier,
+      );
+      for (final CalendarSchedule schedule in selectedSchedules) {
+        await calendarEvents.add(
+          title: schedule.title,
+          startAt: schedule.startDate,
+          endAt: schedule.endDate,
+          category: CalendarEventCategory.study,
+          reminder: CalendarReminder.none,
+          linkedCertificate: widget.certificateName,
+        );
+      }
       if (!mounted) return;
       Navigator.of(context).pop(selectedSchedules.length);
     } catch (_) {
