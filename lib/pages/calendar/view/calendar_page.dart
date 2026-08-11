@@ -34,24 +34,43 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     return DateTime(now.year, now.month, 15);
   }
 
+  // 이동한 달에 선택 날짜의 '일'이 없으면(예: 31일 → 2월) 그 달의 마지막 날로 당긴다.
+  static DateTime _clampToMonth(DateTime date, DateTime month) {
+    final int lastDay = DateTime(month.year, month.month + 1, 0).day;
+    return DateTime(month.year, month.month, date.day.clamp(1, lastDay));
+  }
+
   void _goToPreviousMonth() {
-    setState(
-      () => _focusedMonth = DateTime(
-        _focusedMonth.year,
-        _focusedMonth.month - 1,
-        1,
-      ),
+    final DateTime month = DateTime(
+      _focusedMonth.year,
+      _focusedMonth.month - 1,
+      1,
     );
+    setState(() {
+      _focusedMonth = month;
+      _selectedDate = _clampToMonth(_selectedDate, month);
+    });
   }
 
   void _goToNextMonth() {
-    setState(
-      () => _focusedMonth = DateTime(
-        _focusedMonth.year,
-        _focusedMonth.month + 1,
-        1,
-      ),
+    final DateTime month = DateTime(
+      _focusedMonth.year,
+      _focusedMonth.month + 1,
+      1,
     );
+    setState(() {
+      _focusedMonth = month;
+      _selectedDate = _clampToMonth(_selectedDate, month);
+    });
+  }
+
+  // 주간 화면에서 다른 달의 날짜를 고르면, 월간 화면으로 돌아왔을 때도
+  // 그 달이 보이도록 함께 옮긴다.
+  void _selectDate(DateTime date) {
+    setState(() {
+      _selectedDate = date;
+      _focusedMonth = _firstOfMonth(date);
+    });
   }
 
   Future<void> _openAddSheet() async {
@@ -107,7 +126,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
             selectedDate: _selectedDate,
             events: events,
             viewMode: _viewMode,
-            onSelect: (date) => setState(() => _selectedDate = date),
+            onSelect: _selectDate,
           ),
           const SizedBox(height: AppSpacing.space2),
           Expanded(

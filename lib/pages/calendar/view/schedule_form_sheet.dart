@@ -92,6 +92,17 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
       DateTime(date.year, date.month, date.day, time.hour, time.minute);
 
   Future<void> _submit() async {
+    final DateTime startAt = _combine(_startDate, _startTime);
+    final DateTime endAt = _combine(_endDate, _endTime);
+    if (endAt.isBefore(startAt)) {
+      CustomSnackbar.show(
+        context,
+        message: '종료 시각이 시작 시각보다 빨라요',
+        type: SnackbarType.error,
+      );
+      return;
+    }
+
     setState(() => _isSaving = true);
     try {
       final String memo = _memoController.text.trim();
@@ -99,8 +110,8 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
           .read(calendarEventsProvider.notifier)
           .add(
             title: _titleController.text.trim(),
-            startAt: _combine(_startDate, _startTime),
-            endAt: _combine(_endDate, _endTime),
+            startAt: startAt,
+            endAt: endAt,
             category: CalendarEventCategory.study,
             reminder: _reminder,
             linkedCertificate: dummyLinkedCertificate,

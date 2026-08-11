@@ -33,10 +33,13 @@ class CalendarGrid extends StatelessWidget {
     // 일요일이 0이 되어 요일 머리글 순서와 맞아떨어진다.
     final int leading = first.weekday % 7;
     final int daysInMonth = DateTime(month.year, month.month + 1, 0).day;
+    // 마지막 주도 항상 7칸을 채워야 요일 열이 어긋나지 않는다.
+    final int trailing = (7 - (leading + daysInMonth) % 7) % 7;
     return [
       for (int i = 0; i < leading; i++) null,
       for (int day = 1; day <= daysInMonth; day++)
         DateTime(month.year, month.month, day),
+      for (int i = 0; i < trailing; i++) null,
     ];
   }
 
