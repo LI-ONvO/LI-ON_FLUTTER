@@ -1,8 +1,8 @@
 import 'package:go_router/go_router.dart';
 import 'package:li_on/core/router/app_shell.dart';
-import 'package:li_on/core/widgets/layout/coming_soon_page.dart';
 import 'package:li_on/pages/auth/login/view/login_page.dart';
 import 'package:li_on/pages/auth/sign_in/view/sign_in_page.dart';
+import 'package:li_on/pages/calendar/view/calendar_page.dart';
 import 'package:li_on/pages/certificate_search/view/certificate_detail_page.dart';
 import 'package:li_on/pages/certificate_search/view/certificate_serch_page.dart';
 import 'package:li_on/pages/data_room/view/data_room_page.dart';
@@ -97,7 +97,7 @@ final GoRouter appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/calendar',
-              builder: (context, state) => const ComingSoonPage(title: '캘린더'),
+              builder: (context, state) => const CalendarPage(),
             ),
           ],
         ),

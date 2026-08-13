@@ -5,11 +5,13 @@ class BaseScaffold extends StatelessWidget {
   final PreferredSizeWidget? appBar;
   final Widget child;
   final Widget? bottomBar;
+  final Widget? floatingActionButton;
   const BaseScaffold({
     super.key,
     required this.appBar,
     required this.child,
     this.bottomBar,
+    this.floatingActionButton,
   });
 
   @override
@@ -17,6 +19,7 @@ class BaseScaffold extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: appBar,
+      floatingActionButton: floatingActionButton,
       body: SafeArea(
         bottom: bottomBar == null,
         child: Padding(
