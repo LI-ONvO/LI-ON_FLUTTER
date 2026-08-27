@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
@@ -7,6 +8,7 @@ import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/pages/onboarding/provider/onboarding_view_model.dart';
+import 'package:li_on/pages/auth/provider/auth_session.dart';
 
 class OnboardingPage extends ConsumerWidget {
   const OnboardingPage({super.key});
@@ -50,7 +52,12 @@ class OnboardingPage extends ConsumerWidget {
             ),
           ),
           CustomElevatedButton(
-            onPressed: state.isFilled ? () {} : null,
+            onPressed: state.isFilled
+                ? () {
+                    ref.read(authSessionProvider).finishOnboarding();
+                    context.go('/login');
+                  }
+                : null,
             text: '다음',
             backgroundColor: AppColors.primary,
           ),

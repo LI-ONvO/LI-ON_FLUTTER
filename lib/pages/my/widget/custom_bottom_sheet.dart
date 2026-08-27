@@ -5,6 +5,7 @@ import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/model/job_field.dart';
 import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
+import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/core/widgets/text_field/custom_text_field.dart';
 
 /// [CustomBottomSheet]의 저장 결과. 이름, 직무, 희망 분야를 편집한 값을
@@ -145,7 +146,13 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                         fillColor: AppColors.surface,
                       ),
                       GestureDetector(
-                        onTap: () {},
+                        // 비밀번호 변경 화면이 아직 없어, 무반응 대신 준비
+                        // 중임을 알린다.
+                        onTap: () => CustomSnackbar.show(
+                          context,
+                          message: '아직 준비 중인 기능이에요',
+                          type: SnackbarType.info,
+                        ),
                         behavior: HitTestBehavior.opaque,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
