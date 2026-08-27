@@ -6,6 +6,7 @@ class SignInState {
   final String email;
   final String password;
   final String passwordConfirm;
+  final String nickname;
   final String verificationCode;
   final AutovalidateMode autovalidateMode;
 
@@ -13,6 +14,7 @@ class SignInState {
     this.email = '',
     this.password = '',
     this.passwordConfirm = '',
+    this.nickname = '',
     this.verificationCode = '',
     this.autovalidateMode = AutovalidateMode.disabled,
   });
@@ -21,12 +23,15 @@ class SignInState {
       email.length >= Validators.minEmailLength &&
       password.length >= Validators.minPasswordLength &&
       passwordConfirm.length >= Validators.minPasswordLength &&
-      verificationCode.length >= Validators.verificationCodeLength;
+      nickname.length >= Validators.minNicknameLength;
+
+  bool get isVerificationCodeFilled => verificationCode.isNotEmpty;
 
   SignInState copyWith({
     String? email,
     String? password,
     String? passwordConfirm,
+    String? nickname,
     String? verificationCode,
     AutovalidateMode? autovalidateMode,
   }) {
@@ -34,6 +39,7 @@ class SignInState {
       email: email ?? this.email,
       password: password ?? this.password,
       passwordConfirm: passwordConfirm ?? this.passwordConfirm,
+      nickname: nickname ?? this.nickname,
       verificationCode: verificationCode ?? this.verificationCode,
       autovalidateMode: autovalidateMode ?? this.autovalidateMode,
     );
@@ -51,6 +57,8 @@ class SignInViewModel extends Notifier<SignInState> {
   void setPasswordConfirm(String value) =>
       state = state.copyWith(passwordConfirm: value);
 
+  void setNickname(String value) => state = state.copyWith(nickname: value);
+
   void setVerificationCode(String value) =>
       state = state.copyWith(verificationCode: value);
 
@@ -59,6 +67,8 @@ class SignInViewModel extends Notifier<SignInState> {
       autovalidateMode: AutovalidateMode.onUserInteraction,
     );
   }
+
+  void reset() => state = const SignInState();
 }
 
 final signInViewModelProvider = NotifierProvider<SignInViewModel, SignInState>(

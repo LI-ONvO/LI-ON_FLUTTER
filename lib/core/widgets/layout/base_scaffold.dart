@@ -6,12 +6,15 @@ class BaseScaffold extends StatelessWidget {
   final Widget child;
   final Widget? bottomBar;
   final Widget? floatingActionButton;
+  final Color? backGroudColor;
+
   const BaseScaffold({
     super.key,
     required this.appBar,
     required this.child,
     this.bottomBar,
     this.floatingActionButton,
+    this.backGroudColor,
   });
 
   @override

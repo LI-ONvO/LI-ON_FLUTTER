@@ -3,7 +3,7 @@ import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 
-enum SnackbarType { success, error }
+enum SnackbarType { success, error, info }
 
 abstract final class CustomSnackbar {
   CustomSnackbar._();
@@ -13,12 +13,16 @@ abstract final class CustomSnackbar {
     required String message,
     required SnackbarType type,
   }) {
-    final Color backgroundColor = type == SnackbarType.success
-        ? AppColors.success
-        : AppColors.danger;
-    final IconData icon = type == SnackbarType.success
-        ? Icons.check_circle_outline
-        : Icons.error_outline;
+    final Color backgroundColor = switch (type) {
+      SnackbarType.success => AppColors.success,
+      SnackbarType.error => AppColors.danger,
+      SnackbarType.info => AppColors.primary,
+    };
+    final IconData icon = switch (type) {
+      SnackbarType.success => Icons.check_circle_outline,
+      SnackbarType.error => Icons.error_outline,
+      SnackbarType.info => Icons.info_outline,
+    };
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()

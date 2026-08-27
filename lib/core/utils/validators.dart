@@ -4,6 +4,8 @@ abstract final class Validators {
   static const int minEmailLength = 6;
   static const int minPasswordLength = 8;
   static const int verificationCodeLength = 6;
+  static const int minNicknameLength = 2;
+  static const int maxNicknameLength = 10;
 
   static final RegExp _emailPattern = RegExp(
     r'^[\w.+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$',
@@ -31,6 +33,16 @@ abstract final class Validators {
     }
     if (!_passwordPattern.hasMatch(value)) {
       return '영문, 숫자를 포함해 8자 이상 입력해주세요';
+    }
+    return null;
+  }
+
+  static String? nickname(String? value) {
+    if (value == null || value.isEmpty) {
+      return '닉네임을 입력해주세요';
+    }
+    if (value.length < minNicknameLength || value.length > maxNicknameLength) {
+      return '닉네임은 2~10자로 입력해주세요';
     }
     return null;
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/utils/auth_form_submit.dart';
@@ -10,28 +11,38 @@ import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/core/widgets/text_field/custom_text_field.dart';
 import 'package:li_on/core/widgets/text_field/email_field.dart';
-import 'package:li_on/pages/auth/sign_in/provider/sign_in_view_model.dart';
+import 'package:li_on/pages/auth/provider/auth_repository.dart';
+import 'package:li_on/pages/auth/sign_up/provider/sign_in_view_model.dart';
 
-class SignInPage extends ConsumerStatefulWidget {
-  const SignInPage({super.key});
+/// 이메일·비밀번호·닉네임을 입력받는 회원가입 1단계 화면.
+/// 인증코드 발송에 성공하면 이메일 인증 화면(2단계)으로 넘어간다.
+class SignUpPage extends ConsumerStatefulWidget {
+  const SignUpPage({super.key});
 
   @override
-  ConsumerState<SignInPage> createState() => _SignInPageState();
+  ConsumerState<SignUpPage> createState() => _SignUpPageState();
 }
 
-class _SignInPageState extends ConsumerState<SignInPage> {
+class _SignUpPageState extends ConsumerState<SignUpPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  void _submit() {
+  Future<void> _submit() async {
     final SignInViewModel viewModel = ref.read(
       signInViewModelProvider.notifier,
     );
-    submitAuthForm(
+    final SignInState formState = ref.read(signInViewModelProvider);
+    final bool isValid = await submitAuthForm(
       context: context,
       formKey: _formKey,
       onSubmitted: viewModel.markSubmitted,
       successMessage: '인증 메일을 보냈습니다',
+      onValid: () => ref
+          .read(authRepositoryProvider)
+          .sendEmailVerificationCode(email: formState.email),
     );
+    if (!mounted) return;
+    if (!isValid) return;
+    context.push('/sign-up/verify-email');
   }
 
   @override
@@ -49,14 +60,14 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         backgroundColor: AppColors.primary,
       ),
       child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const AuthHeader(),
-              const SizedBox(height: AppSpacing.space6),
-              Column(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const AuthHeader(),
+            const SizedBox(height: AppSpacing.space6),
+            Form(
+              key: _formKey,
+              child: Column(
                 spacing: AppSpacing.space2,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -65,37 +76,39 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     onChanged: viewModel.setEmail,
                   ),
                   CustomTextField(
+                    key: const Key('nicknameField'),
+                    label: '닉네임',
+                    hintText: '2~10자로 입력해주세요',
+                    validator: Validators.nickname,
+                    autovalidateMode: formState.autovalidateMode,
+                    onChanged: viewModel.setNickname,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  CustomTextField(
                     key: const Key('passwordField'),
                     label: '비밀번호',
-                    hintText: '8자 이상 입력해주세요',
+                    hintText: '영문·숫자 포함 8자 이상',
                     obscureText: true,
                     validator: Validators.password,
                     autovalidateMode: formState.autovalidateMode,
                     onChanged: viewModel.setPassword,
+                    textInputAction: TextInputAction.next,
                   ),
                   CustomTextField(
                     key: const Key('passwordConfirmField'),
                     label: '비밀번호 확인',
-                    hintText: '비밀번호를 다시 입력해주세요',
+                    hintText: '위 비밀번호와 동일하게 입력',
                     obscureText: true,
                     validator: (value) =>
                         Validators.passwordConfirm(value, formState.password),
                     autovalidateMode: formState.autovalidateMode,
                     onChanged: viewModel.setPasswordConfirm,
-                  ),
-                  CustomTextField(
-                    key: const Key('verificationCodeField'),
-                    label: '인증 코드 확인',
-                    hintText: '인증 코드를 입력해주세요',
-                    keyboardType: TextInputType.number,
-                    validator: Validators.verificationCode,
-                    autovalidateMode: formState.autovalidateMode,
-                    onChanged: viewModel.setVerificationCode,
+                    textInputAction: TextInputAction.done,
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

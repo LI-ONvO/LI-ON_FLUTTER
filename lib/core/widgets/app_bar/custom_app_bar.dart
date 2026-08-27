@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
@@ -45,7 +46,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                       size: 22,
                       onTap:
                           onBackPressed ??
-                          () => Navigator.of(context).maybePop(),
+                          () {
+                            if (context.canPop()) {
+                              context.pop();
+                            } else {
+                              context.go('/search');
+                            }
+                          },
                     ),
                   const Spacer(),
                   ...actions,

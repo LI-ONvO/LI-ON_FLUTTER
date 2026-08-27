@@ -14,6 +14,7 @@ class CustomTextField extends StatefulWidget {
   final void Function(String)? onChanged;
   final void Function(String)? onSubmitted;
   final AutovalidateMode autovalidateMode;
+  final TextInputAction? textInputAction;
   final Color fillColor;
   final double borderRadius;
   final bool showBorder;
@@ -35,6 +36,7 @@ class CustomTextField extends StatefulWidget {
     this.onChanged,
     this.onSubmitted,
     this.autovalidateMode = AutovalidateMode.onUserInteraction,
+    this.textInputAction,
     this.fillColor = AppColors.white,
     this.borderRadius = 10,
     this.showBorder = true,
@@ -89,6 +91,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           onChanged: widget.onChanged,
           onFieldSubmitted: widget.onSubmitted,
           autovalidateMode: widget.autovalidateMode,
+          textInputAction: widget.textInputAction,
           onTapOutside: (event) => FocusScope.of(context).unfocus(),
           maxLines: widget.maxLines,
           minLines: widget.minLines,
