@@ -46,14 +46,23 @@ class CertificateDetail {
   final String examInfo;
   final List<CertificateField> fields;
 
-  // Figma 목업 전용 필드 (백엔드 응답에 아직 없음 — 추가되면 API 값으로 교체)
+  // Figma 목업 전용 필드 (백엔드 응답에 아직 없음 — 추가되면 API 값으로 교체).
+  // 응답에 없어도 파싱이 실패하지 않도록 기본값을 둔다.
+  @JsonKey(defaultValue: '')
   final String level;
+
+  @JsonKey(defaultValue: '')
   final String examFee;
 
   /// 0~100 스케일의 합격률 (예: 42.3 = 42.3%). [ExamSubject.percent]와 달리
   /// 0-1 스케일이 아니므로 혼동하지 않도록 주의한다.
+  @JsonKey(defaultValue: 0)
   final double passRate;
+
+  @JsonKey(defaultValue: '')
   final String examDuration;
+
+  @JsonKey(defaultValue: <ExamSubject>[])
   final List<ExamSubject> subjects;
 
   const CertificateDetail({

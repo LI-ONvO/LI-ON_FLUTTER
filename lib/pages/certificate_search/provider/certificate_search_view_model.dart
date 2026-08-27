@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/pages/certificate_search/model/certificate.dart';
 import 'package:li_on/pages/certificate_search/provider/certificate_repository.dart';
@@ -22,11 +24,20 @@ class CertificateSearchState {
 }
 
 class CertificateSearchViewModel extends Notifier<CertificateSearchState> {
+  Timer? _searchDebounce;
+
   @override
-  CertificateSearchState build() => const CertificateSearchState();
+  CertificateSearchState build() {
+    ref.onDispose(() => _searchDebounce?.cancel());
+    return const CertificateSearchState();
+  }
 
   void setQuery(String query) {
-    state = state.copyWith(query: query);
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(
+      const Duration(milliseconds: 300),
+      () => state = state.copyWith(query: query),
+    );
   }
 
   void selectCategory(String category) {
@@ -49,12 +60,14 @@ final filteredCertificatesProvider = Provider<AsyncValue<List<Certificate>>>((
   final certificatesAsync = ref.watch(certificatesProvider);
 
   return certificatesAsync.whenData((certificates) {
+    // 앞뒤 공백과 대소문자 차이 때문에 검색이 실패하지 않도록 정규화한다.
+    final String query = filter.query.trim().toLowerCase();
     return certificates.where((certificate) {
       final matchesCategory =
           filter.selectedCategory == allCategory ||
           certificate.category == filter.selectedCategory;
       final matchesQuery =
-          filter.query.isEmpty || certificate.name.contains(filter.query);
+          query.isEmpty || certificate.name.toLowerCase().contains(query);
       return matchesCategory && matchesQuery;
     }).toList();
   });

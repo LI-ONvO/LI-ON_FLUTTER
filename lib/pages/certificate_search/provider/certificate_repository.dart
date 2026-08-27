@@ -1,22 +1,36 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_on/core/network/api_client.dart';
+import 'package:li_on/core/network/api_exception.dart';
 import 'package:li_on/pages/certificate_search/model/certificate.dart';
 import 'package:li_on/pages/certificate_search/model/certificate_detail.dart';
+import 'package:li_on/pages/certificate_search/model/certificate_search_result.dart';
 
 const List<Certificate> _dummyCertificates = [
-  Certificate(id: '1', initial: '정', name: '정보처리기사', category: 'IT'),
-  Certificate(id: '2', initial: 'S', name: 'SQLD', category: 'IT'),
-  Certificate(id: '3', initial: '전', name: '전산회계 1급', category: '경영'),
-  Certificate(id: '4', initial: '건', name: '건축기사', category: '건축'),
-  Certificate(id: '5', initial: '간', name: '간호조무사', category: '보건'),
-  Certificate(id: '6', initial: '평', name: '평생교육사', category: '교육'),
-  Certificate(id: '7', initial: '네', name: '네트워크관리사', category: 'IT'),
-  Certificate(id: '8', initial: '재', name: '재경관리사', category: '경영'),
+  Certificate(id: 101, name: '정보처리기사', issuingOrg: '한국산업인력공단', category: 'IT'),
+  Certificate(id: 102, name: 'SQLD', issuingOrg: '한국데이터산업진흥원', category: 'IT'),
+  Certificate(id: 103, name: '전산회계 1급', issuingOrg: '한국세무사회', category: '경영'),
+  Certificate(id: 104, name: '건축기사', issuingOrg: '한국산업인력공단', category: '건축'),
+  Certificate(
+    id: 105,
+    name: '간호조무사',
+    issuingOrg: '한국보건의료인국가시험원',
+    category: '보건',
+  ),
+  Certificate(id: 106, name: '평생교육사', issuingOrg: '국가평생교육진흥원', category: '교육'),
+  Certificate(
+    id: 107,
+    name: '네트워크관리사',
+    issuingOrg: '한국정보통신자격협회',
+    category: 'IT',
+  ),
+  Certificate(id: 108, name: '재경관리사', issuingOrg: '삼일회계법인', category: '경영'),
 ];
 
 /// 자격증 상세 더미 데이터.
 /// key는 [_dummyCertificates]의 [Certificate.id]와 매칭된다.
-const Map<String, CertificateDetail> _dummyCertificateDetails = {
-  '1': CertificateDetail(
+const Map<int, CertificateDetail> _dummyCertificateDetails = {
+  101: CertificateDetail(
     id: 101,
     name: '정보처리기사',
     issuingOrg: '한국산업인력공단',
@@ -36,7 +50,7 @@ const Map<String, CertificateDetail> _dummyCertificateDetails = {
       ExamSubject(name: '정보시스템 구축관리', percent: 0.18),
     ],
   ),
-  '2': CertificateDetail(
+  102: CertificateDetail(
     id: 102,
     name: 'SQLD',
     issuingOrg: '한국데이터산업진흥원',
@@ -53,7 +67,7 @@ const Map<String, CertificateDetail> _dummyCertificateDetails = {
       ExamSubject(name: 'SQL 기본 및 활용', percent: 0.60),
     ],
   ),
-  '3': CertificateDetail(
+  103: CertificateDetail(
     id: 103,
     name: '전산회계 1급',
     issuingOrg: '한국세무사회',
@@ -70,7 +84,7 @@ const Map<String, CertificateDetail> _dummyCertificateDetails = {
       ExamSubject(name: '실무', percent: 0.70),
     ],
   ),
-  '4': CertificateDetail(
+  104: CertificateDetail(
     id: 104,
     name: '건축기사',
     issuingOrg: '한국산업인력공단',
@@ -90,7 +104,7 @@ const Map<String, CertificateDetail> _dummyCertificateDetails = {
       ExamSubject(name: '건축법규', percent: 0.20),
     ],
   ),
-  '5': CertificateDetail(
+  105: CertificateDetail(
     id: 105,
     name: '간호조무사',
     issuingOrg: '한국보건의료인국가시험원',
@@ -108,7 +122,7 @@ const Map<String, CertificateDetail> _dummyCertificateDetails = {
       ExamSubject(name: '공중보건학개론', percent: 0.30),
     ],
   ),
-  '6': CertificateDetail(
+  106: CertificateDetail(
     id: 106,
     name: '평생교육사',
     issuingOrg: '국가평생교육진흥원',
@@ -126,7 +140,7 @@ const Map<String, CertificateDetail> _dummyCertificateDetails = {
       ExamSubject(name: '평생교육경영론', percent: 0.35),
     ],
   ),
-  '7': CertificateDetail(
+  107: CertificateDetail(
     id: 107,
     name: '네트워크관리사',
     issuingOrg: '한국정보통신자격협회',
@@ -144,7 +158,7 @@ const Map<String, CertificateDetail> _dummyCertificateDetails = {
       ExamSubject(name: 'NOS', percent: 0.30),
     ],
   ),
-  '8': CertificateDetail(
+  108: CertificateDetail(
     id: 108,
     name: '재경관리사',
     issuingOrg: '삼일회계법인',
@@ -168,8 +182,9 @@ const Map<String, CertificateDetail> _dummyCertificateDetails = {
 /// API 연동 시에는 이 인터페이스를 구현하는 클래스를 새로 만들고
 /// [certificateRepositoryProvider]의 구현체만 교체하면 된다.
 abstract class CertificateRepository {
-  Future<List<Certificate>> fetchCertificates();
-  Future<CertificateDetail?> fetchCertificateDetail(String id);
+  /// 자격증 목록. [keyword]·[fieldId]를 주면 서버에서 필터링해 준다.
+  Future<List<Certificate>> fetchCertificates({String? keyword, int? fieldId});
+  Future<CertificateDetail?> fetchCertificateDetail(int id);
 }
 
 /// 실제 API가 준비되기 전까지 사용하는 더미 구현체.
@@ -177,28 +192,73 @@ class DummyCertificateRepository implements CertificateRepository {
   const DummyCertificateRepository();
 
   @override
-  Future<List<Certificate>> fetchCertificates() async {
+  Future<List<Certificate>> fetchCertificates({
+    String? keyword,
+    int? fieldId,
+  }) async {
     return _dummyCertificates;
   }
 
   @override
-  Future<CertificateDetail?> fetchCertificateDetail(String id) async {
+  Future<CertificateDetail?> fetchCertificateDetail(int id) async {
     return _dummyCertificateDetails[id];
   }
 }
 
 final certificateRepositoryProvider = Provider<CertificateRepository>((ref) {
-  return const DummyCertificateRepository();
+  return HttpCertificateRepository(ref.watch(apiClientProvider));
 });
+
+/// `GET /api/certificates`·`GET /api/certificates/{id}`를 쓰는 실제 구현체.
+class HttpCertificateRepository implements CertificateRepository {
+  HttpCertificateRepository(this.apiClient);
+
+  final ApiClient apiClient;
+
+  @override
+  Future<List<Certificate>> fetchCertificates({
+    String? keyword,
+    int? fieldId,
+  }) {
+    return guardApiCall(() async {
+      final response = await apiClient.dio.get(
+        '/api/certificates',
+        queryParameters: {
+          if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
+          'fieldId': ?fieldId,
+          // 화면이 페이지네이션 없이 전체를 필터링하므로 넉넉히 받아온다.
+          'page': 0,
+          'size': 100,
+        },
+      );
+      return CertificateSearchResult.fromJson(response.data).content;
+    });
+  }
+
+  @override
+  Future<CertificateDetail?> fetchCertificateDetail(int id) {
+    return guardApiCall(() async {
+      try {
+        final response = await apiClient.dio.get('/api/certificates/$id');
+        return CertificateDetail.fromJson(response.data);
+      } on DioException catch (exception) {
+        // 존재하지 않는 자격증은 오류가 아니라 null로 알려, 화면이
+        // "찾을 수 없음" 상태를 그리게 한다.
+        if (exception.response?.statusCode == 404) return null;
+        rethrow;
+      }
+    });
+  }
+}
 
 final certificatesProvider = FutureProvider<List<Certificate>>((ref) {
   return ref.watch(certificateRepositoryProvider).fetchCertificates();
 });
 
 /// 자격증 상세 정보.
-/// [id]는 [Certificate.id]와 매칭되는 문자열 키다.
+/// [id]는 [Certificate.id]와 매칭되는 키다.
 final certificateDetailProvider = FutureProvider.autoDispose
-    .family<CertificateDetail?, String>((ref, id) {
+    .family<CertificateDetail?, int>((ref, id) {
       return ref
           .watch(certificateRepositoryProvider)
           .fetchCertificateDetail(id);

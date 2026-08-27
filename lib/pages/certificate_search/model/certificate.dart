@@ -23,17 +23,18 @@ const Map<String, Color> _categoryColors = {
   '교육': Color(0xFF7C3AED),
 };
 
+/// `GET /api/certificates` 목록의 자격증 한 건.
 @JsonSerializable()
 class Certificate {
-  final String id;
-  final String initial;
+  final int id;
   final String name;
+  final String issuingOrg;
   final String category;
 
   const Certificate({
     required this.id,
-    required this.initial,
     required this.name,
+    required this.issuingOrg,
     required this.category,
   });
 
@@ -41,6 +42,9 @@ class Certificate {
       _$CertificateFromJson(json);
 
   Map<String, dynamic> toJson() => _$CertificateToJson(this);
+
+  /// 아바타에 쓰는 이름 첫 글자. API에 없는 값이라 저장하지 않고 계산한다.
+  String get initial => name.isNotEmpty ? name.substring(0, 1) : '';
 
   Color get accentColor => _categoryColors[category] ?? AppColors.primary;
 }

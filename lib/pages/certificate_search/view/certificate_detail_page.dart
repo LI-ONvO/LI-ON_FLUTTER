@@ -12,7 +12,7 @@ import 'package:li_on/pages/certificate_search/widget/bookmark_button.dart';
 import 'package:li_on/pages/certificate_search/widget/detail_body.dart';
 
 class CertificateDetailPage extends ConsumerWidget {
-  final String certificateId;
+  final int certificateId;
 
   /// 목록 화면에서 이미 알고 있는 자격증 이름. 상세 데이터가 로딩되는 동안
   /// AppBar 제목이 비어 보이지 않도록 임시로 사용한다.
