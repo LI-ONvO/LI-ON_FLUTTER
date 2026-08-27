@@ -1,21 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:li_on/core/constants/color.dart';
+import 'package:li_on/core/utils/json_converters.dart';
 
 part 'calendar_event.g.dart';
 
-/// 일정의 성격. 캘린더에서 왼쪽 색 막대 색을 구분하는 데 쓴다.
-enum CalendarEventCategory {
-  study,
-  exam;
-
-  Color get accentColor => switch (this) {
-    CalendarEventCategory.study => AppColors.primary,
-    CalendarEventCategory.exam => AppColors.success,
-  };
-}
-
-/// 일정 시작 전 알림을 보낼 시점.
+/// 일정 시작 전 알림을 보낼 시점. 지금은 화면에서만 쓰는 단일 선택 값이고,
+/// 서버 `POST /api/calendar/events`는 이보다 풍부한 `alarms`(여러 개의
+/// 절대 시각 알림) 목록을 쓴다. 알림 기능을 본격적으로 붙일 때 이 값을
+/// alarms로 변환하는 작업이 필요하다.
 enum CalendarReminder {
   none,
   minutes5,
@@ -34,27 +26,36 @@ enum CalendarReminder {
   };
 }
 
-/// 캘린더에 표시되는 일정 한 건.
+/// 캘린더에 표시되는 일정 한 건. `GET/POST/PATCH /api/calendar/events` 응답과
+/// 맞춘 모델이다. `alarms`는 아직 화면에 붙이지 않아 [reminder]로 대신한다.
 @JsonSerializable()
 class CalendarEvent {
-  final String id;
+  final int id;
   final String title;
+
+  @JsonKey(fromJson: localDateTimeFromJson)
   final DateTime startAt;
+
+  @JsonKey(fromJson: localDateTimeFromJson)
   final DateTime endAt;
-  final CalendarEventCategory category;
+
+  @JsonKey(defaultValue: CalendarReminder.none)
   final CalendarReminder reminder;
-  final String? linkedCertificate;
-  final String? memo;
+
+  /// 이 일정이 로드맵에서 추가됐다면 그 스텝의 ID.
+  final int? roadmapStepId;
+
+  /// 일정 생성 시 함께 보낼 수 있는 설명(서버의 `description`).
+  final String? description;
 
   const CalendarEvent({
     required this.id,
     required this.title,
     required this.startAt,
     required this.endAt,
-    this.category = CalendarEventCategory.study,
     this.reminder = CalendarReminder.none,
-    this.linkedCertificate,
-    this.memo,
+    this.roadmapStepId,
+    this.description,
   });
 
   factory CalendarEvent.fromJson(Map<String, dynamic> json) =>
@@ -62,8 +63,7 @@ class CalendarEvent {
 
   Map<String, dynamic> toJson() => _$CalendarEventToJson(this);
 
-  DateTime get startDate =>
-      DateTime(startAt.year, startAt.month, startAt.day);
+  DateTime get startDate => DateTime(startAt.year, startAt.month, startAt.day);
 
   DateTime get endDate => DateTime(endAt.year, endAt.month, endAt.day);
 

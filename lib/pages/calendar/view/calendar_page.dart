@@ -6,6 +6,7 @@ import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/pages/calendar/provider/calendar_view_model.dart';
+import 'package:li_on/pages/calendar/view/calendar_event_actions.dart';
 import 'package:li_on/pages/calendar/view/schedule_form_sheet.dart';
 import 'package:li_on/pages/calendar/widget/calendar_event_tile.dart';
 import 'package:li_on/pages/calendar/widget/calendar_grid.dart';
@@ -28,10 +29,9 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   static DateTime _firstOfMonth(DateTime date) =>
       DateTime(date.year, date.month, 1);
 
-  // 더미 일정이 이번 달 15일에 몰려 있어, 처음 열었을 때부터 바로 보이게 한다.
   static DateTime _defaultSelectedDate() {
     final DateTime now = DateTime.now();
-    return DateTime(now.year, now.month, 15);
+    return DateTime(now.year, now.month, now.day);
   }
 
   // 이동한 달에 선택 날짜의 '일'이 없으면(예: 31일 → 2월) 그 달의 마지막 날로 당긴다.
@@ -97,9 +97,9 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       calendarEventsProvider,
     );
     final List<CalendarEvent> events = eventsAsync.value ?? const [];
-    final List<CalendarEvent> selectedDayEvents =
-        events.where((event) => event.occursOn(_selectedDate)).toList()
-          ..sort((a, b) => a.startAt.compareTo(b.startAt));
+    final List<CalendarEvent> selectedDayEvents = ref.watch(
+      calendarEventsForDateProvider(_selectedDate),
+    );
 
     return BaseScaffold(
       appBar: null,
@@ -132,24 +132,53 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           Expanded(
             child: eventsAsync.when(
               data: (_) => selectedDayEvents.isEmpty
-                  ? Center(
-                      child: Text('일정이 없어요', style: AppTextStyle.subText),
-                    )
+                  ? Center(child: Text('일정이 없어요', style: AppTextStyle.subText))
                   : ListView.separated(
-                      padding: const EdgeInsets.only(
-                        bottom: AppSpacing.space5,
-                      ),
+                      padding: const EdgeInsets.only(bottom: AppSpacing.space5),
                       itemCount: selectedDayEvents.length,
                       separatorBuilder: (_, _) =>
                           const SizedBox(height: AppSpacing.space1),
-                      itemBuilder: (context, index) =>
-                          CalendarEventTile(event: selectedDayEvents[index]),
+                      itemBuilder: (context, index) {
+                        final CalendarEvent event = selectedDayEvents[index];
+                        return CalendarEventTile(
+                          event: event,
+                          onTap: () => openScheduleEditSheet(context, event),
+                          onEdit: () => openScheduleEditSheet(context, event),
+                          onDelete: () =>
+                              confirmDeleteEvent(context, ref, event),
+                        );
+                      },
                     ),
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stackTrace) => Center(
-                child: Text('일정을 불러오지 못했어요', style: AppTextStyle.subText),
+              error: (error, stackTrace) => _RetryError(
+                message: '일정을 불러오지 못했어요',
+                onRetry: () => ref.invalidate(calendarEventsProvider),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RetryError extends StatelessWidget {
+  const _RetryError({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(message, style: AppTextStyle.subText),
+          TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('다시 시도'),
           ),
         ],
       ),

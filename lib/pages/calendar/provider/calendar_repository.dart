@@ -1,9 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_on/core/network/api_client.dart';
+import 'package:li_on/core/network/api_exception.dart';
 import 'package:li_on/pages/calendar/model/calendar_event.dart';
-
-/// 데모용으로 연결해두는 자격증. 실제로는 사용자가 학습 중인 자격증을 고르는
-/// 기능이 생기면 그 값으로 대체한다.
-const String dummyLinkedCertificate = '정보처리기사';
 
 /// 캘린더를 처음 열었을 때 보이는 더미 일정. 이번 달 8·15·22일에 반복
 /// 학습 일정을, 15일에는 시험 일정을 함께 둔다.
@@ -14,37 +12,32 @@ List<CalendarEvent> _dummyEvents() {
 
   return [
     CalendarEvent(
-      id: '1',
+      id: 1,
       title: '실기 로드맵 학습',
       startAt: onDay(8, 19, 0),
-      endAt: onDay(8, 19, 0),
+      endAt: onDay(8, 20, 0),
       reminder: CalendarReminder.minutes30,
-      linkedCertificate: dummyLinkedCertificate,
     ),
     CalendarEvent(
-      id: '2',
+      id: 2,
       title: '실기 로드맵 학습',
       startAt: onDay(15, 19, 0),
-      endAt: onDay(15, 19, 0),
+      endAt: onDay(15, 20, 0),
       reminder: CalendarReminder.minutes30,
-      linkedCertificate: dummyLinkedCertificate,
     ),
     CalendarEvent(
-      id: '3',
+      id: 3,
       title: '정보처리기사 필기시험',
       startAt: onDay(15, 9, 0),
-      endAt: onDay(15, 9, 0),
-      category: CalendarEventCategory.exam,
+      endAt: onDay(15, 10, 0),
       reminder: CalendarReminder.hour1,
-      linkedCertificate: dummyLinkedCertificate,
     ),
     CalendarEvent(
-      id: '4',
+      id: 4,
       title: '실기 로드맵 학습',
       startAt: onDay(22, 19, 0),
-      endAt: onDay(22, 19, 0),
+      endAt: onDay(22, 20, 0),
       reminder: CalendarReminder.minutes30,
-      linkedCertificate: dummyLinkedCertificate,
     ),
   ];
 }
@@ -60,11 +53,16 @@ abstract class CalendarEventRepository {
     required String title,
     required DateTime startAt,
     required DateTime endAt,
-    required CalendarEventCategory category,
     required CalendarReminder reminder,
-    String? linkedCertificate,
-    String? memo,
+    int? roadmapStepId,
+    String? description,
   });
+
+  /// [event]와 같은 id를 가진 일정을 통째로 덮어쓴다.
+  Future<CalendarEvent> updateEvent(CalendarEvent event);
+
+  /// [id]에 해당하는 일정을 지운다.
+  Future<void> removeEvent(int id);
 }
 
 /// 실제 캘린더 API가 준비되기 전까지 사용하는 메모리 저장소.
@@ -87,23 +85,36 @@ class InMemoryCalendarEventRepository implements CalendarEventRepository {
     required String title,
     required DateTime startAt,
     required DateTime endAt,
-    required CalendarEventCategory category,
     required CalendarReminder reminder,
-    String? linkedCertificate,
-    String? memo,
+    int? roadmapStepId,
+    String? description,
   }) async {
     final CalendarEvent event = CalendarEvent(
-      id: '${_nextId++}',
+      id: _nextId++,
       title: title,
       startAt: startAt,
       endAt: endAt,
-      category: category,
       reminder: reminder,
-      linkedCertificate: linkedCertificate,
-      memo: memo,
+      roadmapStepId: roadmapStepId,
+      description: description,
     );
     _events.add(event);
     return event;
+  }
+
+  @override
+  Future<CalendarEvent> updateEvent(CalendarEvent event) async {
+    final int index = _events.indexWhere((e) => e.id == event.id);
+    if (index == -1) {
+      throw StateError('일정을 찾을 수 없어요: ${event.id}');
+    }
+    _events[index] = event;
+    return event;
+  }
+
+  @override
+  Future<void> removeEvent(int id) async {
+    _events.removeWhere((event) => event.id == id);
   }
 }
 
@@ -112,5 +123,139 @@ class InMemoryCalendarEventRepository implements CalendarEventRepository {
 final calendarEventRepositoryProvider = Provider<CalendarEventRepository>((
   ref,
 ) {
-  return InMemoryCalendarEventRepository();
+  return HttpCalendarEventRepository(ref.watch(apiClientProvider));
 });
+
+/// 화면의 단일 선택 리마인더와 서버의 `alarms`(절대 시각 알림 목록)를
+/// 서로 변환한다.
+Duration? _reminderOffset(CalendarReminder reminder) => switch (reminder) {
+  CalendarReminder.none => null,
+  CalendarReminder.minutes5 => const Duration(minutes: 5),
+  CalendarReminder.minutes10 => const Duration(minutes: 10),
+  CalendarReminder.minutes30 => const Duration(minutes: 30),
+  CalendarReminder.hour1 => const Duration(hours: 1),
+  CalendarReminder.day1 => const Duration(days: 1),
+};
+
+List<Map<String, dynamic>> _alarmsFromReminder(
+  CalendarReminder reminder,
+  DateTime startAt,
+) {
+  final Duration? offset = _reminderOffset(reminder);
+  if (offset == null) return const [];
+  return [
+    {
+      'remindAt': startAt.subtract(offset).toUtc().toIso8601String(),
+      'channel': 'PUSH',
+    },
+  ];
+}
+
+CalendarReminder _reminderFromAlarms(DateTime startAt, dynamic alarms) {
+  if (alarms is! List || alarms.isEmpty) return CalendarReminder.none;
+  final remindAtRaw = (alarms.first as Map<String, dynamic>)['remindAt'];
+  final DateTime? remindAt = DateTime.tryParse(remindAtRaw as String? ?? '');
+  if (remindAt == null) return CalendarReminder.none;
+  final Duration offset = startAt.difference(remindAt);
+  for (final CalendarReminder reminder in CalendarReminder.values) {
+    if (_reminderOffset(reminder) == offset) return reminder;
+  }
+  return CalendarReminder.none;
+}
+
+/// `/api/calendar/events` CRUD를 쓰는 실제 구현체.
+class HttpCalendarEventRepository implements CalendarEventRepository {
+  HttpCalendarEventRepository(this.apiClient);
+
+  final ApiClient apiClient;
+
+  static String _dateParam(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
+
+  @override
+  Future<List<CalendarEvent>> fetchEvents() {
+    return guardApiCall(() async {
+      // 화면이 조회 범위를 넘기지 않으므로, 오늘 기준 앞뒤 1년을 받아온다.
+      final DateTime now = DateTime.now();
+      final response = await apiClient.dio.get(
+        '/api/calendar/events',
+        queryParameters: {
+          'from': _dateParam(now.subtract(const Duration(days: 365))),
+          'to': _dateParam(now.add(const Duration(days: 365))),
+        },
+      );
+      return (response.data as List).map((item) {
+        final json = item as Map<String, dynamic>;
+        final CalendarEvent event = CalendarEvent.fromJson(json);
+        return CalendarEvent(
+          id: event.id,
+          title: event.title,
+          startAt: event.startAt,
+          endAt: event.endAt,
+          reminder: _reminderFromAlarms(event.startAt, json['alarms']),
+          roadmapStepId: event.roadmapStepId,
+          description: event.description,
+        );
+      }).toList();
+    });
+  }
+
+  @override
+  Future<CalendarEvent> addEvent({
+    required String title,
+    required DateTime startAt,
+    required DateTime endAt,
+    required CalendarReminder reminder,
+    int? roadmapStepId,
+    String? description,
+  }) {
+    return guardApiCall(() async {
+      final response = await apiClient.dio.post(
+        '/api/calendar/events',
+        data: {
+          'title': title,
+          'description': ?description,
+          'startAt': startAt.toUtc().toIso8601String(),
+          'endAt': endAt.toUtc().toIso8601String(),
+          'roadmapStepId': ?roadmapStepId,
+          'alarms': _alarmsFromReminder(reminder, startAt),
+        },
+      );
+      final CalendarEvent created = CalendarEvent.fromJson(response.data);
+      return CalendarEvent(
+        id: created.id,
+        title: created.title,
+        startAt: created.startAt,
+        endAt: created.endAt,
+        reminder: reminder,
+        roadmapStepId: created.roadmapStepId ?? roadmapStepId,
+        description: description,
+      );
+    });
+  }
+
+  @override
+  Future<CalendarEvent> updateEvent(CalendarEvent event) {
+    return guardApiCall(() async {
+      await apiClient.dio.patch(
+        '/api/calendar/events/${event.id}',
+        data: {
+          'title': event.title,
+          'startAt': event.startAt.toUtc().toIso8601String(),
+          'endAt': event.endAt.toUtc().toIso8601String(),
+          'alarms': _alarmsFromReminder(event.reminder, event.startAt),
+        },
+      );
+      return event;
+    });
+  }
+
+  @override
+  Future<void> removeEvent(int id) {
+    return guardApiCall(() async {
+      await apiClient.dio.delete('/api/calendar/events/$id');
+    });
+  }
+}

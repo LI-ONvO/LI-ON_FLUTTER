@@ -53,11 +53,35 @@ class CalendarGrid extends StatelessWidget {
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
+  /// 보이는 날짜마다 모든 일정을 다시 훑지 않도록, 일정이 있는 날짜를
+  /// 한 번만 계산해 둔 집합. 날짜는 자정 기준으로 정규화한다.
+  static Set<DateTime> _eventDays(
+    List<DateTime?> cells,
+    List<CalendarEvent> events,
+  ) {
+    final List<DateTime> days = cells.whereType<DateTime>().toList();
+    if (days.isEmpty || events.isEmpty) return const {};
+    final DateTime first = days.first;
+    final DateTime last = days.last;
+    final Set<DateTime> result = {};
+    for (final event in events) {
+      // 표시 범위와 겹치는 구간만 하루씩 넓혀 담는다.
+      DateTime day = event.startDate.isBefore(first) ? first : event.startDate;
+      final DateTime end = event.endDate.isAfter(last) ? last : event.endDate;
+      while (!day.isAfter(end)) {
+        result.add(DateTime(day.year, day.month, day.day));
+        day = day.add(const Duration(days: 1));
+      }
+    }
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<DateTime?> cells = viewMode == CalendarViewMode.monthly
         ? _monthCells(focusedMonth)
         : _weekCells(selectedDate);
+    final Set<DateTime> eventDays = _eventDays(cells, events);
 
     final List<List<DateTime?>> weeks = [
       for (int i = 0; i < cells.length; i += 7)
@@ -91,7 +115,7 @@ class CalendarGrid extends StatelessWidget {
                       : _DayCell(
                           day: day,
                           selected: _isSameDay(day, selectedDate),
-                          hasEvent: events.any((event) => event.occursOn(day)),
+                          hasEvent: eventDays.contains(day),
                           onTap: () => onSelect(day),
                         ),
                 ),

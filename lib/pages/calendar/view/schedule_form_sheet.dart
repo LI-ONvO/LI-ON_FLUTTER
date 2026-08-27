@@ -10,25 +10,39 @@ import 'package:li_on/core/widgets/text_field/custom_text_field.dart';
 import 'package:li_on/pages/calendar/provider/calendar_view_model.dart';
 import 'package:li_on/pages/calendar/view/reminder_select_sheet.dart';
 
-/// 새 일정을 추가하는 바텀시트. 저장하면 true를 돌려주고, 취소하면 null.
+/// 일정을 추가하거나 수정하는 바텀시트. [event]를 주면 그 값으로 채워진
+/// 수정 폼이 되고, 주지 않으면 [initialDate]를 기본값으로 하는 추가 폼이
+/// 된다. 저장하면 true를 돌려주고, 취소하면 null.
 class ScheduleFormSheet extends ConsumerStatefulWidget {
   final DateTime initialDate;
+  final CalendarEvent? event;
 
-  const ScheduleFormSheet({super.key, required this.initialDate});
+  const ScheduleFormSheet({super.key, required this.initialDate, this.event});
 
   @override
   ConsumerState<ScheduleFormSheet> createState() => _ScheduleFormSheetState();
 }
 
 class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
-  late final TextEditingController _titleController = TextEditingController();
-  late final TextEditingController _memoController = TextEditingController();
+  bool get _isEditing => widget.event != null;
 
-  late DateTime _startDate = widget.initialDate;
-  late DateTime _endDate = widget.initialDate;
-  TimeOfDay _startTime = const TimeOfDay(hour: 19, minute: 0);
-  TimeOfDay _endTime = const TimeOfDay(hour: 21, minute: 0);
-  CalendarReminder _reminder = CalendarReminder.minutes30;
+  late final TextEditingController _titleController = TextEditingController(
+    text: widget.event?.title ?? '',
+  );
+  late final TextEditingController _memoController = TextEditingController(
+    text: widget.event?.description ?? '',
+  );
+
+  late DateTime _startDate = widget.event?.startDate ?? widget.initialDate;
+  late DateTime _endDate = widget.event?.endDate ?? widget.initialDate;
+  late TimeOfDay _startTime = widget.event != null
+      ? TimeOfDay.fromDateTime(widget.event!.startAt)
+      : const TimeOfDay(hour: 19, minute: 0);
+  late TimeOfDay _endTime = widget.event != null
+      ? TimeOfDay.fromDateTime(widget.event!.endAt)
+      : const TimeOfDay(hour: 21, minute: 0);
+  late CalendarReminder _reminder =
+      widget.event?.reminder ?? CalendarReminder.minutes30;
   bool _isSaving = false;
 
   @override
@@ -46,7 +60,7 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
       firstDate: DateTime(initial.year - 1),
       lastDate: DateTime(initial.year + 2),
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     setState(() {
       if (isStart) {
         _startDate = picked;
@@ -63,7 +77,7 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
       context: context,
       initialTime: initial,
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     setState(() {
       if (isStart) {
         _startTime = picked;
@@ -74,17 +88,16 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
   }
 
   Future<void> _pickReminder() async {
-    final CalendarReminder? picked = await showModalBottomSheet<
-      CalendarReminder
-    >(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.4),
-      builder: (context) => ReminderSelectSheet(initial: _reminder),
-    );
-    if (picked == null) return;
+    final CalendarReminder? picked =
+        await showModalBottomSheet<CalendarReminder>(
+          context: context,
+          useRootNavigator: true,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          barrierColor: Colors.black.withValues(alpha: 0.4),
+          builder: (context) => ReminderSelectSheet(initial: _reminder),
+        );
+    if (picked == null || !mounted) return;
     setState(() => _reminder = picked);
   }
 
@@ -94,10 +107,11 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
   Future<void> _submit() async {
     final DateTime startAt = _combine(_startDate, _startTime);
     final DateTime endAt = _combine(_endDate, _endTime);
-    if (endAt.isBefore(startAt)) {
+    // 시작과 종료가 같은 일정도 저장되지 않도록 "늦어야 함"으로 검증한다.
+    if (!endAt.isAfter(startAt)) {
       CustomSnackbar.show(
         context,
-        message: '종료 시각이 시작 시각보다 빨라요',
+        message: '종료 시각은 시작 시각보다 늦어야 해요',
         type: SnackbarType.error,
       );
       return;
@@ -106,24 +120,35 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
     setState(() => _isSaving = true);
     try {
       final String memo = _memoController.text.trim();
-      await ref
-          .read(calendarEventsProvider.notifier)
-          .add(
+      final CalendarEvents notifier = ref.read(calendarEventsProvider.notifier);
+      if (_isEditing) {
+        await notifier.edit(
+          CalendarEvent(
+            id: widget.event!.id,
             title: _titleController.text.trim(),
             startAt: startAt,
             endAt: endAt,
-            category: CalendarEventCategory.study,
             reminder: _reminder,
-            linkedCertificate: dummyLinkedCertificate,
-            memo: memo.isEmpty ? null : memo,
-          );
+            roadmapStepId: widget.event!.roadmapStepId,
+            description: memo.isEmpty ? null : memo,
+          ),
+        );
+      } else {
+        await notifier.add(
+          title: _titleController.text.trim(),
+          startAt: startAt,
+          endAt: endAt,
+          reminder: _reminder,
+          description: memo.isEmpty ? null : memo,
+        );
+      }
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (_) {
       if (!mounted) return;
       CustomSnackbar.show(
         context,
-        message: '일정을 추가하지 못했어요',
+        message: _isEditing ? '일정을 수정하지 못했어요' : '일정을 추가하지 못했어요',
         type: SnackbarType.error,
       );
     } finally {
@@ -135,7 +160,7 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
   @override
   Widget build(BuildContext context) {
     return AppBottomSheet(
-      title: '일정 추가',
+      title: _isEditing ? '일정 수정' : '일정 추가',
       children: [
         Flexible(
           child: SingleChildScrollView(
@@ -250,36 +275,6 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.space3),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      '연결된 자격증',
-                      style: TextStyle(
-                        fontFamily: 'HelveticaNeue',
-                        fontSize: 15,
-                        color: AppColors.text,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.light,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        dummyLinkedCertificate,
-                        style: AppTextStyle.subText.copyWith(
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.space3),
                 const SheetLabel('메모'),
                 CustomTextField(
                   hintText: '메모를 남겨보세요',
@@ -303,7 +298,7 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
           child: ValueListenableBuilder<TextEditingValue>(
             valueListenable: _titleController,
             builder: (context, value, child) => CustomElevatedButton(
-              text: '저장',
+              text: _isEditing ? '수정 완료' : '저장',
               backgroundColor: AppColors.primary,
               onPressed: _isSaving || value.text.trim().isEmpty
                   ? null
