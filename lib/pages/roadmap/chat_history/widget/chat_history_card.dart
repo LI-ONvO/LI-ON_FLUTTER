@@ -50,22 +50,6 @@ class ChatHistoryCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.space1),
             // 제목은 화면 폭에 맞춰 자연스럽게 여러 줄로 감긴다.
             Text(history.title, style: AppTextStyle.card),
-            const SizedBox(height: AppSpacing.space1),
-            // 좁은 화면에서 메시지 수와 배지가 겹치지 않도록 줄바꿈을 허용한다.
-            Wrap(
-              spacing: AppSpacing.space1,
-              runSpacing: AppSpacing.space0,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Text(
-                  history.messageCountLabel,
-                  style: AppTextStyle.subText.copyWith(
-                    color: AppColors.placeholder,
-                  ),
-                ),
-                if (history.hasPlan) const ChatHistoryTag.plan(),
-              ],
-            ),
           ],
         ),
       ),

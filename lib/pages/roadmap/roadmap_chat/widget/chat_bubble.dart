@@ -3,7 +3,6 @@ import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/pages/roadmap/roadmap_chat/model/chat_message.dart';
-import 'package:li_on/pages/roadmap/roadmap_chat/widget/quick_actions.dart';
 
 const double bubbleMaxWidth = 260;
 
@@ -21,13 +20,8 @@ BoxDecoration chatBubbleDecoration({required bool isUser}) {
 
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
-  final ValueChanged<ChatQuickAction> onQuickAction;
 
-  const ChatBubble({
-    super.key,
-    required this.message,
-    required this.onQuickAction,
-  });
+  const ChatBubble({super.key, required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +47,6 @@ class ChatBubble extends StatelessWidget {
                   color: isUser ? AppColors.white : AppColors.text,
                 ),
               ),
-              if (message.actions.isNotEmpty)
-                QuickActions(actions: message.actions, onTap: onQuickAction),
               const SizedBox(height: AppSpacing.space0),
               Text(
                 message.timestamp.toKoreanTimeLabel,

@@ -5,8 +5,6 @@ import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
-import 'package:li_on/pages/roadmap/calendar_add/view/calendar_add_sheet.dart';
-import 'package:li_on/pages/roadmap/material_save/view/material_save_sheet.dart';
 import 'package:li_on/pages/roadmap/roadmap_chat/provider/roadmap_chat_view_model.dart';
 import 'package:li_on/pages/roadmap/roadmap_chat/widget/chat_bubble.dart';
 import 'package:li_on/pages/roadmap/roadmap_chat/widget/chat_input_bar.dart';
@@ -18,11 +16,15 @@ class RoadmapChatPage extends ConsumerStatefulWidget {
   /// 대화 내역 화면에서 열렸는지 여부. true면 앱바의 대화 내역 버튼이
   /// 화면을 새로 쌓지 않고 이미 스택 아래에 있는 대화 내역으로 돌아간다.
   final bool openedFromHistory;
+  final int? historyId;
+  final bool isRootChat;
 
   const RoadmapChatPage({
     super.key,
     required this.certificateName,
     this.openedFromHistory = false,
+    this.historyId,
+    this.isRootChat = false,
   });
 
   @override
@@ -61,45 +63,6 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
     context.push('/roadmap/history');
   }
 
-  /// 로드맵 대화는 go_router 셸 브랜치의 중첩 Navigator 안에서도 열리므로,
-  /// 시트가 하단 탭바 영역에만 걸치지 않도록 최상위 Navigator를 쓴다.
-  Future<T?> _showSheet<T>(WidgetBuilder builder) {
-    return showModalBottomSheet<T>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.4),
-      builder: builder,
-    );
-  }
-
-  /// '캘린더에 추가'와 '자료방에 저장'은 시트를 띄우고, 나머지 액션은
-  /// 뷰모델이 확인 메시지로 처리한다.
-  Future<void> _handleQuickAction(
-    RoadmapChatViewModel viewModel,
-    ChatQuickAction action,
-  ) async {
-    switch (action.id) {
-      case addToCalendarActionId:
-        final int? addedCount = await _showSheet<int>(
-          (context) =>
-              CalendarAddSheet(certificateName: widget.certificateName),
-        );
-        if (addedCount == null || !mounted) return;
-        viewModel.notifySchedulesAdded(addedCount);
-      case saveToMaterialsActionId:
-        final String? savedTitle = await _showSheet<String>(
-          (context) =>
-              MaterialSaveSheet(certificateName: widget.certificateName),
-        );
-        if (savedTitle == null || !mounted) return;
-        viewModel.notifyMaterialSaved(savedTitle);
-      default:
-        viewModel.handleQuickAction(action);
-    }
-  }
-
   void _handleSend(RoadmapChatViewModel viewModel) {
     final String text = _controller.text;
     if (text.trim().isEmpty) return;
@@ -110,7 +73,12 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = roadmapChatViewModelProvider(widget.certificateName);
+    final provider = roadmapChatViewModelProvider(
+      RoadmapChatSession(
+        certificateName: widget.certificateName,
+        historyId: widget.historyId,
+      ),
+    );
     final RoadmapChatState state = ref.watch(provider);
     final RoadmapChatViewModel viewModel = ref.read(provider.notifier);
 
@@ -123,6 +91,7 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
     return BaseScaffold(
       appBar: CustomAppBar(
         title: '${widget.certificateName} 로드맵',
+        showBackButton: !widget.isRootChat,
         actions: [
           GestureDetector(
             onTap: () => _openChatHistory(context),
@@ -147,10 +116,7 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
         separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.space1),
         itemBuilder: (context, index) {
           if (index == state.messages.length) return const TypingBubble();
-          return ChatBubble(
-            message: state.messages[index],
-            onQuickAction: (action) => _handleQuickAction(viewModel, action),
-          );
+          return ChatBubble(message: state.messages[index]);
         },
       ),
     );

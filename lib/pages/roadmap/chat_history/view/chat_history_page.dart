@@ -7,6 +7,7 @@ import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/core/widgets/search_bar/custom_search_bar.dart';
 import 'package:li_on/pages/roadmap/chat_history/provider/chat_history_view_model.dart';
+import 'package:li_on/pages/roadmap/chat_history/provider/chat_history_repository.dart';
 import 'package:li_on/pages/roadmap/chat_history/widget/chat_history_card.dart';
 
 /// 태블릿·웹처럼 폭이 넓은 화면에서 목록이 과하게 늘어나지 않도록 제한한다.
@@ -64,7 +65,7 @@ class ChatHistoryPage extends ConsumerWidget {
                                 context.push(
                                   '/roadmap/chat/'
                                   '${Uri.encodeComponent(history.certificateName)}'
-                                  '?from=history',
+                                  '?from=history&sessionId=${history.id}',
                                 );
                               },
                             );
@@ -72,17 +73,37 @@ class ChatHistoryPage extends ConsumerWidget {
                         ),
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (error, stackTrace) => Center(
-                    child: Text(
-                      '대화 내역을 불러오지 못했어요',
-                      style: AppTextStyle.subText,
-                    ),
+                  error: (error, stackTrace) => _ChatHistoryRetryError(
+                    onRetry: () => ref.invalidate(chatHistoriesProvider),
                   ),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ChatHistoryRetryError extends StatelessWidget {
+  const _ChatHistoryRetryError({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('대화 내역을 불러오지 못했어요', style: AppTextStyle.subText),
+          TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('다시 시도'),
+          ),
+        ],
       ),
     );
   }
