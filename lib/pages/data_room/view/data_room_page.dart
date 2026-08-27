@@ -85,14 +85,37 @@ class DataRoomPage extends ConsumerWidget {
                         ),
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (error, stackTrace) => Center(
-                    child: Text('자료를 불러오지 못했어요', style: AppTextStyle.subText),
+                  error: (error, stackTrace) => _MaterialsRetryError(
+                    onRetry: () => ref.invalidate(dataRoomMaterialsProvider),
                   ),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _MaterialsRetryError extends StatelessWidget {
+  const _MaterialsRetryError({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('자료를 불러오지 못했어요', style: AppTextStyle.subText),
+          TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('다시 시도'),
+          ),
+        ],
       ),
     );
   }

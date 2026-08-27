@@ -39,7 +39,7 @@ class DataRoomMaterials extends AsyncNotifier<List<SavedMaterial>> {
   /// 사용자가 고친 제목·카테고리·메모를 반영한다.
   /// AsyncNotifier에 이미 update가 있어 이름을 edit으로 둔다.
   Future<void> edit({
-    required String id,
+    required int id,
     required String title,
     required String category,
     required String memo,
@@ -54,7 +54,7 @@ class DataRoomMaterials extends AsyncNotifier<List<SavedMaterial>> {
     state = AsyncData(await repository.fetchMaterials());
   }
 
-  Future<void> remove(String id) async {
+  Future<void> remove(int id) async {
     final DataRoomRepository repository = ref.read(dataRoomRepositoryProvider);
     await repository.deleteMaterial(id);
     state = AsyncData(await repository.fetchMaterials());
@@ -102,7 +102,7 @@ final materialCategoryOptionsProvider = Provider<List<String>>((ref) {
 });
 
 /// id로 자료 한 건을 찾는다. 지워졌으면 null.
-final materialByIdProvider = Provider.family<SavedMaterial?, String>((ref, id) {
+final materialByIdProvider = Provider.family<SavedMaterial?, int>((ref, id) {
   final List<SavedMaterial> materials =
       ref.watch(dataRoomMaterialsProvider).value ?? const [];
   final Iterable<SavedMaterial> matched = materials.where(

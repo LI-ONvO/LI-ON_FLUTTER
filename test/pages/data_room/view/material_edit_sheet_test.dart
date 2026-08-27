@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:li_on/pages/data_room/provider/data_room_repository.dart';
 import 'package:li_on/pages/data_room/provider/data_room_view_model.dart';
 import 'package:li_on/pages/data_room/view/material_edit_sheet.dart';
 
 void main() {
   Future<ProviderContainer> pumpSheet(WidgetTester tester) async {
-    final ProviderContainer container = ProviderContainer();
+    final ProviderContainer container = ProviderContainer(
+      overrides: [
+        // 실제 저장소는 서버 API를 쓰므로, 테스트는 메모리 저장소로 바꾼다.
+        dataRoomRepositoryProvider.overrideWithValue(
+          InMemoryDataRoomRepository(),
+        ),
+      ],
+    );
     addTearDown(container.dispose);
     final List<SavedMaterial> materials = await container.read(
       dataRoomMaterialsProvider.future,
@@ -18,7 +26,7 @@ void main() {
         child: MaterialApp(
           home: Scaffold(
             body: MaterialEditSheet(
-              material: materials.firstWhere((material) => material.id == '1'),
+              material: materials.firstWhere((material) => material.id == 1),
             ),
           ),
         ),
@@ -53,7 +61,7 @@ void main() {
 
     final SavedMaterial updated = (await container.read(
       dataRoomMaterialsProvider.future,
-    )).firstWhere((material) => material.id == '1');
+    )).firstWhere((material) => material.id == 1);
     expect(updated.title, '고친 제목');
     expect(updated.memo, '고친 메모');
     expect(updated.category, '기타');

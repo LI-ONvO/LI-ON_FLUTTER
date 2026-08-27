@@ -35,9 +35,17 @@ class MaterialMoreButton extends StatelessWidget {
   }
 
   Future<void> _openMenu(BuildContext context) async {
-    final RenderBox button = context.findRenderObject()! as RenderBox;
-    final RenderBox overlay =
-        Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
+    // 레이아웃이 아직 없거나 오버레이를 찾지 못하면 메뉴를 열 수 없으므로
+    // null 단언 대신 조용히 반환해 크래시를 막는다.
+    final RenderObject? buttonRenderObject = context.findRenderObject();
+    final RenderObject? overlayRenderObject = Navigator.of(
+      context,
+    ).overlay?.context.findRenderObject();
+    if (buttonRenderObject is! RenderBox || overlayRenderObject is! RenderBox) {
+      return;
+    }
+    final RenderBox button = buttonRenderObject;
+    final RenderBox overlay = overlayRenderObject;
     final Offset topLeft = button.localToGlobal(Offset.zero, ancestor: overlay);
 
     final MaterialMenuAction? action = await showMenu<MaterialMenuAction>(

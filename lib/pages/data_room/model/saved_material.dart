@@ -8,7 +8,7 @@ part 'saved_material.g.dart';
 /// 자료방에 저장된 자료 한 건.
 @JsonSerializable()
 class SavedMaterial {
-  final String id;
+  final int id;
 
   /// 저장할 때 사용자가 직접 정한 제목.
   final String title;

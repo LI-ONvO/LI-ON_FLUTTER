@@ -42,6 +42,13 @@ Future<bool> confirmDeleteMaterial(
 
   try {
     await ref.read(dataRoomMaterialsProvider.notifier).remove(material.id);
+    if (context.mounted) {
+      CustomSnackbar.show(
+        context,
+        message: '자료를 삭제했어요',
+        type: SnackbarType.success,
+      );
+    }
     return true;
   } catch (_) {
     if (context.mounted) {

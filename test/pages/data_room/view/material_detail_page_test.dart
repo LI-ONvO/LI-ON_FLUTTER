@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:li_on/pages/data_room/provider/data_room_repository.dart';
 import 'package:li_on/pages/data_room/provider/data_room_view_model.dart';
 import 'package:li_on/pages/data_room/view/material_detail_page.dart';
 
@@ -8,9 +9,16 @@ void main() {
   /// 더미 데이터의 첫 자료(정보처리기사 · 링크)를 연다.
   Future<ProviderContainer> pumpDetail(
     WidgetTester tester, {
-    String materialId = '2',
+    int materialId = 2,
   }) async {
-    final ProviderContainer container = ProviderContainer();
+    final ProviderContainer container = ProviderContainer(
+      overrides: [
+        // 실제 저장소는 서버 API를 쓰므로, 테스트는 메모리 저장소로 바꾼다.
+        dataRoomRepositoryProvider.overrideWithValue(
+          InMemoryDataRoomRepository(),
+        ),
+      ],
+    );
     addTearDown(container.dispose);
     // 상세 화면은 목록 provider가 자료를 다 읽은 뒤에야 자료를 찾을 수 있다.
     await container.read(dataRoomMaterialsProvider.future);
@@ -38,7 +46,7 @@ void main() {
   });
 
   testWidgets('없는 자료를 열면 안내 문구를 보여준다', (tester) async {
-    await pumpDetail(tester, materialId: '없는-id');
+    await pumpDetail(tester, materialId: 999999);
 
     expect(find.text('자료를 찾을 수 없어요'), findsOneWidget);
   });
@@ -83,7 +91,7 @@ void main() {
     final List<SavedMaterial> materials = await container.read(
       dataRoomMaterialsProvider.future,
     );
-    expect(materials.map((material) => material.id), isNot(contains('2')));
+    expect(materials.map((material) => material.id), isNot(contains(2)));
   });
 
   testWidgets('삭제를 취소하면 자료가 그대로 남는다', (tester) async {
@@ -99,6 +107,6 @@ void main() {
     final List<SavedMaterial> materials = await container.read(
       dataRoomMaterialsProvider.future,
     );
-    expect(materials.map((material) => material.id), contains('2'));
+    expect(materials.map((material) => material.id), contains(2));
   });
 }

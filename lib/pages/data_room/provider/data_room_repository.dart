@@ -1,11 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_on/core/constants/material_category.dart';
+import 'package:li_on/core/network/api_client.dart';
+import 'package:li_on/core/network/api_exception.dart';
+import 'package:li_on/pages/data_room/model/resource_response.dart';
 import 'package:li_on/pages/data_room/model/saved_material.dart';
 
 /// 자료방을 처음 열었을 때 보이는 더미 데이터.
 /// 실제로는 서버에 저장해둔 자료 목록이 내려온다.
 final List<SavedMaterial> _dummyMaterials = [
   SavedMaterial(
-    id: '1',
+    id: 1,
     title: '필기 핵심요약 PDF',
     category: '정보처리기사',
     source: '정보처리기사 로드맵 채팅',
@@ -13,7 +17,7 @@ final List<SavedMaterial> _dummyMaterials = [
     savedAt: DateTime(2026, 7, 12),
   ),
   SavedMaterial(
-    id: '2',
+    id: 2,
     title: '기출문제 정리 링크',
     category: '정보처리기사',
     source: '정보처리기사 로드맵 채팅',
@@ -21,7 +25,7 @@ final List<SavedMaterial> _dummyMaterials = [
     savedAt: DateTime(2026, 7, 10),
   ),
   SavedMaterial(
-    id: '3',
+    id: 3,
     title: '학습 계획 메모',
     category: '정보처리기사',
     source: '정보처리기사 로드맵 채팅',
@@ -29,7 +33,7 @@ final List<SavedMaterial> _dummyMaterials = [
     savedAt: DateTime(2026, 7, 8),
   ),
   SavedMaterial(
-    id: '4',
+    id: 4,
     title: '빅데이터 분석 개념 정리',
     category: '빅데이터분석기사',
     source: '빅데이터분석기사 로드맵 채팅',
@@ -57,13 +61,13 @@ abstract class DataRoomRepository {
   /// 사용자가 고칠 수 있는 항목(제목·카테고리·메모)만 바꾼다.
   /// 저장 시각·출처·주소는 그대로 둔다.
   Future<SavedMaterial> updateMaterial({
-    required String id,
+    required int id,
     required String title,
     required String category,
     required String memo,
   });
 
-  Future<void> deleteMaterial(String id);
+  Future<void> deleteMaterial(int id);
 }
 
 /// 실제 자료방 API가 준비되기 전까지 사용하는 메모리 저장소.
@@ -94,7 +98,7 @@ class InMemoryDataRoomRepository implements DataRoomRepository {
     String memo = '',
   }) async {
     final SavedMaterial material = SavedMaterial(
-      id: '${_nextId++}',
+      id: _nextId++,
       title: title,
       category: category,
       source: source,
@@ -109,7 +113,7 @@ class InMemoryDataRoomRepository implements DataRoomRepository {
 
   @override
   Future<SavedMaterial> updateMaterial({
-    required String id,
+    required int id,
     required String title,
     required String category,
     required String memo,
@@ -134,7 +138,7 @@ class InMemoryDataRoomRepository implements DataRoomRepository {
   }
 
   @override
-  Future<void> deleteMaterial(String id) async {
+  Future<void> deleteMaterial(int id) async {
     _materials.removeWhere((material) => material.id == id);
   }
 }
@@ -143,5 +147,125 @@ class InMemoryDataRoomRepository implements DataRoomRepository {
 /// 그대로 보이려면 앱 전체가 같은 인스턴스를 공유해야 하므로 유지형
 /// [Provider]로 둔다.
 final dataRoomRepositoryProvider = Provider<DataRoomRepository>((ref) {
-  return InMemoryDataRoomRepository();
+  return HttpDataRoomRepository(ref.watch(apiClientProvider));
 });
+
+/// `/api/resources` CRUD를 쓰는 실제 구현체.
+/// 서버에는 카테고리·출처 개념이 없어 연관 자격증(`certificate.name`)을
+/// 카테고리로, 출처 세션(`session.title`)을 출처 문구로 옮겨 담는다.
+class HttpDataRoomRepository implements DataRoomRepository {
+  HttpDataRoomRepository(this.apiClient);
+
+  final ApiClient apiClient;
+
+  Future<ResourceDetail> _fetchDetail(int id) async {
+    final response = await apiClient.dio.get('/api/resources/$id');
+    return ResourceDetail.fromJson(response.data);
+  }
+
+  SavedMaterial _toSavedMaterial(ResourceDetail detail) {
+    return SavedMaterial(
+      id: detail.id,
+      title: detail.title,
+      category: detail.certificate?.name ?? etcCategory,
+      source: detail.session?.title ?? '',
+      type: detail.type,
+      url: detail.url,
+      memo: detail.memo,
+      savedAt: detail.createdAt,
+    );
+  }
+
+  @override
+  Future<List<SavedMaterial>> fetchMaterials() {
+    return guardApiCall(() async {
+      final response = await apiClient.dio.get(
+        '/api/resources',
+        queryParameters: {'page': 0, 'size': 100},
+      );
+      final ResourcePageResult page = ResourcePageResult.fromJson(
+        response.data,
+      );
+      // 목록 응답에는 카테고리(자격증 이름)·출처·메모가 없어, 상세를 병렬
+      // 조회해 화면 모델을 채운다.
+      final List<ResourceDetail> details = await Future.wait(
+        page.content.map((item) => _fetchDetail(item.id)),
+      );
+      return details.map(_toSavedMaterial).toList();
+    });
+  }
+
+  @override
+  Future<SavedMaterial> addMaterial({
+    required String title,
+    required String category,
+    required String source,
+    required MaterialResourceType type,
+    String url = '',
+    String memo = '',
+  }) {
+    return guardApiCall(() async {
+      final response = await apiClient.dio.post(
+        '/api/resources',
+        data: {
+          'title': title,
+          'url': url,
+          'type': switch (type) {
+            MaterialResourceType.link => 'LINK',
+            MaterialResourceType.file => 'FILE',
+            MaterialResourceType.note => 'NOTE',
+          },
+          if (memo.isNotEmpty) 'memo': memo,
+        },
+      );
+      final ResourceCreateResult created = ResourceCreateResult.fromJson(
+        response.data,
+      );
+      // 카테고리·출처는 서버 필드가 아니라 화면에서 넘어온 값을 유지한다.
+      return SavedMaterial(
+        id: created.id,
+        title: created.title,
+        category: category,
+        source: source,
+        type: created.type,
+        url: created.url,
+        memo: memo,
+        savedAt: created.createdAt,
+      );
+    });
+  }
+
+  @override
+  Future<SavedMaterial> updateMaterial({
+    required int id,
+    required String title,
+    required String category,
+    required String memo,
+  }) {
+    return guardApiCall(() async {
+      await apiClient.dio.patch(
+        '/api/resources/$id',
+        data: {'title': title, 'memo': memo},
+      );
+      final ResourceDetail detail = await _fetchDetail(id);
+      final SavedMaterial updated = _toSavedMaterial(detail);
+      return SavedMaterial(
+        id: updated.id,
+        title: updated.title,
+        category: category,
+        source: updated.source,
+        type: updated.type,
+        url: updated.url,
+        memo: updated.memo,
+        savedAt: updated.savedAt,
+      );
+    });
+  }
+
+  @override
+  Future<void> deleteMaterial(int id) {
+    return guardApiCall(() async {
+      await apiClient.dio.delete('/api/resources/$id');
+    });
+  }
+}

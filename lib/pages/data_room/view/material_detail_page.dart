@@ -18,7 +18,7 @@ const double _memoLineHeight = 20 / 14;
 
 /// 자료방에서 고른 자료 한 건의 상세 화면.
 class MaterialDetailPage extends ConsumerWidget {
-  final String materialId;
+  final int materialId;
 
   const MaterialDetailPage({super.key, required this.materialId});
 
@@ -81,6 +81,11 @@ class MaterialDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // materialByIdProvider는 목록이 아직 로딩 중일 때도 null을 돌려주므로,
+    // 로딩·실패를 "자료 없음"으로 오해하지 않도록 목록 상태를 함께 본다.
+    final AsyncValue<List<SavedMaterial>> materialsAsync = ref.watch(
+      dataRoomMaterialsProvider,
+    );
     final SavedMaterial? material = ref.watch(materialByIdProvider(materialId));
 
     return BaseScaffold(
@@ -110,11 +115,17 @@ class MaterialDetailPage extends ConsumerWidget {
           // 화면 가운데로 내려가지 않게 높이를 꽉 채운다.
           child: SizedBox(
             height: double.infinity,
-            child: material == null
-                ? Center(
-                    child: Text('자료를 찾을 수 없어요', style: AppTextStyle.subText),
-                  )
-                : _body(material),
+            child: materialsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stackTrace) => Center(
+                child: Text('자료를 불러오지 못했어요', style: AppTextStyle.subText),
+              ),
+              data: (_) => material == null
+                  ? Center(
+                      child: Text('자료를 찾을 수 없어요', style: AppTextStyle.subText),
+                    )
+                  : _body(material),
+            ),
           ),
         ),
       ),
