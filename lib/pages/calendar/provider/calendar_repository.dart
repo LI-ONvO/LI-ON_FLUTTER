@@ -3,8 +3,8 @@ import 'package:li_on/core/network/api_client.dart';
 import 'package:li_on/core/network/api_exception.dart';
 import 'package:li_on/pages/calendar/model/calendar_event.dart';
 
-/// 캘린더를 처음 열었을 때 보이는 더미 일정. 이번 달 8·15·22일에 반복
-/// 학습 일정을, 15일에는 시험 일정을 함께 둔다.
+/// 테스트에서 [InMemoryCalendarEventRepository]의 초기 상태로 쓰는 일정.
+/// 이번 달 8·15·22일에 반복 학습 일정을, 15일에는 시험 일정을 함께 둔다.
 List<CalendarEvent> _dummyEvents() {
   final DateTime now = DateTime.now();
   DateTime onDay(int day, int hour, int minute) =>
@@ -65,8 +65,8 @@ abstract class CalendarEventRepository {
   Future<void> removeEvent(int id);
 }
 
-/// 실제 캘린더 API가 준비되기 전까지 사용하는 메모리 저장소.
-/// 앱이 떠 있는 동안에만 유지되므로, 다시 실행하면 더미 데이터로 돌아간다.
+/// 네트워크 없이 테스트할 때 [calendarEventRepositoryProvider]에 덮어씌우는
+/// 메모리 저장소. 프로덕션에서는 쓰지 않는다.
 class InMemoryCalendarEventRepository implements CalendarEventRepository {
   /// 더미 목록을 그대로 쓰지 않고 복사해, 저장소를 새로 만들 때마다 같은
   /// 일정으로 시작하게 한다.
@@ -146,7 +146,8 @@ List<Map<String, dynamic>> _alarmsFromReminder(
   return [
     {
       'remindAt': startAt.subtract(offset).toUtc().toIso8601String(),
-      'channel': 'PUSH',
+      // 서버가 현재 EMAIL 채널만 지원한다(PUSH는 422로 거부됨).
+      'channel': 'EMAIL',
     },
   ];
 }
@@ -177,13 +178,14 @@ class HttpCalendarEventRepository implements CalendarEventRepository {
   @override
   Future<List<CalendarEvent>> fetchEvents() {
     return guardApiCall(() async {
-      // 화면이 조회 범위를 넘기지 않으므로, 오늘 기준 앞뒤 1년을 받아온다.
+      // 서버가 조회 기간을 최대 366일로 제한해, 오늘 기준 앞뒤 180일
+      // (총 360일)만 받아온다.
       final DateTime now = DateTime.now();
       final response = await apiClient.dio.get(
         '/api/calendar/events',
         queryParameters: {
-          'from': _dateParam(now.subtract(const Duration(days: 365))),
-          'to': _dateParam(now.add(const Duration(days: 365))),
+          'from': _dateParam(now.subtract(const Duration(days: 180))),
+          'to': _dateParam(now.add(const Duration(days: 180))),
         },
       );
       return (response.data as List).map((item) {

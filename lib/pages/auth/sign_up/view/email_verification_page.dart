@@ -42,39 +42,50 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
     });
   }
 
-  Future<void> _submit() async {
-    final SignInViewModel viewModel = ref.read(
-      signInViewModelProvider.notifier,
-    );
-    final SignInState formState = ref.read(signInViewModelProvider);
-    final authRepository = ref.read(authRepositoryProvider);
+  /// 가입 완료 요청이 진행 중인지. 버튼을 비활성화해 중복 제출을 막는다.
+  bool _isSubmitting = false;
 
-    final bool isValid = await submitAuthForm(
-      context: context,
-      formKey: _formKey,
-      onSubmitted: viewModel.markSubmitted,
-      successMessage: '회원가입이 완료되었습니다',
-      onValid: () async {
-        final verification = await authRepository.verifyEmailCode(
-          email: formState.email,
-          code: formState.verificationCode,
-        );
-        if (!verification.verified || verification.verificationToken.isEmpty) {
-          throw const ApiException(message: '인증 코드가 올바르지 않아요');
-        }
-        await authRepository.signUp(
-          email: formState.email,
-          password: formState.password,
-          passwordConfirm: formState.passwordConfirm,
-          nickname: formState.nickname,
-          verificationToken: verification.verificationToken,
-        );
-      },
-    );
-    if (!mounted) return;
-    if (!isValid) return;
-    ref.read(authSessionProvider).startOnboarding();
-    context.go('/onboarding');
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
+    setState(() => _isSubmitting = true);
+    try {
+      final SignInViewModel viewModel = ref.read(
+        signInViewModelProvider.notifier,
+      );
+      final SignInState formState = ref.read(signInViewModelProvider);
+      final authRepository = ref.read(authRepositoryProvider);
+
+      final bool isValid = await submitAuthForm(
+        context: context,
+        formKey: _formKey,
+        onSubmitted: viewModel.markSubmitted,
+        successMessage: '회원가입이 완료되었습니다',
+        onValid: () async {
+          final verification = await authRepository.verifyEmailCode(
+            email: formState.email,
+            code: formState.verificationCode,
+          );
+          // verificationToken은 서버가 내려줄 때만 있는 선택 값이라, 인증
+          // 여부는 verified로만 판단한다.
+          if (!verification.verified) {
+            throw const ApiException(message: '인증 코드가 올바르지 않아요');
+          }
+          await authRepository.signUp(
+            email: formState.email,
+            password: formState.password,
+            passwordConfirm: formState.passwordConfirm,
+            nickname: formState.nickname,
+            verificationToken: verification.verificationToken,
+          );
+        },
+      );
+      if (!mounted) return;
+      if (!isValid) return;
+      ref.read(authSessionProvider).startOnboarding();
+      context.go('/onboarding');
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -87,7 +98,9 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
     return BaseScaffold(
       appBar: CustomAppBar(title: '이메일 인증'),
       bottomBar: CustomElevatedButton(
-        onPressed: formState.isVerificationCodeFilled ? _submit : null,
+        onPressed: formState.isVerificationCodeFilled && !_isSubmitting
+            ? _submit
+            : null,
         text: '가입 완료',
         backgroundColor: AppColors.primary,
       ),

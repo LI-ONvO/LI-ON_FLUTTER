@@ -63,11 +63,9 @@ GoRouter createAppRouter(AuthSessionController authSession) => GoRouter(
     GoRoute(
       path: '/search/certificate/:certificateId',
       builder: (context, state) {
-        // 딥링크 등으로 잘못된 id가 들어와도 크래시 없이 안내 화면을 띄운다.
-        final int? certificateId = int.tryParse(
-          state.pathParameters['certificateId'] ?? '',
-        );
-        if (certificateId == null) {
+        // 딥링크 등으로 id가 비어 있어도 크래시 없이 안내 화면을 띄운다.
+        final String? certificateId = state.pathParameters['certificateId'];
+        if (certificateId == null || certificateId.isEmpty) {
           return const _InvalidRoutePage(title: '자격증 상세');
         }
         final Object? extra = state.extra;

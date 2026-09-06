@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/router/app_router.dart';
 import 'package:li_on/core/widgets/layout/web_frame.dart';
 import 'package:li_on/pages/auth/provider/auth_session.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
   runApp(const ProviderScope(child: MyApp()));
 }
 

@@ -80,9 +80,13 @@ class AuthInterceptor extends Interceptor {
     if (refreshToken == null) return null;
 
     try {
+      // 서버는 리프레시 토큰을 Authorization 헤더가 아니라 요청 바디의
+      // `refreshToken` 필드로 받는다(직접 호출해 확인: 헤더로 보내면
+      // "refreshToken must be a jwt string, refreshToken should not be
+      // empty"로 422가 남).
       final Response<dynamic> response = await _refreshDio.post(
         '/api/auth/refresh',
-        options: Options(headers: {'Authorization': 'Bearer $refreshToken'}),
+        data: {'refreshToken': refreshToken},
       );
       final TokenRefreshResult result = TokenRefreshResult.fromJson(
         response.data as Map<String, dynamic>,

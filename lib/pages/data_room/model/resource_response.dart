@@ -15,7 +15,7 @@ class ResourceListItem {
   final String url;
   final MaterialResourceType type;
   final int? sessionId;
-  final int? certificateId;
+  final String? certificateId;
   @JsonKey(fromJson: localDateTimeFromJson)
   final DateTime createdAt;
 
@@ -35,18 +35,26 @@ class ResourceListItem {
   Map<String, dynamic> toJson() => _$ResourceListItemToJson(this);
 }
 
+/// 화면은 [content]만 쓰고 페이지 정보는 아직 안 써서, 서버의 페이지네이션
+/// 응답 형태(필드명 등)가 예상과 달라도 목록 자체는 파싱되게 기본값을 둔다.
 @JsonSerializable()
 class ResourcePageResult {
   final List<ResourceListItem> content;
+
+  @JsonKey(defaultValue: 0)
   final int page;
+
+  @JsonKey(defaultValue: 0)
   final int totalElements;
+
+  @JsonKey(defaultValue: 0)
   final int totalPages;
 
   const ResourcePageResult({
     required this.content,
-    required this.page,
-    required this.totalElements,
-    required this.totalPages,
+    this.page = 0,
+    this.totalElements = 0,
+    this.totalPages = 0,
   });
 
   factory ResourcePageResult.fromJson(Map<String, dynamic> json) =>

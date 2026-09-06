@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 /// 네트워크 계층의 예외를 화면에서 다루기 쉬운 형태로 감싼 도메인 예외.
 /// 저장소(repository)가 [DioException]이나 파싱 오류를 이 타입으로 바꿔
@@ -49,8 +50,14 @@ Future<T> guardApiCall<T>(Future<T> Function() call) async {
     throw ApiException.fromDio(exception);
   } on ApiException {
     rethrow;
-  } catch (_) {
-    // 응답 형식이 예상과 달라 fromJson 등에서 실패한 경우.
+  } catch (error, stackTrace) {
+    // 응답 형식이 예상과 달라 fromJson 등에서 실패한 경우. HTTP 상태는
+    // 정상(2xx)인데 화면에는 에러로 보이는 경우 대부분 여기가 원인이므로,
+    // 실제 예외를 콘솔에 남겨 원인을 바로 알 수 있게 한다.
+    if (kDebugMode) {
+      debugPrint('[API parse error] $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
     throw const ApiException(message: '응답을 처리하지 못했어요');
   }
 }

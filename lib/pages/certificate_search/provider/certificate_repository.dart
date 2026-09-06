@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/network/api_client.dart';
@@ -5,204 +7,13 @@ import 'package:li_on/core/network/api_exception.dart';
 import 'package:li_on/pages/certificate_search/model/certificate.dart';
 import 'package:li_on/pages/certificate_search/model/certificate_detail.dart';
 import 'package:li_on/pages/certificate_search/model/certificate_search_result.dart';
-
-const List<Certificate> _dummyCertificates = [
-  Certificate(id: 101, name: '정보처리기사', issuingOrg: '한국산업인력공단', category: 'IT'),
-  Certificate(id: 102, name: 'SQLD', issuingOrg: '한국데이터산업진흥원', category: 'IT'),
-  Certificate(id: 103, name: '전산회계 1급', issuingOrg: '한국세무사회', category: '경영'),
-  Certificate(id: 104, name: '건축기사', issuingOrg: '한국산업인력공단', category: '건축'),
-  Certificate(
-    id: 105,
-    name: '간호조무사',
-    issuingOrg: '한국보건의료인국가시험원',
-    category: '보건',
-  ),
-  Certificate(id: 106, name: '평생교육사', issuingOrg: '국가평생교육진흥원', category: '교육'),
-  Certificate(
-    id: 107,
-    name: '네트워크관리사',
-    issuingOrg: '한국정보통신자격협회',
-    category: 'IT',
-  ),
-  Certificate(id: 108, name: '재경관리사', issuingOrg: '삼일회계법인', category: '경영'),
-];
-
-/// 자격증 상세 더미 데이터.
-/// key는 [_dummyCertificates]의 [Certificate.id]와 매칭된다.
-const Map<int, CertificateDetail> _dummyCertificateDetails = {
-  101: CertificateDetail(
-    id: 101,
-    name: '정보처리기사',
-    issuingOrg: '한국산업인력공단',
-    category: 'IT',
-    description: '정보시스템의 개발과 운영에 필요한 실무 지식을 검증하는 국가기술자격증입니다.',
-    examInfo: '필기 5과목 / 실기 1과목, 연 3회 시행',
-    fields: [CertificateField(id: 5, name: '보안')],
-    level: '중급',
-    examFee: '19,400원',
-    passRate: 42.3,
-    examDuration: '필기 2시간 30분',
-    subjects: [
-      ExamSubject(name: '소프트웨어 설계', percent: 0.22),
-      ExamSubject(name: '소프트웨어 개발', percent: 0.20),
-      ExamSubject(name: '데이터베이스 구축', percent: 0.20),
-      ExamSubject(name: '프로그래밍 언어 활용', percent: 0.20),
-      ExamSubject(name: '정보시스템 구축관리', percent: 0.18),
-    ],
-  ),
-  102: CertificateDetail(
-    id: 102,
-    name: 'SQLD',
-    issuingOrg: '한국데이터산업진흥원',
-    category: 'IT',
-    description: '데이터 모델링과 SQL 활용 능력을 검증하는 민간자격증입니다.',
-    examInfo: '필기 2과목, 연 4회 시행',
-    fields: [CertificateField(id: 6, name: '데이터')],
-    level: '초급',
-    examFee: '50,000원',
-    passRate: 58.6,
-    examDuration: '필기 1시간 30분',
-    subjects: [
-      ExamSubject(name: '데이터 모델링의 이해', percent: 0.40),
-      ExamSubject(name: 'SQL 기본 및 활용', percent: 0.60),
-    ],
-  ),
-  103: CertificateDetail(
-    id: 103,
-    name: '전산회계 1급',
-    issuingOrg: '한국세무사회',
-    category: '경영',
-    description: '전산 회계 프로그램을 활용한 실무 회계 처리 능력을 평가하는 자격증입니다.',
-    examInfo: '이론 + 실무, 연 6회 시행',
-    fields: [CertificateField(id: 2, name: '회계')],
-    level: '초급',
-    examFee: '30,000원',
-    passRate: 63.1,
-    examDuration: '60분',
-    subjects: [
-      ExamSubject(name: '이론', percent: 0.30),
-      ExamSubject(name: '실무', percent: 0.70),
-    ],
-  ),
-  104: CertificateDetail(
-    id: 104,
-    name: '건축기사',
-    issuingOrg: '한국산업인력공단',
-    category: '건축',
-    description: '건축물의 설계·시공·감리 실무 능력을 검증하는 국가기술자격증입니다.',
-    examInfo: '필기 5과목 / 실기 1과목, 연 3회 시행',
-    fields: [CertificateField(id: 3, name: '건축')],
-    level: '중급',
-    examFee: '19,400원',
-    passRate: 35.7,
-    examDuration: '필기 2시간 30분',
-    subjects: [
-      ExamSubject(name: '건축계획', percent: 0.20),
-      ExamSubject(name: '건축시공', percent: 0.20),
-      ExamSubject(name: '건축구조', percent: 0.20),
-      ExamSubject(name: '건축설비', percent: 0.20),
-      ExamSubject(name: '건축법규', percent: 0.20),
-    ],
-  ),
-  105: CertificateDetail(
-    id: 105,
-    name: '간호조무사',
-    issuingOrg: '한국보건의료인국가시험원',
-    category: '보건',
-    description: '의료기관에서 간호 보조 업무를 수행하는 국가자격증입니다.',
-    examInfo: '필기시험, 연 1회 시행',
-    fields: [CertificateField(id: 4, name: '의료')],
-    level: '초급',
-    examFee: '90,000원',
-    passRate: 88.7,
-    examDuration: '2시간 30분',
-    subjects: [
-      ExamSubject(name: '기초간호학', percent: 0.40),
-      ExamSubject(name: '보건간호학', percent: 0.30),
-      ExamSubject(name: '공중보건학개론', percent: 0.30),
-    ],
-  ),
-  106: CertificateDetail(
-    id: 106,
-    name: '평생교육사',
-    issuingOrg: '국가평생교육진흥원',
-    category: '교육',
-    description: '평생교육 프로그램의 기획·운영·평가를 담당하는 전문가 자격증입니다.',
-    examInfo: '자격연수 이수, 연 1회 접수',
-    fields: [CertificateField(id: 1, name: '교육')],
-    level: '중급',
-    examFee: '150,000원',
-    passRate: 76.4,
-    examDuration: '과목별 상이',
-    subjects: [
-      ExamSubject(name: '평생교육방법론', percent: 0.30),
-      ExamSubject(name: '평생교육프로그램개발론', percent: 0.35),
-      ExamSubject(name: '평생교육경영론', percent: 0.35),
-    ],
-  ),
-  107: CertificateDetail(
-    id: 107,
-    name: '네트워크관리사',
-    issuingOrg: '한국정보통신자격협회',
-    category: 'IT',
-    description: '네트워크 설계·구축·운영 관리 능력을 검증하는 민간자격증입니다.',
-    examInfo: '필기 + 실기, 연 4회 시행',
-    fields: [CertificateField(id: 5, name: '보안')],
-    level: '중급',
-    examFee: '40,000원',
-    passRate: 45.2,
-    examDuration: '필기 1시간 30분',
-    subjects: [
-      ExamSubject(name: 'TCP/IP', percent: 0.35),
-      ExamSubject(name: '네트워크 일반', percent: 0.35),
-      ExamSubject(name: 'NOS', percent: 0.30),
-    ],
-  ),
-  108: CertificateDetail(
-    id: 108,
-    name: '재경관리사',
-    issuingOrg: '삼일회계법인',
-    category: '경영',
-    description: '재무회계·세무회계·원가관리회계 실무 능력을 평가하는 민간자격증입니다.',
-    examInfo: '객관식, 연 8회 시행',
-    fields: [CertificateField(id: 2, name: '회계')],
-    level: '중급',
-    examFee: '73,000원',
-    passRate: 30.5,
-    examDuration: '80분',
-    subjects: [
-      ExamSubject(name: '재무회계', percent: 0.40),
-      ExamSubject(name: '세무회계', percent: 0.30),
-      ExamSubject(name: '원가관리회계', percent: 0.30),
-    ],
-  ),
-};
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// 자격증 목록을 가져오는 방법을 추상화한다.
-/// API 연동 시에는 이 인터페이스를 구현하는 클래스를 새로 만들고
-/// [certificateRepositoryProvider]의 구현체만 교체하면 된다.
 abstract class CertificateRepository {
   /// 자격증 목록. [keyword]·[fieldId]를 주면 서버에서 필터링해 준다.
   Future<List<Certificate>> fetchCertificates({String? keyword, int? fieldId});
-  Future<CertificateDetail?> fetchCertificateDetail(int id);
-}
-
-/// 실제 API가 준비되기 전까지 사용하는 더미 구현체.
-class DummyCertificateRepository implements CertificateRepository {
-  const DummyCertificateRepository();
-
-  @override
-  Future<List<Certificate>> fetchCertificates({
-    String? keyword,
-    int? fieldId,
-  }) async {
-    return _dummyCertificates;
-  }
-
-  @override
-  Future<CertificateDetail?> fetchCertificateDetail(int id) async {
-    return _dummyCertificateDetails[id];
-  }
+  Future<CertificateDetail?> fetchCertificateDetail(String id);
 }
 
 final certificateRepositoryProvider = Provider<CertificateRepository>((ref) {
@@ -215,28 +26,110 @@ class HttpCertificateRepository implements CertificateRepository {
 
   final ApiClient apiClient;
 
+  /// 화면이 페이지네이션 없이 전체를 필터링하므로 마지막 페이지까지
+  /// 모두 모아서 돌려준다. 서버에 자격증이 3,600여 개 있어 한 번의
+  /// 요청만으로는 일부만 받아오게 된다.
+  ///
+  /// size를 100 넘게 요청하면 서버가 422로 거부해(페이지 크기 상한이
+  /// 있는 것으로 보임), 이전에 확인됐던 100을 그대로 쓰고 페이지 수를
+  /// 늘려서 커버한다.
+  static const int _pageSize = 100;
+
+  /// 서버가 계속 꽉 찬 페이지를 주는 이상 상황에서도 무한히 요청하지
+  /// 않도록 두는 안전장치. 100 * 100 = 10,000개까지 커버한다.
+  static const int _maxPages = 100;
+
+  /// 앱을 새로 켤 때마다 3,600여 개를 매번 다시 받아오지 않도록 기기에
+  /// 저장해 재사용한다. [Certificate]의 JSON 형태가 바뀌면 옛 캐시를
+  /// 못 읽고 죽는 대신 그냥 무시하고 새로 받아오도록, 모델을 바꿀 때는
+  /// 이 키의 버전(`v1`)을 올린다.
+  static const String _cacheKey = 'certificates_cache_v1';
+  static const String _cacheSavedAtKey = 'certificates_cache_saved_at_v1';
+
+  /// 국가자격 목록은 자주 바뀌지 않으니, 이 기간 동안은 캐시를 그대로 쓴다.
+  static const Duration _cacheTtl = Duration(days: 1);
+
   @override
   Future<List<Certificate>> fetchCertificates({
     String? keyword,
     int? fieldId,
   }) {
     return guardApiCall(() async {
-      final response = await apiClient.dio.get(
-        '/api/certificates',
-        queryParameters: {
-          if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
-          'fieldId': ?fieldId,
-          // 화면이 페이지네이션 없이 전체를 필터링하므로 넉넉히 받아온다.
-          'page': 0,
-          'size': 100,
-        },
-      );
-      return CertificateSearchResult.fromJson(response.data).content;
+      // 캐시는 "필터 없이 전체 목록"을 부르는 호출에만 쓴다. 화면이
+      // 서버 필터링 없이 전체를 받아 클라이언트에서 걸러내는 방식이라,
+      // 지금은 이 경우만 실제로 쓰인다.
+      final bool isFullList =
+          (keyword == null || keyword.isEmpty) && fieldId == null;
+
+      if (isFullList) {
+        final List<Certificate>? cached = await _readCache();
+        if (cached != null) return cached;
+      }
+
+      final List<Certificate> all = [];
+      for (int page = 0; page < _maxPages; page++) {
+        final response = await apiClient.dio.get(
+          '/api/certificates',
+          queryParameters: {
+            if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
+            'fieldId': ?fieldId,
+            'page': page,
+            'size': _pageSize,
+          },
+        );
+        final List<Certificate> pageContent = CertificateSearchResult.fromJson(
+          response.data,
+        ).content;
+        all.addAll(pageContent);
+        // 꽉 채워지지 않은 페이지가 왔다는 건 마지막 페이지라는 뜻이다.
+        // totalPages 등 메타 필드는 서버마다 형태가 달라 신뢰하지 않는다.
+        if (pageContent.length < _pageSize) break;
+      }
+
+      if (isFullList) await _writeCache(all);
+      return all;
     });
   }
 
+  Future<List<Certificate>?> _readCache() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? savedAtRaw = prefs.getString(_cacheSavedAtKey);
+      final String? raw = prefs.getString(_cacheKey);
+      if (raw == null || savedAtRaw == null) return null;
+
+      final DateTime? savedAt = DateTime.tryParse(savedAtRaw);
+      if (savedAt == null || DateTime.now().difference(savedAt) > _cacheTtl) {
+        return null;
+      }
+
+      return (jsonDecode(raw) as List<dynamic>)
+          .map((item) => Certificate.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } catch (_) {
+      // 캐시가 손상됐어도 서버에서 새로 받아오면 되니 실패로 취급하지 않는다.
+      return null;
+    }
+  }
+
+  Future<void> _writeCache(List<Certificate> certificates) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _cacheKey,
+        jsonEncode(certificates.map((c) => c.toJson()).toList()),
+      );
+      await prefs.setString(
+        _cacheSavedAtKey,
+        DateTime.now().toIso8601String(),
+      );
+    } catch (_) {
+      // 캐시 저장 실패는 무시한다 — 다음에 다시 네트워크로 받아오면 된다.
+    }
+  }
+
   @override
-  Future<CertificateDetail?> fetchCertificateDetail(int id) {
+  Future<CertificateDetail?> fetchCertificateDetail(String id) {
     return guardApiCall(() async {
       try {
         final response = await apiClient.dio.get('/api/certificates/$id');
@@ -258,7 +151,7 @@ final certificatesProvider = FutureProvider<List<Certificate>>((ref) {
 /// 자격증 상세 정보.
 /// [id]는 [Certificate.id]와 매칭되는 키다.
 final certificateDetailProvider = FutureProvider.autoDispose
-    .family<CertificateDetail?, int>((ref, id) {
+    .family<CertificateDetail?, String>((ref, id) {
       return ref
           .watch(certificateRepositoryProvider)
           .fetchCertificateDetail(id);

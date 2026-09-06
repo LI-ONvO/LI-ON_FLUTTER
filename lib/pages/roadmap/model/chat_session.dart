@@ -26,18 +26,26 @@ class ChatSessionSummary {
   Map<String, dynamic> toJson() => _$ChatSessionSummaryToJson(this);
 }
 
+/// 화면은 [content]만 쓰고 페이지 정보는 아직 안 써서, 서버의 페이지네이션
+/// 응답 형태(필드명 등)가 예상과 달라도 목록 자체는 파싱되게 기본값을 둔다.
 @JsonSerializable()
 class ChatSessionListResult {
   final List<ChatSessionSummary> content;
+
+  @JsonKey(defaultValue: 0)
   final int page;
+
+  @JsonKey(defaultValue: 0)
   final int totalElements;
+
+  @JsonKey(defaultValue: 0)
   final int totalPages;
 
   const ChatSessionListResult({
     required this.content,
-    required this.page,
-    required this.totalElements,
-    required this.totalPages,
+    this.page = 0,
+    this.totalElements = 0,
+    this.totalPages = 0,
   });
 
   factory ChatSessionListResult.fromJson(Map<String, dynamic> json) =>
@@ -51,7 +59,7 @@ class ChatSessionListResult {
 class ChatSessionCreateResult {
   final int id;
   final String title;
-  final int? certificateId;
+  final String? certificateId;
   final DateTime createdAt;
 
   const ChatSessionCreateResult({

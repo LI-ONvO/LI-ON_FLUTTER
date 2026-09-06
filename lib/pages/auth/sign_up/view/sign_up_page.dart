@@ -26,23 +26,32 @@ class SignUpPage extends ConsumerStatefulWidget {
 class _SignUpPageState extends ConsumerState<SignUpPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  /// 인증 메일 발송 요청이 진행 중인지. 버튼을 비활성화해 중복 제출을 막는다.
+  bool _isSubmitting = false;
+
   Future<void> _submit() async {
-    final SignInViewModel viewModel = ref.read(
-      signInViewModelProvider.notifier,
-    );
-    final SignInState formState = ref.read(signInViewModelProvider);
-    final bool isValid = await submitAuthForm(
-      context: context,
-      formKey: _formKey,
-      onSubmitted: viewModel.markSubmitted,
-      successMessage: '인증 메일을 보냈습니다',
-      onValid: () => ref
-          .read(authRepositoryProvider)
-          .sendEmailVerificationCode(email: formState.email),
-    );
-    if (!mounted) return;
-    if (!isValid) return;
-    context.push('/sign-up/verify-email');
+    if (_isSubmitting) return;
+    setState(() => _isSubmitting = true);
+    try {
+      final SignInViewModel viewModel = ref.read(
+        signInViewModelProvider.notifier,
+      );
+      final SignInState formState = ref.read(signInViewModelProvider);
+      final bool isValid = await submitAuthForm(
+        context: context,
+        formKey: _formKey,
+        onSubmitted: viewModel.markSubmitted,
+        successMessage: '인증 메일을 보냈습니다',
+        onValid: () => ref
+            .read(authRepositoryProvider)
+            .sendEmailVerificationCode(email: formState.email),
+      );
+      if (!mounted) return;
+      if (!isValid) return;
+      context.push('/sign-up/verify-email');
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -55,7 +64,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     return BaseScaffold(
       appBar: CustomAppBar(title: '회원가입'),
       bottomBar: CustomElevatedButton(
-        onPressed: formState.isFilled ? _submit : null,
+        onPressed: formState.isFilled && !_isSubmitting ? _submit : null,
         text: '메일 인증 받기',
         backgroundColor: AppColors.primary,
       ),
@@ -87,7 +96,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                   CustomTextField(
                     key: const Key('passwordField'),
                     label: '비밀번호',
-                    hintText: '영문·숫자 포함 8자 이상',
+                    hintText: '영문·숫자·특수문자 포함 8자 이상',
                     obscureText: true,
                     validator: Validators.password,
                     autovalidateMode: formState.autovalidateMode,

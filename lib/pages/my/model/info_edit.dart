@@ -17,13 +17,11 @@ class InfoEditRequest {
 class InfoEditResponse {
   final int id;
   final String nickname;
-  final JobField job;
 
-  const InfoEditResponse({
-    required this.id,
-    required this.nickname,
-    required this.job,
-  });
+  /// [Profile.job]과 마찬가지로 직무가 없는 사용자도 있을 수 있어 nullable.
+  final JobField? job;
+
+  const InfoEditResponse({required this.id, required this.nickname, this.job});
 
   factory InfoEditResponse.fromJson(Map<String, dynamic> json) =>
       _$InfoEditResponseFromJson(json);

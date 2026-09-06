@@ -16,7 +16,7 @@ class CertificateDetailState {
 class CertificateDetailViewModel extends Notifier<CertificateDetailState> {
   CertificateDetailViewModel(this.certificateId);
 
-  final int certificateId;
+  final String certificateId;
 
   @override
   CertificateDetailState build() => const CertificateDetailState();
@@ -32,5 +32,5 @@ final certificateDetailViewModelProvider =
     NotifierProvider.family<
       CertificateDetailViewModel,
       CertificateDetailState,
-      int
+      String
     >((certificateId) => CertificateDetailViewModel(certificateId));

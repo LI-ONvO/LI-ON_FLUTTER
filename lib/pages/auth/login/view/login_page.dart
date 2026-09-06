@@ -114,10 +114,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         CustomTextField(
                           key: const Key('passwordField'),
                           label: '비밀번호',
-                          hintText: '영문·숫자 포함 8자 이상',
+                          hintText: '비밀번호를 입력해주세요',
                           controller: _passwordController,
                           obscureText: true,
-                          validator: Validators.password,
+                          validator: Validators.requiredPassword,
                           autovalidateMode: formState.autovalidateMode,
                           onChanged: viewModel.setPassword,
                           textInputAction: TextInputAction.done,

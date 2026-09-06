@@ -1,16 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/network/auth_interceptor.dart';
+import 'package:li_on/core/network/status_log_interceptor.dart';
 import 'package:li_on/core/network/token_storage.dart';
 import 'package:li_on/pages/auth/provider/auth_session.dart';
 
-/// API 서버 주소. 빌드 시 `--dart-define=API_BASE_URL=https://...`로
-/// 주입한다. 지정하지 않으면 로컬 개발 서버를 바라본다.
-const String _defaultBaseUrl = String.fromEnvironment(
-  'API_BASE_URL',
-  defaultValue: 'http://localhost:8080',
-);
+/// API 서버 주소. 프로젝트 루트의 `.env` 파일에서 `API_BASE_URL`을 읽는다.
+/// 지정하지 않으면 로컬 개발 서버를 바라본다.
+String get _defaultBaseUrl =>
+    dotenv.env['API_BASE_URL'] ?? 'http://localhost:8080';
 
 class ApiClient {
   final Dio _dio;
@@ -38,9 +38,11 @@ class ApiClient {
         connectTimeout: Duration(seconds: 10),
       ),
     );
-    dio.interceptors.add(
+    dio.interceptors.addAll([
+      StatusLogInterceptor(),
       AuthInterceptor(token, refreshDio, onSessionExpired: onSessionExpired),
-    );
+    ]);
+    refreshDio.interceptors.add(StatusLogInterceptor());
     return ApiClient(dio);
   }
 

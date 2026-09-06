@@ -1,3 +1,80 @@
+# QA 메모 — 실서버(ngrok) API 전수 점검 (2026-09-04)
+
+실제 백엔드(`.env`의 `API_BASE_URL`, ngrok 터널)에 연동한 뒤, 앱을 직접 조작하며
+나온 크래시들을 그때그때 고친 기록 + 오늘 `curl`로 모든 엔드포인트를 직접 호출해
+점검한 결과를 함께 정리. 인증이 필요한 엔드포인트는 유효한 테스트 계정이 없어
+"401이 정상적으로 뜨는지"(엔드포인트 존재 확인)까지만 확인했고, 로그인 이후의
+실제 성공 응답 형태는 앱을 직접 써보며 나온 크래시들로만 확인됨.
+
+## 🔴 실행 중 발견하고 수정한 크래시
+
+세션 하나로 오늘 나온 순서대로. 전부 "HTTP 상태는 정상인데 클라이언트 파싱이나
+검증에서 죽는" 유형 — 서버 응답 필드명·타입이 앱이 기대한 것과 달라서 발생.
+
+1. **자격증 목록(`GET /api/certificates`) 파싱 크래시**
+   - 식별자가 `id`(int)가 아니라 `jmCd`(문자열, "C177"처럼 숫자만은 아님). `issuingOrg`는 응답에 아예 없음.
+   - `Certificate.id`를 `String`(`jmCd` 매핑)으로, `issuingOrg`는 기본값 `''`로 수정. 이 변경이 라우팅(`/search/certificate/:certificateId`)·북마크·로드맵 세션 생성의 `certificateId`까지 전부 `String`으로 이어짐.
+2. **자격증 목록이 100개만 보임**
+   - `size: 100` 고정 요청 한 번뿐이었는데 실제로는 3,600여 개. 마지막 페이지(꽉 안 채워진 페이지)까지 반복 요청하도록 수정.
+   - 이어서 `size`를 200으로 올렸다가 **422**(서버의 페이지 크기 상한 추정) 받아서 100으로 되돌림.
+3. **자격증 상세(`GET /api/certificates/{id}`) 파싱 크래시**
+   - `issuingOrg`·`examInfo` 필드가 응답에 없고, `description`은 `null`로 옴. 셋 다 기본값 `''`로 방어.
+   - `examSchedules`(시험 일정 배열)는 모델에 아예 없어서 조용히 버려지고 있었음 → `ExamSchedule` 모델 추가해서 화면에 노출.
+   - `examSchedules[].implSeq`가 숫자가 아니라 숫자 문자열로 옴 → `looseIntFromJson`(숫자·숫자문자열 겸용 파서) 추가해서 방어. 이 API가 필드 타입을 계속 바꿔서 내려주므로, 앞으로도 비슷한 문제가 또 나올 수 있음.
+   - `description`·`fields`(관련 분야)·`examInfo`는 모델엔 있었지만 **어떤 위젯도 화면에 그리지 않고 있었음** → 자격증 상세 화면에 소개/관련 분야 뱃지/시험 일정 섹션 추가.
+4. **캘린더 일정 조회(`GET /api/calendar/events`) 422**
+   - "조회 기간은 최대 366일입니다" — 코드가 오늘 기준 앞뒤 365일(총 730일)을 요청하고 있었음. 앞뒤 180일(총 360일)로 축소.
+5. **캘린더 일정 저장(`POST /api/calendar/events`) 422**
+   - "현재는 EMAIL 채널만 지원합니다" — 알림 채널을 `PUSH`로 고정 전송하고 있었음. `EMAIL`로 변경.
+6. **이메일 인증(`POST /api/auth/email/verify-code`) 파싱 크래시**
+   - 응답에 `verificationToken`이 없음(`{email, verified}`뿐). 모델이 필수로 요구해서 검증에 성공했는데도 크래시.
+   - `verificationToken`을 optional로, 회원가입(`signUp`)의 같은 파라미터도 optional로 변경.
+
+## 🔴 오늘 curl로 직접 두드려서 새로 찾은 문제
+
+7. **토큰 갱신(`POST /api/auth/refresh`)이 항상 실패하고 있었음 — 로그인 유지 관련 심각한 버그**
+   - `AuthInterceptor._doRefresh()`가 리프레시 토큰을 `Authorization: Bearer` 헤더로 보내고 있었는데, 서버는 요청 바디의 `refreshToken` 필드를 요구함(`curl`로 직접 확인: 헤더로 보내면 422 "refreshToken must be a jwt string, refreshToken should not be empty").
+   - 즉 액세스 토큰이 만료될 때마다 실행되는 조용한 갱신이 실서버에서는 **한 번도 성공한 적이 없고**, 매번 401 → 강제 로그아웃으로 이어졌을 것. 사용자 입장에서는 "이유 없이 갑자기 로그아웃된다"로 보였을 버그.
+   - 요청 바디에 `{"refreshToken": ...}`을 담아 보내도록 수정. (`lib/core/network/auth_interceptor.dart`)
+8. **회원가입 비밀번호 형식 — 클라이언트 검증이 서버보다 느슨했음**
+   - 서버는 영문+숫자만으론 `INVALID_PASSWORD_FORMAT`으로 거부하고 **특수문자**를 포함해야 통과(`curl`로 확인: "Abcdefg1"→400, "Abcdefg1!"→통과). 클라이언트 검증(`Validators.password`)은 특수문자를 요구하지 않아, 사용자가 입력폼은 통과했는데 서버에서 이유가 잘 안 보이는 실패를 겪을 뻔했음.
+   - 정규식에 특수문자 요구 추가, 안내 문구도 "영문·숫자·특수문자 포함 8자 이상"으로 수정.
+   - 겸사겸사: 로그인 화면도 같은 `Validators.password`(형식 검증)를 재사용하고 있었는데, 이러면 이 규칙이 생기기 전에 만든 계정은 비밀번호가 맞아도 로그인 폼 단계에서부터 막힐 수 있어서, 로그인은 "비어 있지 않은지"만 확인하는 `Validators.requiredPassword`로 분리.
+9. **`GET /api/jobs`가 서버에 없음(404 `Cannot GET /api/jobs`)**
+   - `lib/core/meta/meta_repository.dart`의 `MetaRepository.fetchJobs()`가 이 엔드포인트를 씀. 다행히 이 provider는 현재 어떤 화면에서도 실제로 호출되지 않는 미연결 상태라 지금 당장 크래시로 이어지진 않지만, 마이페이지 "직무 수정"을 실제로 연결하는 시점에 바로 걸릴 것.
+   - 실제 직무 목록을 어느 엔드포인트에서 받아야 하는지 확인 필요(백엔드 쪽 문의 또는 스펙 문서 확인 권장).
+
+## ✅ 확인된 것 (엔드포인트 존재 여부만)
+
+토큰 없이 호출해 전부 `401 UNAUTHORIZED`(엔드포인트는 있고 인증만 없다는 뜻)를
+정상적으로 반환하는 것까지 확인: `GET /api/certificates`, `GET /api/fields`,
+`GET /api/calendar/events`, `GET /api/resources`, `GET /api/users/me`,
+`GET /api/onboarding/questions`, `GET /api/chat/sessions`, `GET /api/roadmaps/{id}`.
+
+인증 없이 바로 되는 것도 확인: `GET /api/auth/check-email`(정상 응답),
+`POST /api/auth/login`(잘못된 자격증명 → 401 `INVALID_CREDENTIALS`),
+`POST /api/auth/email/send-code`(정상 발송), `POST /api/auth/email/verify-code`
+(잘못된 코드 → 400 `INVALID_CODE`), `POST /api/auth/signup`(이메일 미인증 상태 →
+422 "이메일 인증이 완료되지 않았습니다" — 서버가 이메일 기준으로 인증 여부를
+관리하고 있다는 뜻이라, `verificationToken`을 optional로 바꾼 결정이 맞았음을
+확인).
+
+## 🟡 유효한 계정 없이는 확인 못한 것
+
+로그인 이후 응답이 필요한 흐름(캘린더 CRUD, 자료방 CRUD, 마이페이지 조회/수정,
+온보딩 제출, 로드맵 채팅 세션·메시지·로드맵 생성)은 실제 계정으로 로그인해서
+받은 응답 바디를 봐야 필드 형태를 확인할 수 있음. 지금까지의 패턴(자격증 API가
+`jmCd`처럼 예상과 다른 필드명·타입을 계속 내려준 전례)을 보면, 이 API들도 처음
+실제로 눌러볼 때 비슷한 파싱 크래시가 하나쯤 더 나올 가능성이 높다. 콘솔에
+`[HTTP ...]`/`body:`/`[API parse error]` 로그가 뜨면 그대로 붙여주면 바로
+원인을 찾아 고칠 수 있음(이번 세션에서 반복된 패턴).
+
+## 참고
+
+- `lib/pages/my/provider/user_repository.dart`의 `updateInfo`/`updateDesiredFields`, `lib/pages/onboarding/provider/onboarding_repository.dart`의 `submitAnswers`는 저장소·모델은 있지만 아직 어떤 화면에서도 실제로 호출하지 않음(마이페이지 수정 시트는 지금 로컬 상태만 바꾸고 저장 API를 안 부름). 실제로 연결하는 시점에 응답 형태를 확인해야 함.
+
+---
+
 # QA 메모 — 코드 플로우 추적 점검 (2026-08-24)
 
 퍼블리싱 단계 수정(크래시 방지·성능·UX·연동 대비) 이후, 스플래시→로그인/가입→탭 5개→상세·시트까지 전체 플로우를 코드 레벨로 추적한 결과. 백엔드는 아직 미연동 상태 기준.

@@ -4,22 +4,33 @@ import 'package:li_on/pages/auth/model/auth_user.dart';
 part 'login_result.g.dart';
 
 /// `POST /api/auth/login` 응답.
+///
+/// `tokenType`·`expiresIn`·`isFirstLogin`은 현재 화면 어디서도 쓰지 않는
+/// 부가 정보라, 서버가 안 내려줘도 로그인 자체는 실패하지 않도록
+/// 기본값을 둔다.
 @JsonSerializable()
 class LoginResult {
   final String accessToken;
   final String refreshToken;
+
+  @JsonKey(defaultValue: 'Bearer')
   final String tokenType;
+
+  @JsonKey(defaultValue: 0)
   final int expiresIn;
+
   final AuthUser user;
+
+  @JsonKey(defaultValue: false)
   final bool isFirstLogin;
 
   const LoginResult({
     required this.accessToken,
     required this.refreshToken,
-    required this.tokenType,
-    required this.expiresIn,
+    this.tokenType = 'Bearer',
+    this.expiresIn = 0,
     required this.user,
-    required this.isFirstLogin,
+    this.isFirstLogin = false,
   });
 
   factory LoginResult.fromJson(Map<String, dynamic> json) =>

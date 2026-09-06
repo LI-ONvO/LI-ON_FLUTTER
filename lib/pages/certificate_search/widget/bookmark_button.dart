@@ -5,7 +5,7 @@ import 'package:li_on/pages/certificate_search/provider/certificate_detail_view_
 
 /// 북마크 상태만 watch해서, 토글 시 상세 본문 전체가 다시 빌드되는 것을 막는다.
 class CertificateBookmarkButton extends ConsumerWidget {
-  final int certificateId;
+  final String certificateId;
 
   const CertificateBookmarkButton({super.key, required this.certificateId});
 

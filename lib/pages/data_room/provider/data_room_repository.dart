@@ -5,8 +5,7 @@ import 'package:li_on/core/network/api_exception.dart';
 import 'package:li_on/pages/data_room/model/resource_response.dart';
 import 'package:li_on/pages/data_room/model/saved_material.dart';
 
-/// 자료방을 처음 열었을 때 보이는 더미 데이터.
-/// 실제로는 서버에 저장해둔 자료 목록이 내려온다.
+/// 테스트에서 [InMemoryDataRoomRepository]의 초기 상태로 쓰는 자료 목록.
 final List<SavedMaterial> _dummyMaterials = [
   SavedMaterial(
     id: 1,
@@ -70,8 +69,8 @@ abstract class DataRoomRepository {
   Future<void> deleteMaterial(int id);
 }
 
-/// 실제 자료방 API가 준비되기 전까지 사용하는 메모리 저장소.
-/// 앱이 떠 있는 동안에만 유지되므로, 다시 실행하면 더미 데이터로 돌아간다.
+/// 네트워크 없이 테스트할 때 [dataRoomRepositoryProvider]에 덮어씌우는
+/// 메모리 저장소. 프로덕션에서는 쓰지 않는다.
 class InMemoryDataRoomRepository implements DataRoomRepository {
   /// 더미 목록을 그대로 쓰지 않고 복사해, 저장소를 새로 만들 때마다 같은
   /// 자료로 시작하게 한다.

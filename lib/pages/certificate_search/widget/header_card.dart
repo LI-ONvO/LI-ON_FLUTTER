@@ -28,24 +28,28 @@ class CertificateHeaderCard extends StatelessWidget {
               fontSize: 20,
             ),
           ),
-          const SizedBox(height: AppSpacing.space0),
-          Text(detail.issuingOrg, style: AppTextStyle.mainText),
-          const SizedBox(height: AppSpacing.space1),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-            decoration: BoxDecoration(
-              color: const Color(0xFFDBEAFE),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              detail.level,
-              style: AppTextStyle.baseTextStyle.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                color: AppColors.dark,
+          if (detail.issuingOrg.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.space0),
+            Text(detail.issuingOrg, style: AppTextStyle.mainText),
+          ],
+          if (detail.level.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.space1),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDBEAFE),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                detail.level,
+                style: AppTextStyle.baseTextStyle.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: AppColors.dark,
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

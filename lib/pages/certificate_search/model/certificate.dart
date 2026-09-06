@@ -24,17 +24,26 @@ const Map<String, Color> _categoryColors = {
 };
 
 /// `GET /api/certificates` 목록의 자격증 한 건.
+///
+/// 서버는 식별자를 `id`가 아니라 `jmCd`(HRD-Net 종목코드, 예: "C177"·"S2I0"
+/// 처럼 숫자로만 이뤄지지 않을 수 있음)로 내려주고, `issuingOrg`(발급 기관)는
+/// 목록 응답에 아예 없다. 실제 응답: `{jmCd, name, category}`.
 @JsonSerializable()
 class Certificate {
-  final int id;
+  @JsonKey(name: 'jmCd')
+  final String id;
+
   final String name;
+
+  @JsonKey(defaultValue: '')
   final String issuingOrg;
+
   final String category;
 
   const Certificate({
     required this.id,
     required this.name,
-    required this.issuingOrg,
+    this.issuingOrg = '',
     required this.category,
   });
 

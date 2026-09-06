@@ -37,7 +37,7 @@ class _FakeAuthRepository implements AuthRepository {
     required String password,
     required String passwordConfirm,
     required String nickname,
-    required String verificationToken,
+    String? verificationToken,
   }) => throw UnimplementedError();
 
   @override
@@ -89,8 +89,8 @@ void main() {
     WidgetTester tester, {
     String email = 'user@example.com',
     String nickname = '홍길동',
-    String password = 'abc12345',
-    String passwordConfirm = 'abc12345',
+    String password = 'abc12345!',
+    String passwordConfirm = 'abc12345!',
   }) async {
     await tester.enterText(_fieldInput(const Key('emailField')), email);
     await tester.enterText(_fieldInput(const Key('nicknameField')), nickname);
@@ -192,7 +192,7 @@ void main() {
       await submit(tester);
 
       expect(find.text('올바른 이메일 형식이 아닙니다'), findsOneWidget);
-      expect(find.text('영문, 숫자를 포함해 8자 이상 입력해주세요'), findsOneWidget);
+      expect(find.text('영문, 숫자, 특수문자를 포함해 8자 이상 입력해주세요'), findsOneWidget);
       expect(find.text('비밀번호가 일치하지 않습니다'), findsOneWidget);
       expect(find.text('입력 내용을 다시 확인해주세요'), findsOneWidget);
     });

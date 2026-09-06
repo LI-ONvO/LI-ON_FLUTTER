@@ -14,7 +14,7 @@ abstract class RoadmapRepository {
 
   /// `POST /api/chat/sessions` — 새 채팅 세션 생성.
   Future<ChatSessionCreateResult> createSession({
-    int? certificateId,
+    String? certificateId,
     String? title,
   });
 
@@ -55,7 +55,7 @@ class HttpRoadmapRepository implements RoadmapRepository {
 
   @override
   Future<ChatSessionCreateResult> createSession({
-    int? certificateId,
+    String? certificateId,
     String? title,
   }) {
     return guardApiCall(() async {

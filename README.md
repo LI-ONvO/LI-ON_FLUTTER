@@ -35,6 +35,7 @@
 ```bash
 git clone https://github.com/LI-ONvO/LI-ON_FLUTTER.git
 cd LI-ON_FLUTTER
+cp .env.example .env
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs
 flutter run
@@ -46,6 +47,18 @@ flutter run
 flutter analyze
 flutter test
 ```
+
+### API 서버 연결하기
+
+모든 저장소는 실제 서버(`Http*Repository`)와 통신합니다. 서버 주소는 프로젝트
+루트의 `.env` 파일(`.env.example`을 복사해서 생성, git에는 커밋하지 않음)의
+`API_BASE_URL` 값을 읽으며, 지정하지 않으면 `http://localhost:8080`을 씁니다.
+
+```env
+API_BASE_URL=https://api.example.com
+```
+
+`.env`를 고치고 `flutter run`(핫 리스타트 `R`)만 하면 바로 반영됩니다.
 
 CI는 Codemagic에서 의존성 설치, 모델 코드 생성, 정적 분석, 테스트, Android debug APK 및 iOS debug 빌드를 수행합니다.
 
@@ -86,10 +99,9 @@ lib/
 
 ## 데이터 및 API 상태
 
-- 인증 repository는 `/api/auth/*` 엔드포인트를 호출하도록 구현되어 있습니다.
-- API 서버 주소는 `lib/core/network/api_client.dart`의 `apiClientProvider`에 아직 placeholder로 설정되어 있습니다. 실제 서버 연동 전 올바른 base URL로 변경해야 합니다.
-- 자격증 검색·로드맵 대화·대화 내역은 현재 더미 데이터를 사용합니다.
-- 자료방과 캘린더 데이터는 현재 앱 실행 중에만 유지되는 in-memory 저장소입니다.
+모든 화면이 `Http*Repository`를 통해 실제 서버 API를 호출합니다. API 서버 주소는
+`lib/core/network/api_client.dart`의 `apiClientProvider`가 `.env`의
+`API_BASE_URL` 값(기본값 `http://localhost:8080`)을 사용합니다.
 
 ## 생성 파일
 
@@ -102,10 +114,5 @@ dart run build_runner build --delete-conflicting-outputs
 ## 테스트
 
 위젯·provider 테스트는 `test/` 디렉터리에 있습니다. 회원가입 검증, 온보딩, 자료방 CRUD 및 링크, 로드맵 자료 저장 흐름을 다룹니다.
-
-## 알려진 제한 사항
-
-- 인증 API의 실제 base URL과 사용자 프로필·희망 분야 저장 API는 서버 연동이 필요합니다.
-- 자격증 검색·로드맵 대화·대화 내역은 현재 더미 데이터를 사용합니다.
 
 구체적인 수동 QA 결과는 [QA_NOTES.md](QA_NOTES.md)를 참고하세요.

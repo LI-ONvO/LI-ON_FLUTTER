@@ -27,7 +27,7 @@ class _VerificationAuthRepository implements AuthRepository {
     return EmailVerifyCodeResult(
       email: email,
       verified: verified,
-      verificationToken: verified ? 'verified-token' : '',
+      verificationToken: verified ? 'verified-token' : null,
     );
   }
 
@@ -37,7 +37,7 @@ class _VerificationAuthRepository implements AuthRepository {
     required String password,
     required String passwordConfirm,
     required String nickname,
-    required String verificationToken,
+    String? verificationToken,
   }) async {
     signUpCalls += 1;
     receivedVerificationToken = verificationToken;
