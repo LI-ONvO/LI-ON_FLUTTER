@@ -8,25 +8,22 @@ import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/core/widgets/text_field/custom_text_field.dart';
 
-/// [CustomBottomSheet]의 저장 결과. 이름, 직무, 희망 분야를 편집한 값을
+/// [CustomBottomSheet]의 저장 결과. 이름과 희망 분야를 편집한 값을
 /// 호출한 화면으로 돌려줄 때 사용한다.
 typedef ProfileEditResult = ({
   String name,
-  JobField? job,
   List<JobField> desiredFields,
 });
 
 class CustomBottomSheet extends StatefulWidget {
   final String name;
   final String email;
-  final JobField? job;
   final List<JobField> desiredFields;
 
   const CustomBottomSheet({
     super.key,
     required this.name,
     required this.email,
-    required this.job,
     required this.desiredFields,
   });
 
@@ -41,7 +38,6 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
   late final TextEditingController _emailController = TextEditingController(
     text: widget.email,
   );
-  late JobField? _job = widget.job;
   late final List<JobField> _desiredFields = List.of(widget.desiredFields);
 
   @override
@@ -173,14 +169,6 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                       ),
                       const Divider(height: 1, color: AppColors.background),
                       _optionsSection(
-                        title: '직무 수정',
-                        options: jobOptions,
-                        isSelected: (option) => _job?.id == option.id,
-                        onToggle: (option) => setState(
-                          () => _job = _job?.id == option.id ? null : option,
-                        ),
-                      ),
-                      _optionsSection(
                         title: '희망 분야 수정',
                         options: desiredFieldOptions,
                         isSelected: (option) => _desiredFields.any(
@@ -217,7 +205,6 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                       onPressed: canSave
                           ? () => Navigator.of(context).pop((
                               name: _nameController.text.trim(),
-                              job: _job,
                               desiredFields: _desiredFields,
                             ))
                           : null,

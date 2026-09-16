@@ -39,12 +39,8 @@ class _MyPageState extends ConsumerState<MyPage> {
   );
 
   String get _explanation {
-    final List<String> parts = [
-      if (_profile.desiredFields.isNotEmpty)
-        _profile.desiredFields.map((field) => field.name).join(', '),
-      if (_profile.job != null) '${_profile.job!.name} 희망',
-    ];
-    return parts.isEmpty ? '희망 분야를 설정해주세요' : parts.join(' · ');
+    if (_profile.desiredFields.isEmpty) return '희망 분야를 설정해주세요';
+    return _profile.desiredFields.map((field) => field.name).join(', ');
   }
 
   Future<void> _openEditProfileSheet(BuildContext context) async {
@@ -62,7 +58,6 @@ class _MyPageState extends ConsumerState<MyPage> {
           builder: (context) => CustomBottomSheet(
             name: _profile.nickname,
             email: _profile.email,
-            job: _profile.job,
             desiredFields: _profile.desiredFields,
           ),
         );
@@ -72,7 +67,6 @@ class _MyPageState extends ConsumerState<MyPage> {
         id: _profile.id,
         email: _profile.email,
         nickname: result.name,
-        job: result.job,
         desiredFields: result.desiredFields,
         isOnboarded: _profile.isOnboarded,
       );

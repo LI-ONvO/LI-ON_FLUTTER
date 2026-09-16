@@ -15,16 +15,6 @@ class JobField {
   Map<String, dynamic> toJson() => _$JobFieldToJson(this);
 }
 
-/// 마이페이지 "직무 수정"에서 고를 수 있는 직무 목록 (백엔드 연동 전 임시 데이터).
-const List<JobField> jobOptions = [
-  JobField(id: 1, name: '백엔드 개발자'),
-  JobField(id: 2, name: '프론트엔드 개발자'),
-  JobField(id: 3, name: '데이터 분석가'),
-  JobField(id: 4, name: '회계·재무 담당자'),
-  JobField(id: 5, name: '건축 설계사'),
-  JobField(id: 6, name: '간호사'),
-];
-
 /// 마이페이지 "희망 분야 수정"에서 고를 수 있는 분야 목록. 온보딩의
 /// `onboardingFields`와 같은 명칭 체계를 사용한다.
 const List<JobField> desiredFieldOptions = [

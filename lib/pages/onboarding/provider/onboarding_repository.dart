@@ -4,23 +4,19 @@ import 'package:li_on/core/network/api_exception.dart';
 import 'package:li_on/pages/onboarding/model/onboarding_question.dart';
 import 'package:li_on/pages/onboarding/model/onboarding_submit_result.dart';
 
-/// 온보딩 설문 답변 한 건. 선택형은 [optionValues], 서술형(TEXT/DATE)은
-/// [value]를 채운다.
+/// 온보딩 설문 답변 한 건. 선택한 선택지들의 `value`를 [optionValues]에 담는다.
 class OnboardingAnswer {
   final String questionKey;
-  final List<String>? optionValues;
-  final String? value;
+  final List<String> optionValues;
 
   const OnboardingAnswer({
     required this.questionKey,
-    this.optionValues,
-    this.value,
+    this.optionValues = const [],
   });
 
   Map<String, dynamic> toJson() => {
     'questionKey': questionKey,
-    'optionValues': ?optionValues,
-    'value': ?value,
+    'optionValues': optionValues,
   };
 }
 
