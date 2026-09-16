@@ -13,10 +13,7 @@ abstract class RoadmapRepository {
   Future<ChatSessionListResult> fetchSessions({int? page, int? size});
 
   /// `POST /api/chat/sessions` — 새 채팅 세션 생성.
-  Future<ChatSessionCreateResult> createSession({
-    String? certificateId,
-    String? title,
-  });
+  Future<ChatSessionCreateResult> createSession({String? jmCd, String? title});
 
   /// `GET /api/chat/sessions/{sessionId}` — 세션 상세(메시지 내역).
   Future<ChatSessionDetail> fetchSessionDetail(int sessionId);
@@ -54,14 +51,11 @@ class HttpRoadmapRepository implements RoadmapRepository {
   }
 
   @override
-  Future<ChatSessionCreateResult> createSession({
-    String? certificateId,
-    String? title,
-  }) {
+  Future<ChatSessionCreateResult> createSession({String? jmCd, String? title}) {
     return guardApiCall(() async {
       final response = await apiClient.dio.post(
         '/api/chat/sessions',
-        data: {'certificateId': ?certificateId, 'title': ?title},
+        data: {'jmCd': ?jmCd, 'title': ?title},
       );
       return ChatSessionCreateResult.fromJson(response.data);
     });

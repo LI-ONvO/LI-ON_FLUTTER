@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:li_on/pages/certificate_search/model/certificate_detail.dart';
+import 'package:li_on/pages/certificate_search/model/certificate.dart';
 
 part 'chat_session.g.dart';
 
@@ -8,7 +8,7 @@ part 'chat_session.g.dart';
 class ChatSessionSummary {
   final int id;
   final String title;
-  final CertificateField? certificate;
+  final CertificateRef? certificate;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -54,18 +54,18 @@ class ChatSessionListResult {
   Map<String, dynamic> toJson() => _$ChatSessionListResultToJson(this);
 }
 
-/// `POST /api/chat/sessions` 응답. 목록 항목과 달리 자격증을 id로만 돌려준다.
+/// `POST /api/chat/sessions` 응답: `{ id, title, jmCd, createdAt }`.
 @JsonSerializable()
 class ChatSessionCreateResult {
   final int id;
   final String title;
-  final String? certificateId;
+  final String? jmCd;
   final DateTime createdAt;
 
   const ChatSessionCreateResult({
     required this.id,
     required this.title,
-    this.certificateId,
+    this.jmCd,
     required this.createdAt,
   });
 

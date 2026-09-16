@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:li_on/pages/certificate_search/model/certificate_detail.dart';
+import 'package:li_on/pages/certificate_search/model/certificate.dart';
 import 'package:li_on/pages/roadmap/roadmap_chat/model/chat_message.dart';
 
 part 'chat_session_detail.g.dart';
@@ -9,7 +9,7 @@ part 'chat_session_detail.g.dart';
 class ChatSessionDetail {
   final int id;
   final String title;
-  final CertificateField? certificate;
+  final CertificateRef? certificate;
   final List<ChatMessage> messages;
 
   const ChatSessionDetail({

@@ -48,6 +48,7 @@ abstract class DataRoomRepository {
   Future<List<SavedMaterial>> fetchMaterials();
 
   /// 자료를 저장하고, id가 부여된 자료를 돌려준다.
+  /// [sessionId]·[jmCd]는 로드맵 채팅에서 저장할 때 함께 넘어온다.
   Future<SavedMaterial> addMaterial({
     required String title,
     required String category,
@@ -55,6 +56,8 @@ abstract class DataRoomRepository {
     required MaterialResourceType type,
     String url,
     String memo,
+    int? sessionId,
+    String? jmCd,
   });
 
   /// 사용자가 고칠 수 있는 항목(제목·카테고리·메모)만 바꾼다.
@@ -95,6 +98,8 @@ class InMemoryDataRoomRepository implements DataRoomRepository {
     required MaterialResourceType type,
     String url = '',
     String memo = '',
+    int? sessionId,
+    String? jmCd,
   }) async {
     final SavedMaterial material = SavedMaterial(
       id: _nextId++,
@@ -202,6 +207,8 @@ class HttpDataRoomRepository implements DataRoomRepository {
     required MaterialResourceType type,
     String url = '',
     String memo = '',
+    int? sessionId,
+    String? jmCd,
   }) {
     return guardApiCall(() async {
       final response = await apiClient.dio.post(
@@ -209,26 +216,23 @@ class HttpDataRoomRepository implements DataRoomRepository {
         data: {
           'title': title,
           'url': url,
-          'type': switch (type) {
-            MaterialResourceType.link => 'LINK',
-            MaterialResourceType.file => 'FILE',
-            MaterialResourceType.note => 'NOTE',
-          },
           if (memo.isNotEmpty) 'memo': memo,
+          'sessionId': ?sessionId,
+          'jmCd': ?jmCd,
         },
       );
       final ResourceCreateResult created = ResourceCreateResult.fromJson(
         response.data,
       );
-      // 카테고리·출처는 서버 필드가 아니라 화면에서 넘어온 값을 유지한다.
+      // 카테고리·출처·타입은 서버 응답 필드가 아니라 화면에서 넘어온 값을 유지한다.
       return SavedMaterial(
         id: created.id,
         title: created.title,
         category: category,
         source: source,
-        type: created.type,
+        type: type,
         url: created.url,
-        memo: memo,
+        memo: created.memo,
         savedAt: created.createdAt,
       );
     });

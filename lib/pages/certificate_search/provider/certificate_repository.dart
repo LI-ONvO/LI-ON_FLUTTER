@@ -43,8 +43,8 @@ class HttpCertificateRepository implements CertificateRepository {
   /// 저장해 재사용한다. [Certificate]의 JSON 형태가 바뀌면 옛 캐시를
   /// 못 읽고 죽는 대신 그냥 무시하고 새로 받아오도록, 모델을 바꿀 때는
   /// 이 키의 버전(`v1`)을 올린다.
-  static const String _cacheKey = 'certificates_cache_v1';
-  static const String _cacheSavedAtKey = 'certificates_cache_saved_at_v1';
+  static const String _cacheKey = 'certificates_cache_v2';
+  static const String _cacheSavedAtKey = 'certificates_cache_saved_at_v2';
 
   /// 국가자격 목록은 자주 바뀌지 않으니, 이 기간 동안은 캐시를 그대로 쓴다.
   static const Duration _cacheTtl = Duration(days: 1);

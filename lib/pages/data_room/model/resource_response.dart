@@ -1,21 +1,26 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:li_on/core/model/material_resource_type.dart';
 import 'package:li_on/core/utils/json_converters.dart';
-import 'package:li_on/pages/certificate_search/model/certificate_detail.dart';
+import 'package:li_on/pages/certificate_search/model/certificate.dart';
 
 export 'package:li_on/core/model/material_resource_type.dart';
 
 part 'resource_response.g.dart';
 
 /// `GET /api/resources` 목록의 자료 한 건.
+/// 명세서 기준: `{ id, title, url, memo, sessionId, jmCd, createdAt }`.
 @JsonSerializable()
 class ResourceListItem {
   final int id;
   final String title;
   final String url;
-  final MaterialResourceType type;
+
+  @JsonKey(defaultValue: '')
+  final String memo;
+
   final int? sessionId;
-  final String? certificateId;
+  final String? jmCd;
+
   @JsonKey(fromJson: localDateTimeFromJson)
   final DateTime createdAt;
 
@@ -23,9 +28,9 @@ class ResourceListItem {
     required this.id,
     required this.title,
     required this.url,
-    required this.type,
+    this.memo = '',
     this.sessionId,
-    this.certificateId,
+    this.jmCd,
     required this.createdAt,
   });
 
@@ -83,10 +88,14 @@ class ResourceDetail {
   final int id;
   final String title;
   final String url;
-  final MaterialResourceType type;
+
+  @JsonKey(defaultValue: '')
   final String memo;
+
+  final MaterialResourceType type;
   final ResourceSessionRef? session;
-  final CertificateField? certificate;
+  final CertificateRef? certificate;
+
   @JsonKey(fromJson: localDateTimeFromJson)
   final DateTime createdAt;
 
@@ -94,8 +103,8 @@ class ResourceDetail {
     required this.id,
     required this.title,
     required this.url,
+    this.memo = '',
     required this.type,
-    required this.memo,
     this.session,
     this.certificate,
     required this.createdAt,
@@ -108,12 +117,19 @@ class ResourceDetail {
 }
 
 /// `POST /api/resources` 응답.
+/// 명세서 기준: `{ id, title, url, memo, sessionId, jmCd, createdAt }`.
 @JsonSerializable()
 class ResourceCreateResult {
   final int id;
   final String title;
   final String url;
-  final MaterialResourceType type;
+
+  @JsonKey(defaultValue: '')
+  final String memo;
+
+  final int? sessionId;
+  final String? jmCd;
+
   @JsonKey(fromJson: localDateTimeFromJson)
   final DateTime createdAt;
 
@@ -121,7 +137,9 @@ class ResourceCreateResult {
     required this.id,
     required this.title,
     required this.url,
-    required this.type,
+    this.memo = '',
+    this.sessionId,
+    this.jmCd,
     required this.createdAt,
   });
 
@@ -131,7 +149,7 @@ class ResourceCreateResult {
   Map<String, dynamic> toJson() => _$ResourceCreateResultToJson(this);
 }
 
-/// `PATCH /api/resources/{resourceId}` 응답.
+/// `PATCH /api/resources/{resourceId}` 응답: `{ id, title, memo }`.
 @JsonSerializable()
 class ResourceUpdateResult {
   final int id;

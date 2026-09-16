@@ -28,11 +28,7 @@ class CertificateHeaderCard extends StatelessWidget {
               fontSize: 20,
             ),
           ),
-          if (detail.issuingOrg.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.space0),
-            Text(detail.issuingOrg, style: AppTextStyle.mainText),
-          ],
-          if (detail.level.isNotEmpty) ...[
+          if (detail.category.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.space1),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
@@ -41,7 +37,7 @@ class CertificateHeaderCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                detail.level,
+                detail.category,
                 style: AppTextStyle.baseTextStyle.copyWith(
                   fontWeight: FontWeight.bold,
                   fontSize: 12,

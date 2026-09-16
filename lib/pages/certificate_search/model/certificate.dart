@@ -23,11 +23,24 @@ const Map<String, Color> _categoryColors = {
   '교육': Color(0xFF7C3AED),
 };
 
+/// 다른 응답(채팅 세션·자료 상세 등)에 박혀 오는 자격증 요약(`{ jmCd, name }`).
+@JsonSerializable()
+class CertificateRef {
+  final String jmCd;
+  final String name;
+
+  const CertificateRef({required this.jmCd, required this.name});
+
+  factory CertificateRef.fromJson(Map<String, dynamic> json) =>
+      _$CertificateRefFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CertificateRefToJson(this);
+}
+
 /// `GET /api/certificates` 목록의 자격증 한 건.
 ///
 /// 서버는 식별자를 `id`가 아니라 `jmCd`(HRD-Net 종목코드, 예: "C177"·"S2I0"
-/// 처럼 숫자로만 이뤄지지 않을 수 있음)로 내려주고, `issuingOrg`(발급 기관)는
-/// 목록 응답에 아예 없다. 실제 응답: `{jmCd, name, category}`.
+/// 처럼 숫자로만 이뤄지지 않을 수 있음)로 내려준다. 실제 응답: `{jmCd, name, category}`.
 @JsonSerializable()
 class Certificate {
   @JsonKey(name: 'jmCd')
@@ -35,15 +48,11 @@ class Certificate {
 
   final String name;
 
-  @JsonKey(defaultValue: '')
-  final String issuingOrg;
-
   final String category;
 
   const Certificate({
     required this.id,
     required this.name,
-    this.issuingOrg = '',
     required this.category,
   });
 
