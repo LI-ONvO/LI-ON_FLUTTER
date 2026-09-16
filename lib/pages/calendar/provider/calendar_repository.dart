@@ -144,11 +144,8 @@ List<Map<String, dynamic>> _alarmsFromReminder(
   final Duration? offset = _reminderOffset(reminder);
   if (offset == null) return const [];
   return [
-    {
-      'remindAt': startAt.subtract(offset).toUtc().toIso8601String(),
-      // 서버가 현재 EMAIL 채널만 지원한다(PUSH는 422로 거부됨).
-      'channel': 'EMAIL',
-    },
+    // 알림은 푸시로만 발송되며, 명세서 기준 요청에 `channel`을 받지 않는다.
+    {'remindAt': startAt.subtract(offset).toUtc().toIso8601String()},
   ];
 }
 
@@ -230,7 +227,7 @@ class HttpCalendarEventRepository implements CalendarEventRepository {
         id: created.id,
         title: created.title,
         startAt: created.startAt,
-        endAt: created.endAt,
+        endAt: created.endAt ?? endAt,
         reminder: reminder,
         roadmapStepId: created.roadmapStepId ?? roadmapStepId,
         description: description,
@@ -246,7 +243,7 @@ class HttpCalendarEventRepository implements CalendarEventRepository {
         data: {
           'title': event.title,
           'startAt': event.startAt.toUtc().toIso8601String(),
-          'endAt': event.endAt.toUtc().toIso8601String(),
+          'endAt': event.endAt?.toUtc().toIso8601String(),
           'alarms': _alarmsFromReminder(event.reminder, event.startAt),
         },
       );

@@ -39,7 +39,7 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
       ? TimeOfDay.fromDateTime(widget.event!.startAt)
       : const TimeOfDay(hour: 19, minute: 0);
   late TimeOfDay _endTime = widget.event != null
-      ? TimeOfDay.fromDateTime(widget.event!.endAt)
+      ? TimeOfDay.fromDateTime(widget.event!.effectiveEndAt)
       : const TimeOfDay(hour: 21, minute: 0);
   late CalendarReminder _reminder =
       widget.event?.reminder ?? CalendarReminder.minutes30;

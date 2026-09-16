@@ -6,6 +6,9 @@ void main() {
     final events = await InMemoryCalendarEventRepository().fetchEvents();
 
     expect(events, isNotEmpty);
-    expect(events.every((event) => event.endAt.isAfter(event.startAt)), isTrue);
+    expect(
+      events.every((event) => event.effectiveEndAt.isAfter(event.startAt)),
+      isTrue,
+    );
   });
 }

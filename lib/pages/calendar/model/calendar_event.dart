@@ -36,8 +36,10 @@ class CalendarEvent {
   @JsonKey(fromJson: localDateTimeFromJson)
   final DateTime startAt;
 
-  @JsonKey(fromJson: localDateTimeFromJson)
-  final DateTime endAt;
+  /// 마감일만 있는 일정을 허용하므로 명세서 기준 nullable이다.
+  /// 화면 계산에서는 값이 없으면 [startAt]과 같은 것으로 다룬다([effectiveEndAt]).
+  @JsonKey(fromJson: localDateTimeFromJsonNullable)
+  final DateTime? endAt;
 
   @JsonKey(defaultValue: CalendarReminder.none)
   final CalendarReminder reminder;
@@ -63,9 +65,13 @@ class CalendarEvent {
 
   Map<String, dynamic> toJson() => _$CalendarEventToJson(this);
 
+  /// 종료 시각이 없으면 시작 시각으로 대신한다.
+  DateTime get effectiveEndAt => endAt ?? startAt;
+
   DateTime get startDate => DateTime(startAt.year, startAt.month, startAt.day);
 
-  DateTime get endDate => DateTime(endAt.year, endAt.month, endAt.day);
+  DateTime get endDate =>
+      DateTime(effectiveEndAt.year, effectiveEndAt.month, effectiveEndAt.day);
 
   /// [day]가 이 일정의 기간(날짜만 비교)에 포함되는지.
   bool occursOn(DateTime day) {
@@ -78,7 +84,7 @@ class CalendarEvent {
   String get dateRangeLabel {
     final String start = '${startAt.month}/${startAt.day}';
     if (startDate == endDate) return start;
-    return '$start ~ ${endAt.month}/${endAt.day}';
+    return '$start ~ ${effectiveEndAt.month}/${effectiveEndAt.day}';
   }
 
   /// "오후 7:00" 형식의 시작 시각 표기.
