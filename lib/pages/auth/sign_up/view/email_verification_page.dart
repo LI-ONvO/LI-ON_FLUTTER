@@ -65,17 +65,16 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
             email: formState.email,
             code: formState.verificationCode,
           );
-          // verificationToken은 서버가 내려줄 때만 있는 선택 값이라, 인증
-          // 여부는 verified로만 판단한다.
           if (!verification.verified) {
             throw const ApiException(message: '인증 코드가 올바르지 않아요');
           }
+          // 서버가 이메일 인증 상태를 이메일 기준으로 들고 있어, 가입 요청에
+          // 별도 인증 토큰을 함께 보내지 않는다.
           await authRepository.signUp(
             email: formState.email,
             password: formState.password,
             passwordConfirm: formState.passwordConfirm,
             nickname: formState.nickname,
-            verificationToken: verification.verificationToken,
           );
         },
       );

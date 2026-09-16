@@ -93,7 +93,9 @@ class AuthInterceptor extends Interceptor {
       );
       await _tokenStorage.saveTokens(
         accessToken: result.accessToken,
-        refreshToken: refreshToken,
+        // 서버가 리프레시 토큰을 회전시키면 새 값으로 교체하고, 안 주면
+        // 기존 값을 유지한다.
+        refreshToken: result.refreshToken ?? refreshToken,
       );
       return result.accessToken;
     } catch (_) {

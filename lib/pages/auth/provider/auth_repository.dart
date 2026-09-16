@@ -15,7 +15,6 @@ abstract class AuthRepository {
     required String password,
     required String passwordConfirm,
     required String nickname,
-    String? verificationToken,
   });
 
   Future<EmailSendCodeResult> sendEmailVerificationCode({
@@ -55,7 +54,6 @@ class HttpAuthRepository implements AuthRepository {
     required String password,
     required String passwordConfirm,
     required String nickname,
-    String? verificationToken,
   }) {
     return guardApiCall(() async {
       final response = await apiClient.dio.post(
@@ -65,9 +63,6 @@ class HttpAuthRepository implements AuthRepository {
           'password': password,
           'passwordConfirm': passwordConfirm,
           'nickname': nickname,
-          // 서버가 이메일 인증 상태를 이메일 기준으로 서버 쪽에 들고 있고
-          // 별도 토큰을 내려주지 않는 경우가 있어, 있을 때만 함께 보낸다.
-          'verificationToken': ?verificationToken,
         },
       );
       return SignUpResult.fromJson(response.data);

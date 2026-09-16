@@ -32,14 +32,9 @@ class EmailVerifyCodeResult {
   @JsonKey(defaultValue: false)
   final bool verified;
 
-  /// 회원가입 요청 시 함께 제출해야 하는 인증 완료 토큰.
-  /// 서버가 이 필드 없이 `verified`만 내려주는 경우도 있어 optional로 둔다.
-  final String? verificationToken;
-
   const EmailVerifyCodeResult({
     this.email = '',
     this.verified = false,
-    this.verificationToken,
   });
 
   factory EmailVerifyCodeResult.fromJson(Map<String, dynamic> json) =>

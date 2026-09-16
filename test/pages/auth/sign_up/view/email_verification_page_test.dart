@@ -14,7 +14,6 @@ class _VerificationAuthRepository implements AuthRepository {
 
   final bool verified;
   int signUpCalls = 0;
-  String? receivedVerificationToken;
 
   @override
   Future<void> logout() async {}
@@ -24,11 +23,7 @@ class _VerificationAuthRepository implements AuthRepository {
     required String email,
     required String code,
   }) async {
-    return EmailVerifyCodeResult(
-      email: email,
-      verified: verified,
-      verificationToken: verified ? 'verified-token' : null,
-    );
+    return EmailVerifyCodeResult(email: email, verified: verified);
   }
 
   @override
@@ -37,10 +32,8 @@ class _VerificationAuthRepository implements AuthRepository {
     required String password,
     required String passwordConfirm,
     required String nickname,
-    String? verificationToken,
   }) async {
     signUpCalls += 1;
-    receivedVerificationToken = verificationToken;
     return SignUpResult(
       userId: 1,
       email: email,
@@ -123,14 +116,13 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('인증 토큰을 회원가입 요청에 전달한다', (tester) async {
+  testWidgets('이메일 인증에 성공하면 회원가입을 요청한다', (tester) async {
     final repository = _VerificationAuthRepository(verified: true);
     await pumpPage(tester, repository);
 
     await submitCode(tester);
 
     expect(repository.signUpCalls, 1);
-    expect(repository.receivedVerificationToken, 'verified-token');
   });
 
   testWidgets('이메일 인증 실패 시 회원가입을 요청하지 않는다', (tester) async {
