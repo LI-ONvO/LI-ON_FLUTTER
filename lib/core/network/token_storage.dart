@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:li_on/features/auth/data/auth_user.dart';
+import 'package:li_on/core/auth/auth_user.dart';
 
 class TokenStorage {
   TokenStorage(this._storage);

@@ -8,7 +8,7 @@ import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/features/onboarding/presentation/view_models/onboarding_view_model.dart';
-import 'package:li_on/features/auth/data/auth_session.dart';
+import 'package:li_on/core/auth/auth_session.dart';
 
 class OnboardingPage extends ConsumerWidget {
   const OnboardingPage({super.key});

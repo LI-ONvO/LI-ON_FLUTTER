@@ -8,7 +8,7 @@ import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/card/custom_card.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/core/widgets/search_bar/custom_search_bar.dart';
-import 'package:li_on/features/auth/data/auth_session.dart';
+import 'package:li_on/core/auth/auth_session.dart';
 import 'package:li_on/features/certificate_search/data/certificate_repository.dart';
 import 'package:li_on/features/certificate_search/presentation/view_models/certificate_search_view_model.dart';
 

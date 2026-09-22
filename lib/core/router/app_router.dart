@@ -5,7 +5,7 @@ import 'package:li_on/core/router/app_shell.dart';
 import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/features/auth/presentation/pages/login_page.dart';
-import 'package:li_on/features/auth/data/auth_session.dart';
+import 'package:li_on/core/auth/auth_session.dart';
 import 'package:li_on/features/auth/presentation/pages/email_verification_page.dart';
 import 'package:li_on/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:li_on/features/calendar/presentation/pages/calendar_page.dart';

@@ -8,7 +8,7 @@ import 'package:li_on/core/widgets/dialog/confirm_dialog.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/features/auth/presentation/view_models/login_view_model.dart';
 import 'package:li_on/features/auth/data/auth_repository.dart';
-import 'package:li_on/features/auth/data/auth_session.dart';
+import 'package:li_on/core/auth/auth_session.dart';
 import 'package:li_on/features/auth/presentation/view_models/sign_in_view_model.dart';
 import 'package:li_on/features/calendar/data/calendar_repository.dart';
 import 'package:li_on/features/calendar/presentation/view_models/calendar_view_model.dart';

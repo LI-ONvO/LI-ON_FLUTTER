@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:li_on/features/auth/data/auth_user.dart';
+import 'package:li_on/core/auth/auth_user.dart';
 
 class AuthSessionController extends ChangeNotifier {
   bool _isAuthenticated = false;

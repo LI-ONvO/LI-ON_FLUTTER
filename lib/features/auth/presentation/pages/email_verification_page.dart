@@ -12,7 +12,7 @@ import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/core/widgets/text_field/custom_text_field.dart';
 import 'package:li_on/features/auth/data/auth_repository.dart';
-import 'package:li_on/features/auth/data/auth_session.dart';
+import 'package:li_on/core/auth/auth_session.dart';
 import 'package:li_on/features/auth/presentation/view_models/sign_in_view_model.dart';
 
 /// 회원가입 2단계: 발송된 인증코드를 확인하고, 확인되면 1단계에서 모아둔

@@ -4,7 +4,7 @@ import 'package:li_on/core/network/token_storage.dart';
 import 'package:li_on/core/utils/validators.dart';
 import 'package:li_on/features/auth/data/login_result.dart';
 import 'package:li_on/features/auth/data/auth_repository.dart';
-import 'package:li_on/features/auth/data/auth_session.dart';
+import 'package:li_on/core/auth/auth_session.dart';
 
 class LoginState {
   final String email;

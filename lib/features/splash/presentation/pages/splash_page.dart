@@ -4,8 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:li_on/core/network/token_storage.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
-import 'package:li_on/features/auth/data/auth_session.dart';
-import 'package:li_on/features/auth/data/auth_user.dart';
+import 'package:li_on/core/auth/auth_session.dart';
+import 'package:li_on/core/auth/auth_user.dart';
 
 /// 스플래시 로고의 한 변 길이. 원본 SVG가 800×800이라 크기를 지정하지 않으면
 /// 그 고유 크기 그대로 그려져 화면이 낮을 때 Column을 넘치므로 명시해 둔다.

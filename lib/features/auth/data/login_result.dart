@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:li_on/features/auth/data/auth_user.dart';
+import 'package:li_on/core/auth/auth_user.dart';
 
 part 'login_result.g.dart';
 

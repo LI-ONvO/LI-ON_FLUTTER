@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/features/roadmap/data/roadmap_message_result.dart';
 import 'package:li_on/features/roadmap/data/roadmap_repository.dart';
-import 'package:li_on/features/roadmap_chat/data/chat_message.dart';
+import 'package:li_on/features/roadmap/data/chat_message.dart';
 
 /// AI 로드맵 챗봇과의 메시지 교환을 추상화한다.
 /// 실제 대화는 서버의 채팅 세션 단위로 오가므로, 세션 생성·내역 조회·

@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:li_on/features/certificate_search/data/certificate.dart';
-import 'package:li_on/features/roadmap_chat/data/chat_message.dart';
+import 'package:li_on/features/roadmap/data/chat_message.dart';
 
 part 'chat_session_detail.g.dart';
 

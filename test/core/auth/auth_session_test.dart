@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:li_on/features/auth/data/auth_user.dart';
-import 'package:li_on/features/auth/data/auth_session.dart';
+import 'package:li_on/core/auth/auth_user.dart';
+import 'package:li_on/core/auth/auth_session.dart';
 
 void main() {
   const user = AuthUser(

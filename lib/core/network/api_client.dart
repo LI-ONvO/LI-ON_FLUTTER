@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/network/auth_interceptor.dart';
 import 'package:li_on/core/network/status_log_interceptor.dart';
 import 'package:li_on/core/network/token_storage.dart';
-import 'package:li_on/features/auth/data/auth_session.dart';
+import 'package:li_on/core/auth/auth_session.dart';
 
 /// API 서버 주소. 프로젝트 루트의 `.env` 파일에서 `API_BASE_URL`을 읽는다.
 /// 지정하지 않으면 로컬 개발 서버를 바라본다.

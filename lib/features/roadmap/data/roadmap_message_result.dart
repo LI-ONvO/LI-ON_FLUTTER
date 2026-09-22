@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:li_on/features/roadmap_chat/data/chat_message.dart';
+import 'package:li_on/features/roadmap/data/chat_message.dart';
 
 part 'roadmap_message_result.g.dart';
 

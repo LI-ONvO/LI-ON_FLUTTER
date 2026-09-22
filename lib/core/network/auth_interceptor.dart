@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:li_on/core/network/token_storage.dart';
-import 'package:li_on/features/auth/data/token_refresh_result.dart';
+import 'package:li_on/core/auth/token_refresh_result.dart';
 
 /// 모든 요청에 액세스 토큰을 붙이고, 401 응답을 받으면 리프레시 토큰으로
 /// 액세스 토큰을 갱신한 뒤 실패한 요청을 한 번 재시도한다.
