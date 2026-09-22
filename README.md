@@ -64,26 +64,46 @@ CI는 Codemagic에서 의존성 설치, 모델 코드 생성, 정적 분석, 테
 
 ## 프로젝트 구조
 
+기능(feature) 단위로 나누고, 각 기능 안쪽을 `data`와 `presentation`으로 나누는 MVVM + Repository 구조입니다.
+
 ```text
 lib/
 ├── core/
+│   ├── auth/            # 로그인 세션, 사용자·토큰 갱신 모델
 │   ├── constants/       # 색상, 폰트, 간격, 공통 상수
 │   ├── network/         # Dio 클라이언트, 인증 인터셉터, 토큰 저장소
 │   ├── router/          # GoRouter와 하단 탭 셸
 │   ├── utils/           # 폼 검증과 제출 보조 로직
 │   └── widgets/         # 공통 UI 컴포넌트
-├── pages/
+├── features/
 │   ├── auth/            # 로그인, 회원가입, 이메일 인증
 │   ├── calendar/        # 캘린더와 일정
 │   ├── certificate_search/
+│   ├── chat_history/    # 로드맵 대화 내역
 │   ├── data_room/       # 학습 자료 관리
 │   ├── my/              # 프로필
 │   ├── onboarding/
-│   └── roadmap/         # 로드맵 대화, 대화 내역, 자료 저장
+│   ├── roadmap/         # 로드맵 API 모델과 repository (화면 없음)
+│   ├── roadmap_chat/    # 로드맵 대화
+│   └── splash/
 └── main.dart
 ```
 
-기능은 주로 `model`, `provider`, `view`, `widget` 계층으로 나뉩니다. 상태와 의존성은 Riverpod provider로 연결하며, 데이터 저장소는 각 기능의 repository를 통해 접근합니다.
+각 기능은 아래 구조를 따릅니다. 화면이 없거나 단순한 기능은 일부 폴더가 없을 수 있습니다.
+
+```text
+features/<기능>/
+├── data/                # 응답 모델(model), repository
+└── presentation/
+    ├── pages/           # 화면(page)과 시트
+    ├── view_models/     # ViewModel (Riverpod)
+    └── widgets/         # 그 기능 안에서만 쓰는 위젯
+```
+
+- 의존 방향은 `presentation → data → core`입니다. `core`는 기능을 참조하지 않습니다(라우터가 페이지를 연결하는 경우만 예외).
+- 두 기능 이상에서 쓰는 코드는 `core/`로 올립니다.
+- 상태와 의존성은 Riverpod provider로 연결하며, 데이터 저장소는 각 기능의 repository를 통해 접근합니다.
+- 테스트는 `test/features/`, `test/core/` 아래에 소스와 같은 구조로 둡니다.
 
 ## 화면 흐름
 
