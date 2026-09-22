@@ -10,7 +10,7 @@ import 'package:li_on/features/auth/presentation/pages/email_verification_page.d
 import 'package:li_on/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:li_on/features/calendar/presentation/pages/calendar_page.dart';
 import 'package:li_on/features/certificate_search/presentation/pages/certificate_detail_page.dart';
-import 'package:li_on/features/certificate_search/presentation/pages/certificate_serch_page.dart';
+import 'package:li_on/features/certificate_search/presentation/pages/certificate_search_page.dart';
 import 'package:li_on/features/data_room/presentation/pages/data_room_page.dart';
 import 'package:li_on/features/data_room/presentation/pages/material_detail_page.dart';
 import 'package:li_on/features/my/presentation/pages/my_page.dart';
