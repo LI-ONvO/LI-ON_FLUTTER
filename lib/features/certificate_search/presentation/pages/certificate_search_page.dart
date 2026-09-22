@@ -28,6 +28,10 @@ class CertificateSearchPage extends ConsumerWidget {
 
     return BaseScaffold(
       appBar: null,
+      // 검색창이 화면 위쪽에 고정돼 있어 키보드가 올라와도 계속 보인다.
+      // 본문 높이를 줄이면 추천 섹션 등 고정 크기 요소들 때문에 남는
+      // 공간이 모자라 결과 목록에서 오버플로우가 났었다.
+      resizeToAvoidBottomInset: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
