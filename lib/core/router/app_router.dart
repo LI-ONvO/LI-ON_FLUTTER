@@ -103,6 +103,9 @@ GoRouter createAppRouter(AuthSessionController authSession) => GoRouter(
         // 대화 내역에서 들어온 경우, 앱바의 대화 내역 버튼이 새 화면을
         // 쌓지 않고 이미 아래에 있는 대화 내역으로 돌아가게 한다.
         openedFromHistory: state.uri.queryParameters['from'] == 'history',
+        // 자격증 상세에서 들어온 경우에만 있다. 대화 내역에서 열었다면
+        // 세션 상세 조회로 jmCd를 알아내므로 비워 둬도 된다.
+        jmCd: state.uri.queryParameters['jmCd'],
       ),
     ),
     StatefulShellRoute.indexedStack(

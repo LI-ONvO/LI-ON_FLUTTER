@@ -21,6 +21,8 @@ class DataRoomMaterials extends AsyncNotifier<List<SavedMaterial>> {
     required MaterialResourceType type,
     String url = '',
     String memo = '',
+    int? sessionId,
+    String? jmCd,
   }) async {
     final DataRoomRepository repository = ref.read(dataRoomRepositoryProvider);
     await repository.addMaterial(
@@ -30,6 +32,8 @@ class DataRoomMaterials extends AsyncNotifier<List<SavedMaterial>> {
       type: type,
       url: url,
       memo: memo,
+      sessionId: sessionId,
+      jmCd: jmCd,
     );
     // 저장 결과를 화면에 직접 끼워 넣지 않고 저장소에서 다시 읽어, 목록이
     // 항상 저장소와 같은 상태가 되게 한다.

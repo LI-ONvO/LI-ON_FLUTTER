@@ -8,6 +8,7 @@ import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_view_model.dart';
 import 'package:li_on/features/roadmap_chat/presentation/widgets/chat_bubble.dart';
 import 'package:li_on/features/roadmap_chat/presentation/widgets/chat_input_bar.dart';
+import 'package:li_on/features/roadmap_chat/presentation/widgets/resource_recommendation_sheet.dart';
 import 'package:li_on/features/roadmap_chat/presentation/widgets/typing_bubble.dart';
 
 class RoadmapChatPage extends ConsumerStatefulWidget {
@@ -19,12 +20,17 @@ class RoadmapChatPage extends ConsumerStatefulWidget {
   final int? historyId;
   final bool isRootChat;
 
+  /// 특정 자격증 상세에서 들어왔다면 그 자격증의 jmCd. 새 세션을 만들 때
+  /// 함께 보내고, "추천 자료" 진입점을 보여줄지 판단하는 데 쓴다.
+  final String? jmCd;
+
   const RoadmapChatPage({
     super.key,
     required this.certificateName,
     this.openedFromHistory = false,
     this.historyId,
     this.isRootChat = false,
+    this.jmCd,
   });
 
   @override
@@ -71,12 +77,30 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
     _scrollToBottom();
   }
 
+  /// 이 자격증에 맞는 학습 자료를 추천받는 시트를 연다. jmCd·세션이 모두
+  /// 있어야 부를 수 있어, 버튼 자체가 그 조건일 때만 보인다.
+  void _openResourceRecommendations(BuildContext context, RoadmapChatState state) {
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.4),
+      builder: (_) => ResourceRecommendationSheet(
+        jmCd: state.jmCd!,
+        sessionId: state.sessionId!,
+        certificateName: widget.certificateName,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = roadmapChatViewModelProvider(
       RoadmapChatSession(
         certificateName: widget.certificateName,
         historyId: widget.historyId,
+        jmCd: widget.jmCd,
       ),
     );
     final RoadmapChatState state = ref.watch(provider);
@@ -93,6 +117,18 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
         title: '${widget.certificateName} 로드맵',
         showBackButton: !widget.isRootChat,
         actions: [
+          if (state.jmCd != null && state.sessionId != null) ...[
+            GestureDetector(
+              onTap: () => _openResourceRecommendations(context, state),
+              behavior: HitTestBehavior.opaque,
+              child: const Icon(
+                Icons.auto_awesome_outlined,
+                size: 20,
+                color: AppColors.text,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.space3),
+          ],
           GestureDetector(
             onTap: () => _openChatHistory(context),
             behavior: HitTestBehavior.opaque,

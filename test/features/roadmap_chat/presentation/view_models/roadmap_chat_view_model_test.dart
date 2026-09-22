@@ -6,18 +6,24 @@ import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_cha
 /// 서버 대신 세션 ID별로 미리 정한 메시지를 돌려주는 가짜 저장소.
 class _FakeRoadmapChatRepository implements RoadmapChatRepository {
   @override
-  Future<int> createSession({required String certificateName}) async => 100;
+  Future<int> createSession({
+    required String certificateName,
+    String? jmCd,
+  }) async => 100;
 
   @override
-  Future<List<ChatMessage>> fetchMessages(int sessionId) async {
-    return [
-      ChatMessage(
-        id: sessionId,
-        sender: ChatSender.bot,
-        text: '세션 $sessionId의 과거 메시지',
-        timestamp: DateTime(2026, 7, 1),
-      ),
-    ];
+  Future<RoadmapChatSessionDetail> fetchSessionDetail(int sessionId) async {
+    return (
+      messages: [
+        ChatMessage(
+          id: sessionId,
+          sender: ChatSender.bot,
+          text: '세션 $sessionId의 과거 메시지',
+          timestamp: DateTime(2026, 7, 1),
+        ),
+      ],
+      jmCd: null,
+    );
   }
 
   @override

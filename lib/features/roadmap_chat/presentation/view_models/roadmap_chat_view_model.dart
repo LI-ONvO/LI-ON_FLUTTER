@@ -5,7 +5,11 @@ import 'package:li_on/features/roadmap/data/chat_message.dart';
 export 'package:li_on/features/roadmap/data/chat_message.dart';
 
 class RoadmapChatSession {
-  const RoadmapChatSession({required this.certificateName, this.historyId});
+  const RoadmapChatSession({
+    required this.certificateName,
+    this.historyId,
+    this.jmCd,
+  });
 
   final String certificateName;
 
@@ -13,27 +17,50 @@ class RoadmapChatSession {
   /// 첫 메시지를 보낼 때 세션이 만들어진다.
   final int? historyId;
 
+  /// 특정 자격증 상세에서 들어왔다면 그 자격증의 jmCd. 자료 추천처럼
+  /// 자격증에 종속된 기능을 켤지 판단하는 데 쓴다.
+  final String? jmCd;
+
   @override
   bool operator ==(Object other) {
     return other is RoadmapChatSession &&
         certificateName == other.certificateName &&
-        historyId == other.historyId;
+        historyId == other.historyId &&
+        jmCd == other.jmCd;
   }
 
   @override
-  int get hashCode => Object.hash(certificateName, historyId);
+  int get hashCode => Object.hash(certificateName, historyId, jmCd);
 }
 
 class RoadmapChatState {
   final List<ChatMessage> messages;
   final bool isBotTyping;
 
-  const RoadmapChatState({this.messages = const [], this.isBotTyping = false});
+  /// 서버에 만들어진 채팅 세션 ID. 첫 메시지를 보내기 전(새 대화)에는 null.
+  final int? sessionId;
 
-  RoadmapChatState copyWith({List<ChatMessage>? messages, bool? isBotTyping}) {
+  /// 이 대화가 연결된 자격증의 jmCd. 자료 추천 진입점을 보여줄지 결정한다.
+  final String? jmCd;
+
+  const RoadmapChatState({
+    this.messages = const [],
+    this.isBotTyping = false,
+    this.sessionId,
+    this.jmCd,
+  });
+
+  RoadmapChatState copyWith({
+    List<ChatMessage>? messages,
+    bool? isBotTyping,
+    int? sessionId,
+    String? jmCd,
+  }) {
     return RoadmapChatState(
       messages: messages ?? this.messages,
       isBotTyping: isBotTyping ?? this.isBotTyping,
+      sessionId: sessionId ?? this.sessionId,
+      jmCd: jmCd ?? this.jmCd,
     );
   }
 }
@@ -57,9 +84,10 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
       // build는 동기라 여기서 기다릴 수 없으므로, 과거 메시지는 뒤에서
       // 불러와 상태를 갱신한다.
       Future.microtask(() => _loadHistory(session.historyId!));
-      return const RoadmapChatState();
+      return RoadmapChatState(sessionId: session.historyId, jmCd: session.jmCd);
     }
     return RoadmapChatState(
+      jmCd: session.jmCd,
       messages: [
         ChatMessage(
           id: 0,
@@ -75,11 +103,11 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
 
   Future<void> _loadHistory(int sessionId) async {
     try {
-      final List<ChatMessage> messages = await ref
+      final RoadmapChatSessionDetail detail = await ref
           .read(roadmapChatRepositoryProvider)
-          .fetchMessages(sessionId);
+          .fetchSessionDetail(sessionId);
       if (!ref.mounted) return;
-      state = state.copyWith(messages: messages);
+      state = state.copyWith(messages: detail.messages, jmCd: detail.jmCd);
     } catch (_) {
       if (!ref.mounted) return;
       state = state.copyWith(
@@ -115,6 +143,7 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
       );
       final int sessionId = _sessionId ??= await repository.createSession(
         certificateName: certificateName,
+        jmCd: session.jmCd,
       );
 
       final ChatMessage reply = await repository.sendMessage(
@@ -126,6 +155,7 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
       state = state.copyWith(
         messages: [...state.messages, reply],
         isBotTyping: false,
+        sessionId: sessionId,
       );
     } catch (_) {
       // 응답에 실패해도 입력이 계속 막히지 않도록 typing 상태를 되돌리고,

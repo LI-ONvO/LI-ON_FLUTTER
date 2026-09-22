@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/constants/material_category.dart';
 import 'package:li_on/core/network/api_client.dart';
 import 'package:li_on/core/network/api_exception.dart';
+import 'package:li_on/features/data_room/data/resource_recommendation.dart';
 import 'package:li_on/features/data_room/data/resource_response.dart';
 import 'package:li_on/features/data_room/data/saved_material.dart';
 
@@ -58,6 +59,14 @@ abstract class DataRoomRepository {
     String memo,
     int? sessionId,
     String? jmCd,
+  });
+
+  /// `POST /api/resources/recommendations` — 이 자격증·세션에 맞는 학습
+  /// 자료를 AI가 추천한다. 이미 아카이빙한 자료는 서버가 제외하고 준다.
+  Future<ResourceRecommendationResult> fetchRecommendations({
+    required String jmCd,
+    required int sessionId,
+    int size,
   });
 
   /// 사용자가 고칠 수 있는 항목(제목·카테고리·메모)만 바꾼다.
@@ -144,6 +153,25 @@ class InMemoryDataRoomRepository implements DataRoomRepository {
   @override
   Future<void> deleteMaterial(int id) async {
     _materials.removeWhere((material) => material.id == id);
+  }
+
+  @override
+  Future<ResourceRecommendationResult> fetchRecommendations({
+    required String jmCd,
+    required int sessionId,
+    int size = 5,
+  }) async {
+    return ResourceRecommendationResult(
+      jmCd: jmCd,
+      generatedAt: DateTime.now(),
+      items: const [
+        ResourceRecommendationItem(
+          title: '기출문제 해설 영상',
+          url: 'https://example.com/video/mock',
+          reason: '테스트용 더미 추천입니다.',
+        ),
+      ],
+    );
   }
 }
 
@@ -269,6 +297,21 @@ class HttpDataRoomRepository implements DataRoomRepository {
   Future<void> deleteMaterial(int id) {
     return guardApiCall(() async {
       await apiClient.dio.delete('/api/resources/$id');
+    });
+  }
+
+  @override
+  Future<ResourceRecommendationResult> fetchRecommendations({
+    required String jmCd,
+    required int sessionId,
+    int size = 5,
+  }) {
+    return guardApiCall(() async {
+      final response = await apiClient.dio.post(
+        '/api/resources/recommendations',
+        data: {'jmCd': jmCd, 'sessionId': sessionId, 'size': size},
+      );
+      return ResourceRecommendationResult.fromJson(response.data);
     });
   }
 }

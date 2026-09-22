@@ -45,7 +45,10 @@ class CertificateDetailPage extends ConsumerWidget {
         onPressed: () {
           if (certificateName.isEmpty) return;
           if (ModalRoute.of(context)?.isCurrent != true) return;
-          context.push('/roadmap/chat/${Uri.encodeComponent(certificateName)}');
+          context.push(
+            '/roadmap/chat/${Uri.encodeComponent(certificateName)}'
+            '?jmCd=${Uri.encodeComponent(certificateId)}',
+          );
         },
       ),
       child: detailAsync.when(
