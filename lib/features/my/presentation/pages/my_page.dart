@@ -1,8 +1,10 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/network/token_storage.dart';
+import 'package:li_on/core/notification/device_token_repository.dart';
 import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
 import 'package:li_on/core/widgets/dialog/confirm_dialog.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
@@ -89,6 +91,13 @@ class _MyPageState extends ConsumerState<MyPage> {
     // 진행해, 네트워크 문제로 로그아웃이 막히지 않게 한다.
     try {
       await ref.read(authRepositoryProvider).logout();
+    } catch (_) {}
+    // 이 기기의 FCM 토큰을 해제한다. accessToken이 지워지기 전에 호출해야 한다.
+    try {
+      final String? fcmToken = await FirebaseMessaging.instance.getToken();
+      if (fcmToken != null) {
+        await ref.read(deviceTokenRepositoryProvider).unregister(fcmToken);
+      }
     } catch (_) {}
     if (!context.mounted) return;
     // 저장된 토큰과 사용자별 메모리 상태를 지워, 다른 계정에 이전 데이터가
