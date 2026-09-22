@@ -6,6 +6,7 @@ import 'package:li_on/core/network/api_client.dart';
 import 'package:li_on/core/network/api_exception.dart';
 import 'package:li_on/features/certificate_search/data/certificate.dart';
 import 'package:li_on/features/certificate_search/data/certificate_detail.dart';
+import 'package:li_on/features/certificate_search/data/certificate_recommendation.dart';
 import 'package:li_on/features/certificate_search/data/certificate_search_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,6 +15,12 @@ abstract class CertificateRepository {
   /// 자격증 목록. [keyword]·[fieldId]를 주면 서버에서 필터링해 준다.
   Future<List<Certificate>> fetchCertificates({String? keyword, int? fieldId});
   Future<CertificateDetail?> fetchCertificateDetail(String id);
+
+  /// `GET /api/recommendations` — 생성된 추천이 없으면 null.
+  Future<CertificateRecommendationResult?> fetchRecommendations();
+
+  /// `POST /api/recommendations` — 온보딩에서 고른 희망 분야 기준으로 새 추천을 만든다.
+  Future<CertificateRecommendationResult> createRecommendations({int size});
 }
 
 final certificateRepositoryProvider = Provider<CertificateRepository>((ref) {
@@ -140,6 +147,34 @@ class HttpCertificateRepository implements CertificateRepository {
         if (exception.response?.statusCode == 404) return null;
         rethrow;
       }
+    });
+  }
+
+  @override
+  Future<CertificateRecommendationResult?> fetchRecommendations() {
+    return guardApiCall(() async {
+      try {
+        final response = await apiClient.dio.get('/api/recommendations');
+        return CertificateRecommendationResult.fromJson(response.data);
+      } on DioException catch (exception) {
+        // 아직 추천을 만든 적 없음을 뜻하므로, 오류가 아니라 null로 알려
+        // 화면이 "추천받기" 진입점을 보여주게 한다.
+        if (exception.response?.statusCode == 404) return null;
+        rethrow;
+      }
+    });
+  }
+
+  @override
+  Future<CertificateRecommendationResult> createRecommendations({
+    int size = 5,
+  }) {
+    return guardApiCall(() async {
+      final response = await apiClient.dio.post(
+        '/api/recommendations',
+        data: {'size': size},
+      );
+      return CertificateRecommendationResult.fromJson(response.data);
     });
   }
 }

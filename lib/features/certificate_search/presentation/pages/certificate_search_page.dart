@@ -11,6 +11,7 @@ import 'package:li_on/core/widgets/search_bar/custom_search_bar.dart';
 import 'package:li_on/core/auth/auth_session.dart';
 import 'package:li_on/features/certificate_search/data/certificate_repository.dart';
 import 'package:li_on/features/certificate_search/presentation/view_models/certificate_search_view_model.dart';
+import 'package:li_on/features/certificate_search/presentation/widgets/recommendation_section.dart';
 
 class CertificateSearchPage extends ConsumerWidget {
   const CertificateSearchPage({super.key});
@@ -38,6 +39,8 @@ class CertificateSearchPage extends ConsumerWidget {
               fontSize: 16,
             ),
           ),
+          const SizedBox(height: AppSpacing.space3),
+          const RecommendationSection(),
           const SizedBox(height: AppSpacing.space2),
           CustomSearchBar(onChanged: viewModel.setQuery),
           const SizedBox(height: AppSpacing.space2),
