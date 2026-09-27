@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -181,6 +182,16 @@ class HttpCertificateRepository implements CertificateRepository {
 
 final certificatesProvider = FutureProvider<List<Certificate>>((ref) {
   return ref.watch(certificateRepositoryProvider).fetchCertificates();
+});
+
+/// 추천할 자격증이 없을 때 대신 보여줄 무작위 자격증 한 건.
+/// 목록이 로드된 뒤 한 번만 뽑아 앱 세션 동안 고정한다(다시 뽑으려면
+/// [certificatesProvider]가 새로 로드돼야 함).
+final randomCertificateProvider = Provider<Certificate?>((ref) {
+  final List<Certificate> certificates =
+      ref.watch(certificatesProvider).value ?? const [];
+  if (certificates.isEmpty) return null;
+  return certificates[Random().nextInt(certificates.length)];
 });
 
 /// 자격증 상세 정보.

@@ -11,12 +11,30 @@ class ApiException implements Exception {
   /// 사용자에게 그대로 보여줄 수 있는 한국어 안내 문구.
   final String message;
 
-  const ApiException({this.statusCode, required this.message});
+  /// 서버가 응답 본문에 함께 내려주는 에러 코드(예: `NO_CANDIDATE_CERTIFICATE`).
+  /// 화면이 상태 코드보다 더 구체적으로 분기해야 할 때 쓴다. 응답을 못
+  /// 받았거나 코드 필드가 없으면 null.
+  final String? code;
+
+  const ApiException({this.statusCode, required this.message, this.code});
 
   bool get isUnauthorized => statusCode == 401;
 
   factory ApiException.fromDio(DioException exception) {
     final int? statusCode = exception.response?.statusCode;
+    final dynamic responseData = exception.response?.data;
+    final String? code = responseData is Map
+        ? responseData['code'] as String?
+        : null;
+    // 서버가 함께 내려주는 문구. 400/401/403/404/409/5xx처럼 화면에
+    // 맞춰 일부러 다른 말로 바꿔 쓰는 경우가 아니라면, 우리가 짐작한
+    // 문구보다 서버가 실제 실패 사유를 담아 보내는 이 문구가 더 정확하다
+    // (예: "온보딩을 먼저 완료해 주세요" 같은, 상태 코드만으로는 알 수
+    // 없는 이유). 코드 하나하나를 다 알아서 분기하는 대신, 우리가
+    // 명시적으로 다루지 않는 상태 코드에서는 이 문구를 그대로 쓴다.
+    final String? serverMessage = responseData is Map
+        ? responseData['message'] as String?
+        : null;
     final String message = switch (exception.type) {
       DioExceptionType.connectionTimeout ||
       DioExceptionType.sendTimeout ||
@@ -25,16 +43,16 @@ class ApiException implements Exception {
       DioExceptionType.badResponse => switch (statusCode) {
         400 => '요청 내용을 다시 확인해주세요',
         401 => '로그인이 필요해요',
-        403 => '접근 권한이 없어요',
+        403 => '권한이 없어요',
         404 => '요청한 정보를 찾을 수 없어요',
         409 => '이미 처리된 요청이에요',
         final int code when code >= 500 =>
           '서버에 문제가 생겼어요. 잠시 후 다시 시도해주세요',
-        _ => '요청을 처리하지 못했어요',
+        _ => serverMessage ?? '요청을 처리하지 못했어요',
       },
       _ => '요청을 처리하지 못했어요',
     };
-    return ApiException(statusCode: statusCode, message: message);
+    return ApiException(statusCode: statusCode, message: message, code: code);
   }
 
   @override
