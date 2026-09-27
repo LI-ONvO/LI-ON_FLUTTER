@@ -121,9 +121,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           autovalidateMode: formState.autovalidateMode,
                           onChanged: viewModel.setPassword,
                           textInputAction: TextInputAction.done,
-                          // 키보드의 완료 버튼으로도 바로 로그인할 수 있게 한다.
-                          // 요청이 진행 중일 때는 무시해, 첫 요청이 끝나기 전에
-                          // 성공으로 오인해 화면이 넘어가는 일을 막는다.
                           onSubmitted: (_) {
                             if (formState.isFilled && !formState.isSubmitting) {
                               _submit();
