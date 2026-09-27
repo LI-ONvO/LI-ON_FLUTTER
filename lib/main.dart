@@ -7,6 +7,7 @@ import 'package:li_on/core/notification/push_notification_service.dart';
 import 'package:li_on/core/router/app_router.dart';
 import 'package:li_on/core/widgets/layout/web_frame.dart';
 import 'package:li_on/core/auth/auth_session.dart';
+import 'package:li_on/features/splash/presentation/pages/splash_page.dart';
 import 'package:li_on/firebase_options.dart';
 
 Future<void> main() async {
@@ -25,6 +26,8 @@ Future<void> main() async {
       ) {});
     },
   );
+
+  await precacheSplashLogo();
 
   runApp(
     UncontrolledProviderScope(container: container, child: const MyApp()),
