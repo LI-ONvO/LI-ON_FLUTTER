@@ -30,10 +30,15 @@ GoRouter createAppRouter(AuthSessionController authSession) => GoRouter(
         state.matchedLocation == '/splash' ||
         state.matchedLocation == '/login' ||
         state.matchedLocation == '/sign-up' ||
-        state.matchedLocation == '/sign-up/verify-email';
+        state.matchedLocation == '/sign-up/verify-email' ||
+        state.matchedLocation == '/onboarding';
+    // 온보딩은 회원가입 직후(canAccessOnboarding)뿐 아니라, 로그인된
+    // 사용자라면 마이페이지에서 언제든 다시 들어와 희망 분야를 고칠 수
+    // 있다. 둘 다 아니면(비로그인 상태로 직접 진입) 가입부터 하게 한다.
     if (state.matchedLocation == '/onboarding' &&
-        !authSession.canAccessOnboarding) {
-      return authSession.isAuthenticated ? '/search' : '/sign-up';
+        !authSession.canAccessOnboarding &&
+        !authSession.isAuthenticated) {
+      return '/sign-up';
     }
     if (!authSession.isAuthenticated && !isGuestRoute) return '/login';
     if (authSession.isAuthenticated &&
