@@ -10,6 +10,7 @@ import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
 import 'package:li_on/core/widgets/dialog/confirm_dialog.dart';
 import 'package:li_on/core/widgets/layout/app_bottom_sheet.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
+import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/features/auth/data/auth_repository.dart';
 import 'package:li_on/core/auth/auth_session.dart';
 import 'package:li_on/features/certificate_search/presentation/widgets/recommendation_section.dart';
@@ -27,17 +28,21 @@ class MyPage extends ConsumerStatefulWidget {
 }
 
 class _MyPageState extends ConsumerState<MyPage> {
-  Profile _profile = const Profile(
-    id: 0,
-    email: '',
-    nickname: '사용자',
-    desiredFields: [],
-    isOnboarded: false,
-  );
+  /// 서버에서 받은 프로필. 불러오기 전(또는 실패 시)에는 null이며, 그동안
+  /// 기본값("사용자", 온보딩 미완료 배너)을 보여주면 저장한 닉네임이
+  /// 사라진 것처럼 보이므로 세션의 닉네임을 대신 쓰고 배너는 숨긴다.
+  Profile? _profile;
+
+  String get _nickname =>
+      _profile?.nickname ??
+      ref.read(authSessionProvider).user?.nickname ??
+      '사용자';
 
   String get _explanation {
-    if (_profile.desiredFields.isEmpty) return '희망 분야를 설정해주세요';
-    return _profile.desiredFields.map((field) => field.name).join(', ');
+    final Profile? profile = _profile;
+    if (profile == null) return '';
+    if (profile.desiredFields.isEmpty) return '희망 분야를 설정해주세요';
+    return profile.desiredFields.map((field) => field.name).join(', ');
   }
 
   @override
@@ -47,33 +52,67 @@ class _MyPageState extends ConsumerState<MyPage> {
   }
 
   /// 서버에 저장된 실제 프로필(회원가입 때 입력한 닉네임 포함)을 불러온다.
-  /// 실패하면 기본값을 그대로 유지한다.
+  /// 실패하면 세션의 닉네임을 그대로 보여주고, 수정 버튼을 누를 때 다시
+  /// 시도한다([_onEditTap]).
   Future<void> _loadProfile() async {
     try {
       final profile = await ref.read(userRepositoryProvider).fetchMyProfile();
       if (!mounted) return;
-      setState(() => _profile = profile);
+      _applyProfile(profile);
     } catch (_) {}
   }
 
-  Future<void> _openEditProfileSheet(BuildContext context) async {
-    final ProfileEditResult? result =
-        await showAppBottomSheet<ProfileEditResult>(
-          context: context,
-          builder: (context) => CustomBottomSheet(
-            name: _profile.nickname,
-            email: _profile.email,
-            desiredFields: _profile.desiredFields,
-          ),
-        );
-    if (result == null || !mounted) return;
+  /// 서버에서 받은 프로필을 화면에 반영하고, 다른 기기에서 닉네임을 바꾼
+  /// 경우처럼 세션의 닉네임이 서버와 다르면 함께 맞춘다.
+  void _applyProfile(Profile profile) {
+    setState(() => _profile = profile);
+    // 화면 표시에는 영향이 없는 보조 동기화라, 기기 저장소 쓰기가 실패해도
+    // 무시한다(다음 조회 때 다시 시도된다).
+    syncSessionNickname(
+      ref.read(authSessionProvider),
+      ref.read(tokenStorageProvider),
+      profile.nickname,
+    ).catchError((Object error) {
+      debugPrint('[profile] 닉네임을 기기에 저장하지 못했어요: $error');
+    });
+  }
+
+  /// 프로필을 아직 못 불러왔다면(네트워크 오류 등) 수정 시트를 열기 전에
+  /// 한 번 더 불러오고, 그래도 실패하면 이유를 알린다.
+  Future<void> _onEditTap(BuildContext context) async {
+    if (_profile == null) await _loadProfile();
+    if (!context.mounted) return;
+    final Profile? profile = _profile;
+    if (profile == null) {
+      CustomSnackbar.show(
+        context,
+        message: '내 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요',
+        type: SnackbarType.error,
+      );
+      return;
+    }
+    await _openEditProfileSheet(context, profile);
+  }
+
+  Future<void> _openEditProfileSheet(
+    BuildContext context,
+    Profile profile,
+  ) async {
+    final String? savedNickname = await showAppBottomSheet<String>(
+      context: context,
+      builder: (context) =>
+          CustomBottomSheet(name: profile.nickname, email: profile.email),
+    );
+    if (savedNickname == null || !mounted) return;
+    // 시트가 myProfileProvider를 invalidate해 곧 서버 값으로 다시 갱신되지만,
+    // 그 전에도 바뀐 닉네임이 바로 보이게 먼저 반영한다.
     setState(() {
       _profile = Profile(
-        id: _profile.id,
-        email: _profile.email,
-        nickname: result.name,
-        desiredFields: result.desiredFields,
-        isOnboarded: _profile.isOnboarded,
+        id: profile.id,
+        email: profile.email,
+        nickname: savedNickname,
+        desiredFields: profile.desiredFields,
+        isOnboarded: profile.isOnboarded,
       );
     });
   }
@@ -109,13 +148,15 @@ class _MyPageState extends ConsumerState<MyPage> {
   Widget build(BuildContext context) {
     // 온보딩을 마이페이지에서 다시 제출하면(onboarding_page.dart) 이
     // provider를 invalidate한다. 그 갱신을 받아 배너·희망 분야 문구를
-    // 새로고침 없이 바로 갱신한다. 수정 시트(_openEditProfileSheet)도
+    // 새로고침 없이 바로 갱신한다. 닉네임 수정 시트(_openEditProfileSheet)도
     // 서버 저장 후 이 provider를 invalidate한다.
     ref.listen<AsyncValue<Profile>>(myProfileProvider, (previous, next) {
       next.whenData((profile) {
-        if (mounted) setState(() => _profile = profile);
+        if (mounted) _applyProfile(profile);
       });
     });
+
+    final Profile? profile = _profile;
 
     return BaseScaffold(
       appBar: CustomAppBar(title: '내 정보', showBackButton: false),
@@ -123,14 +164,14 @@ class _MyPageState extends ConsumerState<MyPage> {
         child: Column(
           children: [
             MyPageProfile(
-              nickname: _profile.nickname,
+              nickname: _nickname,
               explanation: _explanation,
-              onEditTap: () => _openEditProfileSheet(context),
+              onEditTap: () => _onEditTap(context),
             ),
             // 회원가입 직후 온보딩 제출이 실패했거나 건너뛴 계정을 위한
             // 안내. 서버가 내려주는 isOnboarded를 그대로 신뢰해, 추천을
             // 눌러봐서 409를 만나기 전에 먼저 다시 할 수 있게 안내한다.
-            if (!_profile.isOnboarded) ...[
+            if (profile != null && !profile.isOnboarded) ...[
               const SizedBox(height: AppSpacing.space3),
               _OnboardingReminderBanner(
                 onTap: () => context.push('/onboarding'),

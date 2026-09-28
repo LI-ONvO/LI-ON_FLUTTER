@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/auth/auth_user.dart';
+import 'package:li_on/core/network/token_storage.dart';
 
 class AuthSessionController extends ChangeNotifier {
   bool _isAuthenticated = false;
@@ -25,6 +26,12 @@ class AuthSessionController extends ChangeNotifier {
 
   void signIn(AuthUser user) {
     _isAuthenticated = true;
+    _user = user;
+    notifyListeners();
+  }
+
+  /// 로그인 상태는 그대로 두고 사용자 정보만 바꾼다(예: 닉네임 수정).
+  void updateUser(AuthUser user) {
     _user = user;
     notifyListeners();
   }
@@ -62,3 +69,22 @@ final authSessionProvider = Provider<AuthSessionController>((ref) {
   ref.onDispose(controller.dispose);
   return controller;
 });
+
+/// 서버에 저장된 닉네임을 세션과 기기 저장소의 사용자 정보에 반영한다.
+/// 저장소 값은 앱을 다시 켤 때 세션 복원에 쓰이므로, 둘 다 고쳐야 재실행
+/// 후에도 예전 닉네임이 보이지 않는다. 이미 같으면 아무것도 하지 않는다.
+Future<void> syncSessionNickname(
+  AuthSessionController session,
+  TokenStorage storage,
+  String nickname,
+) async {
+  final AuthUser? user = session.user;
+  if (user == null || user.nickname == nickname) return;
+  final AuthUser updated = AuthUser(
+    userId: user.userId,
+    email: user.email,
+    nickname: nickname,
+  );
+  session.updateUser(updated);
+  await storage.saveUser(updated);
+}
