@@ -7,6 +7,7 @@ import 'package:li_on/core/notification/push_notification_service.dart';
 import 'package:li_on/core/router/app_router.dart';
 import 'package:li_on/core/widgets/layout/web_frame.dart';
 import 'package:li_on/core/auth/auth_session.dart';
+import 'package:li_on/core/auth/user_scoped_state_reset.dart';
 import 'package:li_on/features/splash/presentation/pages/splash_page.dart';
 import 'package:li_on/firebase_options.dart';
 
@@ -18,20 +19,20 @@ Future<void> main() async {
   // main()에서 FCM 토큰 갱신 콜백이 API 클라이언트/인증 상태에 접근할 수
   // 있도록, 위젯 트리와 같은 컨테이너를 미리 만들어 공유한다.
   final ProviderContainer container = ProviderContainer();
+  resetUserScopedStateOnSignOut(container);
   await PushNotificationService.initialize(
     onTokenRefresh: (token) {
       if (!container.read(authSessionProvider).isAuthenticated) return;
-      container.read(deviceTokenRepositoryProvider).register(token).catchError((
-        _,
-      ) {});
+      container
+          .read(deviceTokenRepositoryProvider)
+          .register(token)
+          .catchError((_) {});
     },
   );
 
   await precacheSplashLogo();
 
-  runApp(
-    UncontrolledProviderScope(container: container, child: const MyApp()),
-  );
+  runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
 }
 
 class MyApp extends ConsumerWidget {
