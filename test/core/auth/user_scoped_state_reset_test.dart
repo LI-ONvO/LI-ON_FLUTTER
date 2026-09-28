@@ -81,4 +81,23 @@ void main() {
 
     expect(container.read(loginViewModelProvider).email, 'a@b.com');
   });
+
+  test('회원가입 직후 온보딩 중에 세션이 만료되면 사용자별 상태를 초기화한다', () {
+    authSession.startOnboarding(user: user);
+    container.read(signInViewModelProvider.notifier).setNickname('닉네임');
+
+    authSession.signOut();
+
+    expect(container.read(signInViewModelProvider).nickname, isEmpty);
+  });
+
+  test('회원가입 직후 온보딩을 마쳐 로그인되면 초기화하지 않는다', () {
+    authSession.startOnboarding(user: user);
+    container.read(signInViewModelProvider.notifier).setNickname('닉네임');
+
+    authSession.finishOnboarding();
+
+    expect(authSession.isAuthenticated, isTrue);
+    expect(container.read(signInViewModelProvider).nickname, '닉네임');
+  });
 }

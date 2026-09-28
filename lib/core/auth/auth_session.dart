@@ -43,7 +43,14 @@ class AuthSessionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 온보딩을 마친다. 회원가입 직후라면 가입 때 받아 둔 사용자로 로그인
+  /// 상태까지 한 번에 바꾼다. 두 단계로 나눠 알리면 그 사이에 "세션 없음"
+  /// 상태가 잠깐 보여, 로그아웃 감지가 이를 로그아웃으로 착각한다.
   void finishOnboarding() {
+    if (!_isAuthenticated && _onboardingUser != null) {
+      _isAuthenticated = true;
+      _user = _onboardingUser;
+    }
     _canAccessOnboarding = false;
     _onboardingUser = null;
     notifyListeners();

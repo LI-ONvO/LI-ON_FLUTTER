@@ -14,20 +14,24 @@ import 'package:li_on/features/my/data/user_repository.dart';
 import 'package:li_on/features/onboarding/presentation/view_models/onboarding_view_model.dart';
 import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_view_model.dart';
 
-/// 로그인 상태에서 로그아웃 상태로 바뀔 때마다 사용자별 캐시를 비운다.
+/// 세션이 있던 상태에서 없는 상태로 바뀔 때마다 사용자별 캐시를 비운다.
 ///
 /// 직접 로그아웃한 경우뿐 아니라 토큰 갱신에 실패해 세션이 만료된 경우
 /// (AuthInterceptor → signOut)도 같은 길을 거치므로, 같은 기기에서 다른
-/// 계정으로 로그인했을 때 이전 계정의 데이터가 보이지 않는다.
+/// 계정으로 로그인했을 때 이전 계정의 데이터가 보이지 않는다. 회원가입
+/// 직후 온보딩 중(아직 비로그인이지만 토큰은 있는 상태)도 세션으로 친다.
 void resetUserScopedStateOnSignOut(ProviderContainer container) {
   final AuthSessionController authSession = container.read(authSessionProvider);
-  bool wasAuthenticated = authSession.isAuthenticated;
+  bool hadSession = _hasSession(authSession);
   authSession.addListener(() {
-    final bool isAuthenticated = authSession.isAuthenticated;
-    if (wasAuthenticated && !isAuthenticated) _resetUserScopedState(container);
-    wasAuthenticated = isAuthenticated;
+    final bool hasSession = _hasSession(authSession);
+    if (hadSession && !hasSession) _resetUserScopedState(container);
+    hadSession = hasSession;
   });
 }
+
+bool _hasSession(AuthSessionController authSession) =>
+    authSession.isAuthenticated || authSession.onboardingUser != null;
 
 void _resetUserScopedState(ProviderContainer container) {
   container.invalidate(loginViewModelProvider);

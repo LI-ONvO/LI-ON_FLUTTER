@@ -6,7 +6,6 @@ import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/network/api_exception.dart';
-import 'package:li_on/core/auth/auth_user.dart';
 import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
@@ -60,11 +59,7 @@ class _OnboardingForm extends ConsumerWidget {
         // 라우터가 실제로 이동하지 않는 경우가 있어 go()로 목적지를
         // 명시한다.
         final bool wasAlreadySignedIn = authSession.isAuthenticated;
-        final AuthUser? signedUpUser = authSession.onboardingUser;
         authSession.finishOnboarding();
-        if (!wasAlreadySignedIn && signedUpUser != null) {
-          authSession.signIn(signedUpUser);
-        }
         final bool isSignedIn = authSession.isAuthenticated;
         // 희망 분야가 바뀌었으니 추천을 새로 만든다. GET은 서버에 저장된
         // 예전 추천(빈 목록일 수도 있음)을 그대로 돌려줄 뿐이라 invalidate
