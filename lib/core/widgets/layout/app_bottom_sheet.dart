@@ -6,6 +6,25 @@ import 'package:li_on/core/constants/spacing.dart';
 /// 태블릿·웹처럼 폭이 넓은 화면에서 시트가 과하게 늘어나지 않도록 제한한다.
 const double _maxSheetWidth = 640;
 
+/// 앱의 바텀시트를 공통 설정으로 띄운다.
+///
+/// 탭 화면은 go_router 셸 브랜치의 중첩 Navigator 안에 있어, 그 Navigator에
+/// 띄우면 하단 탭바 위 영역에만 걸친다. 최상위 Navigator에 띄워 화면 전체를
+/// 덮고, 배경은 투명하게 두어 [AppBottomSheet]의 둥근 모서리가 보이게 한다.
+Future<T?> showAppBottomSheet<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+}) {
+  return showModalBottomSheet<T>(
+    context: context,
+    useRootNavigator: true,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withValues(alpha: 0.4),
+    builder: builder,
+  );
+}
+
 /// 앱 바텀시트의 공통 골격. 손잡이 바·제목·닫기 버튼과 화면 하단에 붙는
 /// 배치를 맡고, 그 아래 내용은 [children]으로 받는다.
 ///

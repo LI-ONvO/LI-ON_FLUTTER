@@ -17,27 +17,22 @@ class ApiClient {
 
   ApiClient(this._dio);
 
+  static const Duration _timeout = Duration(seconds: 10);
+
   factory ApiClient.create({
     required String baseUrl,
     required TokenStorage token,
     required VoidCallback onSessionExpired,
   }) {
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: baseUrl,
-        receiveTimeout: Duration(seconds: 10),
-        connectTimeout: Duration(seconds: 10),
-      ),
+    final BaseOptions options = BaseOptions(
+      baseUrl: baseUrl,
+      receiveTimeout: _timeout,
+      connectTimeout: _timeout,
     );
+    final dio = Dio(options);
     // 토큰 갱신 요청은 인터셉터가 없는 별도 Dio로 보내, 갱신 요청이 다시
     // 401을 받아도 무한 재시도에 빠지지 않게 한다.
-    final Dio refreshDio = Dio(
-      BaseOptions(
-        baseUrl: baseUrl,
-        receiveTimeout: Duration(seconds: 10),
-        connectTimeout: Duration(seconds: 10),
-      ),
-    );
+    final Dio refreshDio = Dio(options.copyWith());
     dio.interceptors.addAll([
       StatusLogInterceptor(),
       AuthInterceptor(token, refreshDio, onSessionExpired: onSessionExpired),

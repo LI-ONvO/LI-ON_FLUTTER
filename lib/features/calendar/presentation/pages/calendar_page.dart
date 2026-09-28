@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_on/core/widgets/layout/app_bottom_sheet.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
@@ -74,13 +75,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   }
 
   Future<void> _openAddSheet() async {
-    final bool? added = await showModalBottomSheet<bool>(
+    final bool? added = await showAppBottomSheet<bool>(
       context: context,
-      // 셸 브랜치의 중첩 Navigator가 아니라 최상위에 띄워 화면 전체를 덮는다.
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.4),
       builder: (context) => ScheduleFormSheet(initialDate: _selectedDate),
     );
     if (added != true || !mounted) return;

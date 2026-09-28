@@ -43,10 +43,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       onValid: viewModel.login,
     );
     if (!mounted) return;
-    if (isValid) _goToLogin();
+    if (isValid) _goToSearch();
   }
 
-  void _goToLogin() {
+  void _goToSearch() {
     context.go('/search');
   }
 
