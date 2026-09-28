@@ -109,8 +109,8 @@ class _MyPageState extends ConsumerState<MyPage> {
   Widget build(BuildContext context) {
     // 온보딩을 마이페이지에서 다시 제출하면(onboarding_page.dart) 이
     // provider를 invalidate한다. 그 갱신을 받아 배너·희망 분야 문구를
-    // 새로고침 없이 바로 갱신한다. 수정 시트(_openEditProfileSheet)는
-    // 아직 서버에 저장하지 않는 로컬 편집이라 이 provider와는 무관하다.
+    // 새로고침 없이 바로 갱신한다. 수정 시트(_openEditProfileSheet)도
+    // 서버 저장 후 이 provider를 invalidate한다.
     ref.listen<AsyncValue<Profile>>(myProfileProvider, (previous, next) {
       next.whenData((profile) {
         if (mounted) setState(() => _profile = profile);

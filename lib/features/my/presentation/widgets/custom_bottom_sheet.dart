@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/model/job_field.dart';
+import 'package:li_on/core/network/api_exception.dart';
+import 'package:li_on/core/utils/validators.dart';
 import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/core/widgets/text_field/custom_text_field.dart';
+import 'package:li_on/features/certificate_search/presentation/view_models/certificate_recommendation_view_model.dart';
+import 'package:li_on/features/my/data/info_edit.dart';
+import 'package:li_on/features/my/data/user_repository.dart';
 
-/// [CustomBottomSheet]의 저장 결과. 이름과 희망 분야를 편집한 값을
-/// 호출한 화면으로 돌려줄 때 사용한다.
-typedef ProfileEditResult = ({
-  String name,
-  List<JobField> desiredFields,
-});
+/// [CustomBottomSheet]의 저장 결과. 서버에 저장까지 끝난 이름과 희망
+/// 분야를 호출한 화면으로 돌려줄 때 사용한다.
+typedef ProfileEditResult = ({String name, List<JobField> desiredFields});
 
-class CustomBottomSheet extends StatefulWidget {
+class CustomBottomSheet extends ConsumerStatefulWidget {
   final String name;
   final String email;
   final List<JobField> desiredFields;
@@ -28,10 +31,10 @@ class CustomBottomSheet extends StatefulWidget {
   });
 
   @override
-  State<CustomBottomSheet> createState() => _CustomBottomSheetState();
+  ConsumerState<CustomBottomSheet> createState() => _CustomBottomSheetState();
 }
 
-class _CustomBottomSheetState extends State<CustomBottomSheet> {
+class _CustomBottomSheetState extends ConsumerState<CustomBottomSheet> {
   late final TextEditingController _nameController = TextEditingController(
     text: widget.name,
   );
@@ -39,6 +42,70 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
     text: widget.email,
   );
   late final List<JobField> _desiredFields = List.of(widget.desiredFields);
+  bool _isSaving = false;
+
+  bool get _desiredFieldsChanged {
+    final Set<int> before = {
+      for (final field in widget.desiredFields) field.id,
+    };
+    final Set<int> after = {for (final field in _desiredFields) field.id};
+    return before.length != after.length || !before.containsAll(after);
+  }
+
+  /// 바뀐 항목만 서버에 저장하고, 모두 성공하면 저장된 값으로 시트를 닫는다.
+  /// 실패하면 시트를 연 채로 사유를 알려 다시 시도할 수 있게 한다.
+  Future<void> _save() async {
+    final String name = _nameController.text.trim();
+    final String? nameError = Validators.nickname(name);
+    if (nameError != null) {
+      CustomSnackbar.show(
+        context,
+        message: nameError,
+        type: SnackbarType.error,
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    final UserRepository repository = ref.read(userRepositoryProvider);
+    final bool fieldsChanged = _desiredFieldsChanged;
+    bool savedAnything = false;
+    try {
+      String savedName = widget.name;
+      if (name != widget.name) {
+        final InfoEditResponse response = await repository.updateInfo(
+          InfoEditRequest(nickname: name),
+        );
+        savedName = response.nickname;
+        savedAnything = true;
+      }
+      List<JobField> savedFields = widget.desiredFields;
+      if (fieldsChanged) {
+        final result = await repository.updateDesiredFields(
+          _desiredFields.map((field) => field.id).toList(),
+        );
+        savedFields = result.desiredFields;
+        savedAnything = true;
+        // 희망 분야가 바뀌었으니 추천을 새로 만든다(onboarding_page.dart와 동일).
+        ref.read(certificateRecommendationsProvider.notifier).generate();
+      }
+      if (!mounted) return;
+      Navigator.of(
+        context,
+      ).pop<ProfileEditResult>((name: savedName, desiredFields: savedFields));
+    } on ApiException catch (exception) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      CustomSnackbar.show(
+        context,
+        message: exception.message,
+        type: SnackbarType.error,
+      );
+    } finally {
+      // 일부만 저장되고 실패한 경우에도 화면이 서버 값과 어긋나지 않게 한다.
+      if (savedAnything) ref.invalidate(myProfileProvider);
+    }
+  }
 
   @override
   void dispose() {
@@ -198,16 +265,12 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
                 child: ValueListenableBuilder<TextEditingValue>(
                   valueListenable: _nameController,
                   builder: (context, value, _) {
-                    final bool canSave = value.text.trim().isNotEmpty;
+                    final bool canSave =
+                        value.text.trim().isNotEmpty && !_isSaving;
                     return CustomElevatedButton(
-                      text: '저장',
+                      text: _isSaving ? '저장 중...' : '저장',
                       backgroundColor: AppColors.primary,
-                      onPressed: canSave
-                          ? () => Navigator.of(context).pop((
-                              name: _nameController.text.trim(),
-                              desiredFields: _desiredFields,
-                            ))
-                          : null,
+                      onPressed: canSave ? _save : null,
                     );
                   },
                 ),
