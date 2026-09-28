@@ -23,18 +23,16 @@ class ApiException implements Exception {
   factory ApiException.fromDio(DioException exception) {
     final int? statusCode = exception.response?.statusCode;
     final dynamic responseData = exception.response?.data;
-    final String? code = responseData is Map
-        ? responseData['code'] as String?
-        : null;
+    // 필드가 문자열이 아니면(숫자·객체 등) 캐스팅 예외로 이 팩토리 자체가
+    // 실패하지 않도록 null로 두고 아래 기본 문구로 넘긴다.
+    final String? code = _stringField(responseData, 'code');
     // 서버가 함께 내려주는 문구. 400/401/403/404/409/5xx처럼 화면에
     // 맞춰 일부러 다른 말로 바꿔 쓰는 경우가 아니라면, 우리가 짐작한
     // 문구보다 서버가 실제 실패 사유를 담아 보내는 이 문구가 더 정확하다
     // (예: "온보딩을 먼저 완료해 주세요" 같은, 상태 코드만으로는 알 수
     // 없는 이유). 코드 하나하나를 다 알아서 분기하는 대신, 우리가
     // 명시적으로 다루지 않는 상태 코드에서는 이 문구를 그대로 쓴다.
-    final String? serverMessage = responseData is Map
-        ? responseData['message'] as String?
-        : null;
+    final String? serverMessage = _stringField(responseData, 'message');
     final String message = switch (exception.type) {
       DioExceptionType.connectionTimeout ||
       DioExceptionType.sendTimeout ||
@@ -53,6 +51,12 @@ class ApiException implements Exception {
       _ => '요청을 처리하지 못했어요',
     };
     return ApiException(statusCode: statusCode, message: message, code: code);
+  }
+
+  static String? _stringField(dynamic data, String key) {
+    if (data is! Map) return null;
+    final Object? value = data[key];
+    return value is String ? value : null;
   }
 
   @override
