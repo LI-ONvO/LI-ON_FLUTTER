@@ -5,6 +5,9 @@ import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/network/api_exception.dart';
+import 'package:li_on/core/network/token_storage.dart';
+import 'package:li_on/core/notification/device_token_repository.dart';
+import 'package:li_on/core/auth/auth_user.dart';
 import 'package:li_on/core/utils/auth_form_submit.dart';
 import 'package:li_on/core/utils/validators.dart';
 import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
@@ -54,6 +57,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
       );
       final SignInState formState = ref.read(signInViewModelProvider);
       final authRepository = ref.read(authRepositoryProvider);
+      AuthUser? signedUpUser;
 
       final bool isValid = await submitAuthForm(
         context: context,
@@ -76,11 +80,29 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
             passwordConfirm: formState.passwordConfirm,
             nickname: formState.nickname,
           );
+          // 온보딩 질문 조회·답변 제출은 인증이 필요한 API라, 방금 가입한
+          // 계정으로 바로 로그인해 토큰을 저장해 둔다. 세션을 로그인 상태로
+          // 바꾸는 건 온보딩을 마친 뒤다(onboardingUser 참고).
+          final loginResult = await authRepository.login(
+            email: formState.email,
+            password: formState.password,
+          );
+          await ref
+              .read(tokenStorageProvider)
+              .saveSession(
+                accessToken: loginResult.accessToken,
+                refreshToken: loginResult.refreshToken,
+                user: loginResult.user,
+              );
+          signedUpUser = loginResult.user;
+          await registerCurrentDeviceToken(
+            ref.read(deviceTokenRepositoryProvider),
+          );
         },
       );
       if (!mounted) return;
       if (!isValid) return;
-      ref.read(authSessionProvider).startOnboarding();
+      ref.read(authSessionProvider).startOnboarding(user: signedUpUser);
       context.go('/onboarding');
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

@@ -26,6 +26,16 @@ class TokenStorage {
     _refreshToken = refreshToken;
   }
 
+  /// 로그인 응답으로 받은 토큰과 사용자 정보를 한 번에 저장한다.
+  Future<void> saveSession({
+    required String accessToken,
+    required String refreshToken,
+    required AuthUser user,
+  }) async {
+    await saveTokens(accessToken: accessToken, refreshToken: refreshToken);
+    await saveUser(user);
+  }
+
   Future<String?> readAccessToken() async {
     return _accessToken ??= await _storage.read(key: _accessTokenKey);
   }

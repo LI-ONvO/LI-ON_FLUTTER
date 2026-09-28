@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:li_on/core/auth/auth_user.dart';
+import 'package:li_on/core/network/token_storage.dart';
 import 'package:li_on/features/auth/data/email_verification.dart';
 import 'package:li_on/features/auth/data/login_result.dart';
 import 'package:li_on/features/auth/data/sign_up_result.dart';
@@ -14,6 +17,7 @@ class _VerificationAuthRepository implements AuthRepository {
 
   final bool verified;
   int signUpCalls = 0;
+  int loginCalls = 0;
 
   @override
   Future<void> logout() async {}
@@ -51,11 +55,32 @@ class _VerificationAuthRepository implements AuthRepository {
   Future<LoginResult> login({
     required String email,
     required String password,
-  }) => throw UnimplementedError();
+  }) async {
+    loginCalls += 1;
+    return LoginResult(
+      accessToken: 'access',
+      refreshToken: 'refresh',
+      user: AuthUser(userId: 1, email: email, nickname: '홍길동'),
+    );
+  }
 
   @override
   Future<EmailCheckResult> checkEmail({required String email}) =>
       throw UnimplementedError();
+}
+
+class _MemoryTokenStorage extends TokenStorage {
+  _MemoryTokenStorage() : super(const FlutterSecureStorage());
+
+  String? accessToken;
+
+  @override
+  Future<void> saveTokens({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    this.accessToken = accessToken;
+  }
 }
 
 class _PrepopulatedSignInViewModel extends SignInViewModel {
@@ -82,6 +107,10 @@ void main() {
         ),
         GoRoute(path: '/login', builder: (context, state) => const SizedBox()),
         GoRoute(
+          path: '/onboarding',
+          builder: (context, state) => const SizedBox(),
+        ),
+        GoRoute(
           path: '/sign-up',
           builder: (context, state) => const SizedBox(),
         ),
@@ -92,6 +121,7 @@ void main() {
       ProviderScope(
         overrides: [
           authRepositoryProvider.overrideWithValue(repository),
+          tokenStorageProvider.overrideWithValue(_MemoryTokenStorage()),
           signInViewModelProvider.overrideWith(
             _PrepopulatedSignInViewModel.new,
           ),
@@ -123,6 +153,8 @@ void main() {
     await submitCode(tester);
 
     expect(repository.signUpCalls, 1);
+    // 온보딩 API가 인증을 요구하므로 가입 직후 로그인해 토큰을 받아 둔다.
+    expect(repository.loginCalls, 1);
   });
 
   testWidgets('이메일 인증 실패 시 회원가입을 요청하지 않는다', (tester) async {
@@ -132,6 +164,7 @@ void main() {
     await submitCode(tester);
 
     expect(repository.signUpCalls, 0);
+    expect(repository.loginCalls, 0);
     expect(find.text('인증 코드가 올바르지 않아요'), findsOneWidget);
   });
 }

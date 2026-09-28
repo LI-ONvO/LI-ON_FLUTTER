@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:li_on/core/auth/auth_session.dart';
+import 'package:li_on/core/auth/auth_user.dart';
 import 'package:li_on/core/widgets/badge/custom_badge.dart';
+import 'package:li_on/features/certificate_search/presentation/view_models/certificate_recommendation_view_model.dart';
 import 'package:li_on/features/onboarding/data/onboarding_question.dart';
 import 'package:li_on/features/onboarding/data/onboarding_repository.dart';
 import 'package:li_on/features/onboarding/data/onboarding_submit_result.dart';
@@ -25,11 +28,7 @@ class _FakeOnboardingRepository implements OnboardingRepository {
         maxSelect: 8,
         options: [
           OnboardingQuestionOption(key: 'it', value: 'IT', label: 'IT·정보통신'),
-          OnboardingQuestionOption(
-            key: 'biz',
-            value: 'BIZ',
-            label: '경영·회계',
-          ),
+          OnboardingQuestionOption(key: 'biz', value: 'BIZ', label: '경영·회계'),
         ],
       ),
     ];
@@ -45,6 +44,19 @@ class _FakeOnboardingRepository implements OnboardingRepository {
   }
 }
 
+/// 실제 추천 API를 부르지 않고 생성 요청 횟수만 센다.
+class _FakeRecommendations extends CertificateRecommendations {
+  int generateCalls = 0;
+
+  @override
+  Future<CertificateRecommendationResult?> build() async => null;
+
+  @override
+  Future<void> generate() async {
+    generateCalls += 1;
+  }
+}
+
 bool _isBadgeSelected(WidgetTester tester, String field) {
   final CustomBadge badge = tester.widget<CustomBadge>(
     find.widgetWithText(CustomBadge, field),
@@ -54,8 +66,10 @@ bool _isBadgeSelected(WidgetTester tester, String field) {
 
 void main() {
   Future<_FakeOnboardingRepository> pumpOnboardingPage(
-    WidgetTester tester,
-  ) async {
+    WidgetTester tester, {
+    AuthSessionController? authSession,
+    _FakeRecommendations? recommendations,
+  }) async {
     final repository = _FakeOnboardingRepository();
     final router = GoRouter(
       initialLocation: '/onboarding',
@@ -64,7 +78,14 @@ void main() {
           path: '/onboarding',
           builder: (context, state) => const OnboardingPage(),
         ),
-        GoRoute(path: '/login', builder: (context, state) => const SizedBox()),
+        GoRoute(
+          path: '/login',
+          builder: (context, state) => const Text('login'),
+        ),
+        GoRoute(
+          path: '/search',
+          builder: (context, state) => const Text('search'),
+        ),
       ],
     );
 
@@ -72,6 +93,12 @@ void main() {
       ProviderScope(
         overrides: [
           onboardingRepositoryProvider.overrideWithValue(repository),
+          if (authSession != null)
+            authSessionProvider.overrideWithValue(authSession),
+          if (recommendations != null)
+            certificateRecommendationsProvider.overrideWith(
+              () => recommendations,
+            ),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),
@@ -158,6 +185,34 @@ void main() {
             .having((a) => a.optionValues, 'optionValues', ['IT']),
       ]);
       expect(find.byType(OnboardingPage), findsNothing);
+    });
+
+    testWidgets('회원가입 직후라면 로그인 상태로 바꾸고 탐색 화면으로 이동한다', (tester) async {
+      final authSession = AuthSessionController()
+        ..startOnboarding(
+          user: const AuthUser(
+            userId: 1,
+            email: 'user@example.com',
+            nickname: '홍길동',
+          ),
+        );
+      final recommendations = _FakeRecommendations();
+      await pumpOnboardingPage(
+        tester,
+        authSession: authSession,
+        recommendations: recommendations,
+      );
+
+      await tester.tap(find.text('IT·정보통신'));
+      await tester.pump();
+      await tester.tap(find.text('다음'));
+      await tester.pumpAndSettle();
+
+      expect(authSession.isAuthenticated, isTrue);
+      expect(authSession.user?.email, 'user@example.com');
+      expect(authSession.canAccessOnboarding, isFalse);
+      expect(recommendations.generateCalls, 1);
+      expect(find.text('search'), findsOneWidget);
     });
   });
 }

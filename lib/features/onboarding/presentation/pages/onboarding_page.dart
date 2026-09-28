@@ -6,6 +6,7 @@ import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/network/api_exception.dart';
+import 'package:li_on/core/auth/auth_user.dart';
 import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
@@ -50,22 +51,25 @@ class _OnboardingForm extends ConsumerWidget {
       onboardingSubmitViewModelProvider,
       (previous, next) {
         if (!next.hasValue || next.value == null) return;
-        final AuthSessionController authSession = ref.read(
-          authSessionProvider,
-        );
-        // 마이페이지에서 언제든 다시 들어와 답을 바꿀 수 있으니, 이미
-        // 로그인된 상태였다면 로그인 화면으로 보내지 않고 마이페이지로
-        // 돌아간다. 회원가입 직후(아직 비로그인)만 로그인으로 보낸다.
+        final AuthSessionController authSession = ref.read(authSessionProvider);
+        // 마이페이지에서 다시 들어온 경우(이미 로그인)엔 마이페이지로,
+        // 회원가입 직후라면 가입 때 받아 둔 토큰으로 바로 로그인 상태로
+        // 바꿔 탐색 화면으로 보낸다. 둘 다 아니면(토큰 없이 들어온 예외
+        // 상황) 로그인 화면으로 보낸다.
         // context.pop()은 이 리스너(비동기 상태 변화 콜백)에서 호출하면
         // 라우터가 실제로 이동하지 않는 경우가 있어 go()로 목적지를
         // 명시한다.
         final bool wasAlreadySignedIn = authSession.isAuthenticated;
+        final AuthUser? signedUpUser = authSession.onboardingUser;
         authSession.finishOnboarding();
+        if (!wasAlreadySignedIn && signedUpUser != null) {
+          authSession.signIn(signedUpUser);
+        }
+        final bool isSignedIn = authSession.isAuthenticated;
         // 희망 분야가 바뀌었으니 추천을 새로 만든다. GET은 서버에 저장된
         // 예전 추천(빈 목록일 수도 있음)을 그대로 돌려줄 뿐이라 invalidate
-        // 만으로는 바뀐 답이 반영되지 않는다. 회원가입 직후(비로그인)엔
-        // 토큰이 없어 생성할 수 없으니, 로그인 후 GET → 만들기 카드로 넘긴다.
-        if (wasAlreadySignedIn) {
+        // 만으로는 바뀐 답이 반영되지 않는다.
+        if (isSignedIn) {
           ref.read(certificateRecommendationsProvider.notifier).generate();
         } else {
           ref.invalidate(certificateRecommendationsProvider);
@@ -73,6 +77,8 @@ class _OnboardingForm extends ConsumerWidget {
         ref.invalidate(myProfileProvider);
         if (wasAlreadySignedIn) {
           context.go('/profile');
+        } else if (isSignedIn) {
+          context.go('/search');
         } else {
           context.go('/login');
         }
@@ -91,8 +97,7 @@ class _OnboardingForm extends ConsumerWidget {
 
     final bool isFilled = questions.every((question) {
       if (question.minSelect <= 0) return true;
-      return selection.selectionsFor(question.key).length >=
-          question.minSelect;
+      return selection.selectionsFor(question.key).length >= question.minSelect;
     });
     final bool isSubmitting = submitState.isLoading;
 
