@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:li_on/core/auth/auth_session.dart';
 import 'package:li_on/core/auth/auth_user.dart';
 import 'package:li_on/core/widgets/badge/custom_badge.dart';
+import 'package:li_on/core/model/job_field.dart';
 import 'package:li_on/features/certificate_search/presentation/view_models/certificate_recommendation_view_model.dart';
+import 'package:li_on/features/my/data/profile.dart';
+import 'package:li_on/features/my/data/user_repository.dart';
 import 'package:li_on/features/onboarding/data/onboarding_question.dart';
 import 'package:li_on/features/onboarding/data/onboarding_repository.dart';
 import 'package:li_on/features/onboarding/data/onboarding_submit_result.dart';
@@ -69,6 +72,7 @@ void main() {
     WidgetTester tester, {
     AuthSessionController? authSession,
     _FakeRecommendations? recommendations,
+    Profile? profile,
   }) async {
     final repository = _FakeOnboardingRepository();
     final router = GoRouter(
@@ -99,6 +103,8 @@ void main() {
             certificateRecommendationsProvider.overrideWith(
               () => recommendations,
             ),
+          if (profile != null)
+            myProfileProvider.overrideWith((ref) async => profile),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),
@@ -213,6 +219,44 @@ void main() {
       expect(authSession.canAccessOnboarding, isFalse);
       expect(recommendations.generateCalls, 1);
       expect(find.text('search'), findsOneWidget);
+    });
+  });
+
+  group('다시 들어온 경우', () {
+    const AuthUser user = AuthUser(
+      userId: 1,
+      email: 'user@example.com',
+      nickname: '홍길동',
+    );
+    const Profile profile = Profile(
+      id: 1,
+      email: 'user@example.com',
+      nickname: '홍길동',
+      desiredFields: [JobField(id: 9, name: '경영·회계')],
+      isOnboarded: true,
+    );
+
+    testWidgets('로그인 상태면 서버의 희망 분야를 미리 선택해 둔다', (tester) async {
+      await pumpOnboardingPage(
+        tester,
+        authSession: AuthSessionController()..restore(user),
+        profile: profile,
+      );
+
+      expect(_isBadgeSelected(tester, '경영·회계'), isTrue);
+      expect(_isBadgeSelected(tester, 'IT·정보통신'), isFalse);
+      expect(isElevatedButtonEnabled(tester), isTrue);
+    });
+
+    testWidgets('회원가입 직후 온보딩에서는 미리 선택하지 않는다', (tester) async {
+      await pumpOnboardingPage(
+        tester,
+        authSession: AuthSessionController()..startOnboarding(user: user),
+        profile: profile,
+      );
+
+      expect(_isBadgeSelected(tester, '경영·회계'), isFalse);
+      expect(isElevatedButtonEnabled(tester), isFalse);
     });
   });
 }

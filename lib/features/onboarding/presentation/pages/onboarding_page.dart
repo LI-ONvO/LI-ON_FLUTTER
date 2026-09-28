@@ -10,6 +10,7 @@ import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/features/certificate_search/presentation/view_models/certificate_recommendation_view_model.dart';
+import 'package:li_on/features/my/data/profile.dart';
 import 'package:li_on/features/my/data/user_repository.dart';
 import 'package:li_on/features/onboarding/data/onboarding_question.dart';
 import 'package:li_on/features/onboarding/data/onboarding_repository.dart';
@@ -39,13 +40,40 @@ class OnboardingPage extends ConsumerWidget {
   }
 }
 
-class _OnboardingForm extends ConsumerWidget {
+class _OnboardingForm extends ConsumerStatefulWidget {
   const _OnboardingForm({required this.questions});
 
   final List<OnboardingQuestion> questions;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_OnboardingForm> createState() => _OnboardingFormState();
+}
+
+class _OnboardingFormState extends ConsumerState<_OnboardingForm> {
+  List<OnboardingQuestion> get questions => widget.questions;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillFromProfile();
+  }
+
+  /// 마이페이지에서 다시 들어온 경우(이미 로그인) 서버에 저장된 희망 분야를
+  /// 미리 선택해 둔다. 회원가입 직후 온보딩은 아직 답이 없으니 건너뛰고,
+  /// 프로필을 못 불러와도 빈 채로 시작할 뿐이라 오류는 무시한다.
+  Future<void> _prefillFromProfile() async {
+    if (!ref.read(authSessionProvider).isAuthenticated) return;
+    try {
+      final Profile profile = await ref.read(myProfileProvider.future);
+      if (!mounted) return;
+      ref
+          .read(onboardingSelectionViewModelProvider.notifier)
+          .prefillDesiredFields(questions, profile.desiredFields);
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
     ref.listen<AsyncValue<OnboardingSubmitResult?>>(
       onboardingSubmitViewModelProvider,
       (previous, next) {

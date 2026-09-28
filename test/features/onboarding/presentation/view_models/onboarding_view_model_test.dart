@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:li_on/core/model/job_field.dart';
 import 'package:li_on/features/onboarding/data/onboarding_question.dart';
 import 'package:li_on/features/onboarding/presentation/view_models/onboarding_view_model.dart';
 
@@ -15,11 +16,7 @@ OnboardingQuestion _question({
     maxSelect: maxSelect,
     options: const [
       OnboardingQuestionOption(key: 'it', value: 'IT', label: 'IT·정보통신'),
-      OnboardingQuestionOption(
-        key: 'biz',
-        value: 'BIZ',
-        label: '경영·회계',
-      ),
+      OnboardingQuestionOption(key: 'biz', value: 'BIZ', label: '경영·회계'),
     ],
   );
 }
@@ -113,5 +110,87 @@ void main() {
       onboardingSelectionViewModelProvider,
     );
     expect(state.selectionsFor(question.key), {'IT'});
+  });
+
+  group('희망 분야 미리 선택', () {
+    test('서버의 희망 분야와 이름이 같은 선택지를 미리 선택한다', () {
+      final OnboardingSelectionViewModel viewModel = container.read(
+        onboardingSelectionViewModelProvider.notifier,
+      );
+      final OnboardingQuestion question = _question();
+
+      viewModel.prefillDesiredFields(
+        [question],
+        const [JobField(id: 7, name: '경영·회계')],
+      );
+
+      expect(
+        container
+            .read(onboardingSelectionViewModelProvider)
+            .selectionsFor(question.key),
+        {'BIZ'},
+      );
+    });
+
+    test('이미 고른 답이 있는 질문은 덮어쓰지 않는다', () {
+      final OnboardingSelectionViewModel viewModel = container.read(
+        onboardingSelectionViewModelProvider.notifier,
+      );
+      final OnboardingQuestion question = _question();
+      viewModel.toggleOption(question, 'IT');
+
+      viewModel.prefillDesiredFields(
+        [question],
+        const [JobField(id: 7, name: '경영·회계')],
+      );
+
+      expect(
+        container
+            .read(onboardingSelectionViewModelProvider)
+            .selectionsFor(question.key),
+        {'IT'},
+      );
+    });
+
+    test('이름이 맞는 선택지가 없는 질문은 비워 둔다', () {
+      final OnboardingSelectionViewModel viewModel = container.read(
+        onboardingSelectionViewModelProvider.notifier,
+      );
+      final OnboardingQuestion question = _question(key: 'studyTime');
+
+      viewModel.prefillDesiredFields(
+        [question],
+        const [JobField(id: 7, name: '백엔드 개발')],
+      );
+
+      expect(
+        container
+            .read(onboardingSelectionViewModelProvider)
+            .selectionsFor(question.key),
+        isEmpty,
+      );
+    });
+
+    test('최대 선택 개수를 넘겨 미리 선택하지 않는다', () {
+      final OnboardingSelectionViewModel viewModel = container.read(
+        onboardingSelectionViewModelProvider.notifier,
+      );
+      final OnboardingQuestion question = _question(maxSelect: 1);
+
+      viewModel.prefillDesiredFields(
+        [question],
+        const [
+          JobField(id: 1, name: 'IT·정보통신'),
+          JobField(id: 2, name: '경영·회계'),
+        ],
+      );
+
+      expect(
+        container
+            .read(onboardingSelectionViewModelProvider)
+            .selectionsFor(question.key),
+        hasLength(1),
+      );
+    });
   });
 }
