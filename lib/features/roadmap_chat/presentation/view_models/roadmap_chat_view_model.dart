@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_on/core/network/api_exception.dart';
 import 'package:li_on/features/roadmap_chat/data/roadmap_chat_repository.dart';
 import 'package:li_on/features/roadmap/data/chat_message.dart';
 
@@ -157,7 +158,7 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
         isBotTyping: false,
         sessionId: sessionId,
       );
-    } catch (_) {
+    } catch (error) {
       // 응답에 실패해도 입력이 계속 막히지 않도록 typing 상태를 되돌리고,
       // 실패를 대화로 알려준다.
       if (!ref.mounted) return;
@@ -167,7 +168,7 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
           ChatMessage(
             id: DateTime.now().microsecondsSinceEpoch,
             sender: ChatSender.bot,
-            text: '답변을 가져오지 못했어요. 잠시 후 다시 시도해주세요.',
+            text: _sendFailureMessage(error),
             timestamp: DateTime.now(),
           ),
         ],
@@ -175,6 +176,19 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
       );
     }
   }
+}
+
+/// 메시지 전송 실패를 대화에 보여줄 안내 문구로 바꾼다. 502는 백엔드가
+/// AI 서버 응답을 받지 못한 일시적 실패라, 같은 질문을 다시 보내면
+/// 대부분 해결되므로 재전송을 안내한다.
+String _sendFailureMessage(Object error) {
+  if (error is ApiException) {
+    if (error.statusCode == 502) {
+      return 'AI가 지금 답변을 만들지 못했어요. 잠시 후 같은 질문을 다시 보내주세요.';
+    }
+    return error.message;
+  }
+  return '답변을 가져오지 못했어요. 잠시 후 다시 시도해주세요.';
 }
 
 /// autoDispose를 붙이지 않아, 화면을 나갔다 다시 들어와도 같은 세션의

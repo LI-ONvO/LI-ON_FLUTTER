@@ -1,4 +1,3 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/network/token_storage.dart';
@@ -66,20 +65,14 @@ class LoginViewModel extends Notifier<LoginState> {
 
       await ref
           .read(tokenStorageProvider)
-          .saveTokens(
+          .saveSession(
             accessToken: result.accessToken,
             refreshToken: result.refreshToken,
+            user: result.user,
           );
-      await ref.read(tokenStorageProvider).saveUser(result.user);
       ref.read(authSessionProvider).signIn(result.user);
 
-      // 이 기기의 FCM 토큰을 등록한다. 실패해도 로그인 자체는 막지 않는다.
-      final String? fcmToken = await FirebaseMessaging.instance.getToken();
-      if (fcmToken != null) {
-        try {
-          await ref.read(deviceTokenRepositoryProvider).register(fcmToken);
-        } catch (_) {}
-      }
+      await registerCurrentDeviceToken(ref.read(deviceTokenRepositoryProvider));
     } finally {
       state = state.copyWith(isSubmitting: false);
     }

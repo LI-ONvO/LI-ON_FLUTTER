@@ -35,7 +35,7 @@ class CustomElevatedButton extends StatelessWidget {
               backgroundColor: resolvedBackgroundColor,
               disabledBackgroundColor: resolvedBackgroundColor,
               padding: const EdgeInsets.symmetric(
-                vertical: AppSpacing.space3,
+                vertical: AppSpacing.space2,
                 horizontal: AppSpacing.space4,
               ),
               minimumSize: const Size(0, 44),

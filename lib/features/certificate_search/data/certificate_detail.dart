@@ -53,6 +53,9 @@ class CertificateDetail {
   @JsonKey(name: 'jmCd')
   final String id;
   final String name;
+
+  /// 분류가 없는 자격증은 `null`로 오므로 빈 문자열로 받는다.
+  @JsonKey(defaultValue: '')
   final String category;
 
   /// 값이 없을 때 키가 빠지는 대신 `null`로 오는 경우가 있어 기본값을 둔다.

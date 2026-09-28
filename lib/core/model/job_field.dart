@@ -15,8 +15,8 @@ class JobField {
   Map<String, dynamic> toJson() => _$JobFieldToJson(this);
 }
 
-/// 마이페이지 "희망 분야 수정"에서 고를 수 있는 분야 목록. 온보딩의
-/// `onboardingFields`와 같은 명칭 체계를 사용한다.
+/// 마이페이지 "희망 분야 수정"에서 고를 수 있는 분야 목록. 온보딩 질문의
+/// 선택지(`OnboardingQuestionOption.label`)와 같은 명칭 체계를 사용한다.
 const List<JobField> desiredFieldOptions = [
   JobField(id: 101, name: 'IT·정보통신'),
   JobField(id: 102, name: '경영·회계'),

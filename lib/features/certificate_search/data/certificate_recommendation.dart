@@ -7,7 +7,11 @@ part 'certificate_recommendation.g.dart';
 class CertificateRecommendationItem {
   final String jmCd;
   final String name;
+
+  /// 분류가 없는 자격증은 `null`로 오므로 빈 문자열로 받는다.
+  @JsonKey(defaultValue: '')
   final String category;
+
   final String reason;
 
   const CertificateRecommendationItem({

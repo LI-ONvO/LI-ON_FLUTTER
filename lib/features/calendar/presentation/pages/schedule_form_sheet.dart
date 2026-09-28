@@ -88,15 +88,10 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
   }
 
   Future<void> _pickReminder() async {
-    final CalendarReminder? picked =
-        await showModalBottomSheet<CalendarReminder>(
-          context: context,
-          useRootNavigator: true,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          barrierColor: Colors.black.withValues(alpha: 0.4),
-          builder: (context) => ReminderSelectSheet(initial: _reminder),
-        );
+    final CalendarReminder? picked = await showAppBottomSheet<CalendarReminder>(
+      context: context,
+      builder: (context) => ReminderSelectSheet(initial: _reminder),
+    );
     if (picked == null || !mounted) return;
     setState(() => _reminder = picked);
   }

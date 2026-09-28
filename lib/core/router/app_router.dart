@@ -22,24 +22,38 @@ import 'package:li_on/features/splash/presentation/pages/splash_page.dart';
 /// 앱의 진입 경로. 로고를 잠깐 보여 준 뒤 [afterSplashLocation]으로 넘어간다.
 const String initialLocation = '/splash';
 
+/// 로그인하지 않고도 들어갈 수 있는 경로.
+const Set<String> _guestRoutes = {
+  '/splash',
+  '/onboarding',
+  ..._signedOutOnlyRoutes,
+};
+
+/// 로그인한 사용자가 들어오면 탐색 화면으로 돌려보내는 경로.
+const Set<String> _signedOutOnlyRoutes = {
+  '/login',
+  '/sign-up',
+  '/sign-up/verify-email',
+};
+
 GoRouter createAppRouter(AuthSessionController authSession) => GoRouter(
   initialLocation: initialLocation,
   refreshListenable: authSession,
   redirect: (context, state) {
-    final bool isGuestRoute =
-        state.matchedLocation == '/splash' ||
-        state.matchedLocation == '/login' ||
-        state.matchedLocation == '/sign-up' ||
-        state.matchedLocation == '/sign-up/verify-email';
-    if (state.matchedLocation == '/onboarding' &&
-        !authSession.canAccessOnboarding) {
-      return authSession.isAuthenticated ? '/search' : '/sign-up';
+    final String location = state.matchedLocation;
+    // 온보딩은 회원가입 직후(canAccessOnboarding)뿐 아니라, 로그인된
+    // 사용자라면 마이페이지에서 언제든 다시 들어와 희망 분야를 고칠 수
+    // 있다. 둘 다 아니면(비로그인 상태로 직접 진입) 가입부터 하게 한다.
+    if (location == '/onboarding' &&
+        !authSession.canAccessOnboarding &&
+        !authSession.isAuthenticated) {
+      return '/sign-up';
     }
-    if (!authSession.isAuthenticated && !isGuestRoute) return '/login';
+    if (!authSession.isAuthenticated && !_guestRoutes.contains(location)) {
+      return '/login';
+    }
     if (authSession.isAuthenticated &&
-        (state.matchedLocation == '/login' ||
-            state.matchedLocation == '/sign-up' ||
-            state.matchedLocation == '/sign-up/verify-email')) {
+        _signedOutOnlyRoutes.contains(location)) {
       return '/search';
     }
     return null;

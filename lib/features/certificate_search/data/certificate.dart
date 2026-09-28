@@ -48,6 +48,7 @@ class Certificate {
 
   final String name;
 
+  @JsonKey(defaultValue: '')
   final String category;
 
   const Certificate({

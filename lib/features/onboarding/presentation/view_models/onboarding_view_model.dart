@@ -1,48 +1,81 @@
-import 'dart:collection';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_on/features/onboarding/data/onboarding_question.dart';
+import 'package:li_on/features/onboarding/data/onboarding_repository.dart';
+import 'package:li_on/features/onboarding/data/onboarding_submit_result.dart';
 
-const List<String> onboardingFields = [
-  'IT·정보통신',
-  '경영·회계',
-  '건축·토목',
-  '보건·의료',
-  '교육',
-  '디자인',
-  '법률·행정',
-  '기계·전기',
-];
+/// 질문 key별로 선택한 옵션 [OnboardingQuestionOption.value] 집합.
+class OnboardingSelectionState {
+  final Map<String, Set<String>> selectedByQuestionKey;
 
-class OnboardingState {
-  final Set<String> selectedFields;
+  const OnboardingSelectionState({this.selectedByQuestionKey = const {}});
 
-  const OnboardingState({this.selectedFields = const {}});
+  Set<String> selectionsFor(String questionKey) =>
+      selectedByQuestionKey[questionKey] ?? const {};
 
-  bool get isFilled => selectedFields.isNotEmpty;
-
-  OnboardingState copyWith({Set<String>? selectedFields}) {
-    return OnboardingState(
-      selectedFields: selectedFields == null
-          ? this.selectedFields
-          : UnmodifiableSetView(selectedFields),
+  OnboardingSelectionState copyWith({
+    Map<String, Set<String>>? selectedByQuestionKey,
+  }) {
+    return OnboardingSelectionState(
+      selectedByQuestionKey:
+          selectedByQuestionKey ?? this.selectedByQuestionKey,
     );
   }
 }
 
-class OnboardingViewModel extends Notifier<OnboardingState> {
+class OnboardingSelectionViewModel extends Notifier<OnboardingSelectionState> {
   @override
-  OnboardingState build() => const OnboardingState();
+  OnboardingSelectionState build() => const OnboardingSelectionState();
 
-  void toggleField(String field) {
-    final Set<String> updated = Set<String>.from(state.selectedFields);
-    if (!updated.remove(field)) {
-      updated.add(field);
+  void toggleOption(OnboardingQuestion question, String optionValue) {
+    final Set<String> current = Set<String>.from(
+      state.selectionsFor(question.key),
+    );
+    if (!current.remove(optionValue)) {
+      // 최대 선택 개수에 도달했으면 새 선택을 무시한다.
+      if (question.maxSelect > 0 && current.length >= question.maxSelect) {
+        return;
+      }
+      current.add(optionValue);
     }
-    state = state.copyWith(selectedFields: updated);
+    state = state.copyWith(
+      selectedByQuestionKey: {
+        ...state.selectedByQuestionKey,
+        question.key: current,
+      },
+    );
   }
 }
 
-final onboardingViewModelProvider =
-    NotifierProvider<OnboardingViewModel, OnboardingState>(
-      OnboardingViewModel.new,
+final onboardingSelectionViewModelProvider = NotifierProvider<
+  OnboardingSelectionViewModel,
+  OnboardingSelectionState
+>(OnboardingSelectionViewModel.new);
+
+/// 답변 제출 액션. 성공하면 [OnboardingSubmitResult]를 담는다.
+class OnboardingSubmitViewModel
+    extends AsyncNotifier<OnboardingSubmitResult?> {
+  @override
+  Future<OnboardingSubmitResult?> build() async => null;
+
+  Future<void> submit(List<OnboardingQuestion> questions) async {
+    final OnboardingSelectionState selection = ref.read(
+      onboardingSelectionViewModelProvider,
+    );
+    final List<OnboardingAnswer> answers = [
+      for (final question in questions)
+        OnboardingAnswer(
+          questionKey: question.key,
+          optionValues: selection.selectionsFor(question.key).toList(),
+        ),
+    ];
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+      () => ref.read(onboardingRepositoryProvider).submitAnswers(answers),
+    );
+  }
+}
+
+final onboardingSubmitViewModelProvider =
+    AsyncNotifierProvider<OnboardingSubmitViewModel, OnboardingSubmitResult?>(
+      OnboardingSubmitViewModel.new,
     );

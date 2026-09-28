@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_on/core/widgets/layout/app_bottom_sheet.dart';
 import 'package:li_on/core/widgets/dialog/confirm_dialog.dart';
 import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/features/data_room/presentation/view_models/data_room_view_model.dart';
@@ -13,13 +14,8 @@ Future<void> openMaterialEditSheet(
   BuildContext context,
   SavedMaterial material,
 ) {
-  return showModalBottomSheet<bool>(
+  return showAppBottomSheet<bool>(
     context: context,
-    // 셸 브랜치의 중첩 Navigator가 아니라 최상위에 띄워 화면 전체를 덮는다.
-    useRootNavigator: true,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withValues(alpha: 0.4),
     builder: (context) => MaterialEditSheet(material: material),
   );
 }

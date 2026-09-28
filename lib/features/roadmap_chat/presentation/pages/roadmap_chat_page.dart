@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:li_on/core/widgets/layout/app_bottom_sheet.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
@@ -79,13 +80,12 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
 
   /// 이 자격증에 맞는 학습 자료를 추천받는 시트를 연다. jmCd·세션이 모두
   /// 있어야 부를 수 있어, 버튼 자체가 그 조건일 때만 보인다.
-  void _openResourceRecommendations(BuildContext context, RoadmapChatState state) {
-    showModalBottomSheet<void>(
+  void _openResourceRecommendations(
+    BuildContext context,
+    RoadmapChatState state,
+  ) {
+    showAppBottomSheet<void>(
       context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.4),
       builder: (_) => ResourceRecommendationSheet(
         jmCd: state.jmCd!,
         sessionId: state.sessionId!,
