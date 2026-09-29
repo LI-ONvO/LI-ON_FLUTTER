@@ -26,6 +26,8 @@ import 'package:li_on/features/onboarding/presentation/view_models/onboarding_vi
 /// 나갈 때 대신 들어가기 직전에 비워, 항상 서버 값에서 시작하게 한다.
 void pushOnboardingForEdit(BuildContext context, WidgetRef ref) {
   ref.invalidate(onboardingSelectionViewModelProvider);
+  // 지난번 제출 실패의 오류 문구가 다시 들어왔을 때 남아 있지 않게 한다.
+  ref.invalidate(onboardingSubmitViewModelProvider);
   context.push('/onboarding');
 }
 

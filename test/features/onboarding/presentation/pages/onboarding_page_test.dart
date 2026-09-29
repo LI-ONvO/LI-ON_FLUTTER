@@ -25,6 +25,9 @@ class _FakeOnboardingRepository implements OnboardingRepository {
   /// 설정하면 제출 응답을 이 Completer가 끝날 때까지 붙잡아 둔다.
   Completer<void>? holdSubmit;
 
+  /// 참이면 제출을 실패시킨다.
+  bool failSubmit = false;
+
   @override
   Future<List<OnboardingQuestion>> fetchQuestions() async {
     return const [
@@ -49,6 +52,7 @@ class _FakeOnboardingRepository implements OnboardingRepository {
     submitCalls += 1;
     lastAnswers = answers;
     await holdSubmit?.future;
+    if (failSubmit) throw Exception('submit failed');
     return const OnboardingSubmitResult(desiredFields: []);
   }
 }
@@ -323,6 +327,28 @@ void main() {
 
       expect(_isBadgeSelected(tester, '경영·회계'), isTrue);
       expect(_isBadgeSelected(tester, 'IT·정보통신'), isFalse);
+    });
+
+    testWidgets('제출에 실패하고 나갔다 다시 들어오면 오류 문구가 남아 있지 않다', (tester) async {
+      final repository = await pumpOnboardingPage(
+        tester,
+        authSession: AuthSessionController()..restore(user),
+        profile: profile,
+        initialLocation: '/profile',
+      );
+      repository.failSubmit = true;
+      await tester.tap(find.text('open onboarding'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('다음'));
+      await tester.pumpAndSettle();
+      expect(find.text('제출하지 못했어요. 다시 시도해주세요'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.arrow_back_ios_new));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('open onboarding'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('제출하지 못했어요. 다시 시도해주세요'), findsNothing);
     });
 
     testWidgets('제출 중에는 뒤로가기를 눌러도 나가지 않는다', (tester) async {
