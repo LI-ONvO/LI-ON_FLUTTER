@@ -6,6 +6,7 @@ import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/network/api_exception.dart';
+import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
 import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
@@ -17,6 +18,17 @@ import 'package:li_on/features/onboarding/data/onboarding_repository.dart';
 import 'package:li_on/features/onboarding/data/onboarding_submit_result.dart';
 import 'package:li_on/features/onboarding/presentation/view_models/onboarding_view_model.dart';
 
+/// 로그인한 사용자가 희망 분야를 고치러 온보딩에 들어간다.
+///
+/// 선택 상태는 화면을 나가도 남아 있어서, 저장하지 않고 나갔다 다시
+/// 들어오면 버린 선택이 저장된 값처럼 보이고 서버 값으로 미리 선택하는
+/// 것도 막는다. 나가는 길(뒤로가기 버튼·스와이프·시스템 뒤로가기)이 여럿이라
+/// 나갈 때 대신 들어가기 직전에 비워, 항상 서버 값에서 시작하게 한다.
+void pushOnboardingForEdit(BuildContext context, WidgetRef ref) {
+  ref.invalidate(onboardingSelectionViewModelProvider);
+  context.push('/onboarding');
+}
+
 class OnboardingPage extends ConsumerWidget {
   const OnboardingPage({super.key});
 
@@ -26,14 +38,40 @@ class OnboardingPage extends ConsumerWidget {
       onboardingQuestionsProvider,
     );
 
-    return BaseScaffold(
-      appBar: null,
-      child: questionsAsync.when(
-        data: (questions) => _OnboardingForm(questions: questions),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => _RetryError(
-          message: '질문을 불러오지 못했어요',
-          onRetry: () => ref.invalidate(onboardingQuestionsProvider),
+    // 마이페이지에서 희망 분야를 고치러 들어온 경우(이미 로그인)에만 나갈
+    // 수 있게 한다. 회원가입 직후 온보딩은 계정이 이미 만들어진 뒤라 가입
+    // 화면으로 되돌아가지 않도록 뒤로가기를 두지 않는다.
+    final bool isRevisit = ref.watch(authSessionProvider).isAuthenticated;
+    // 제출 중에 나가면 제출 성공 뒤 프로필·추천을 갱신하는 리스너
+    // (_OnboardingFormState)가 사라져, 저장은 됐는데 마이페이지에는 예전
+    // 값이 남는다. 그래서 제출이 끝날 때까지는 어떤 방법으로도 못 나가게 한다.
+    final bool isSubmitting = ref
+        .watch(onboardingSubmitViewModelProvider)
+        .isLoading;
+
+    return PopScope(
+      canPop: !isSubmitting,
+      child: BaseScaffold(
+        appBar: isRevisit
+            ? CustomAppBar(
+                title: '희망 분야 수정',
+                onBackPressed: () {
+                  if (isSubmitting) return;
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/profile');
+                  }
+                },
+              )
+            : null,
+        child: questionsAsync.when(
+          data: (questions) => _OnboardingForm(questions: questions),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stackTrace) => _RetryError(
+            message: '질문을 불러오지 못했어요',
+            onRetry: () => ref.invalidate(onboardingQuestionsProvider),
+          ),
         ),
       ),
     );

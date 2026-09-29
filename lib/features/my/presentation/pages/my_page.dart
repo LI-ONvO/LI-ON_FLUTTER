@@ -19,6 +19,7 @@ import 'package:li_on/features/my/data/user_repository.dart';
 import 'package:li_on/features/my/presentation/widgets/custom_bottom_sheet.dart';
 import 'package:li_on/features/my/presentation/widgets/menu.dart';
 import 'package:li_on/features/my/presentation/widgets/my_page_profile.dart';
+import 'package:li_on/features/onboarding/presentation/pages/onboarding_page.dart';
 
 class MyPage extends ConsumerStatefulWidget {
   const MyPage({super.key});
@@ -174,7 +175,7 @@ class _MyPageState extends ConsumerState<MyPage> {
             if (profile != null && !profile.isOnboarded) ...[
               const SizedBox(height: AppSpacing.space3),
               _OnboardingReminderBanner(
-                onTap: () => context.push('/onboarding'),
+                onTap: () => pushOnboardingForEdit(context, ref),
               ),
             ],
             const SizedBox(height: AppSpacing.space5),
@@ -188,7 +189,7 @@ class _MyPageState extends ConsumerState<MyPage> {
             Menu(
               menu: '희망 분야 수정',
               icon: Icons.person_outline,
-              onTap: () => context.push('/onboarding'),
+              onTap: () => pushOnboardingForEdit(context, ref),
             ),
             Menu(
               menu: '알림 설정',

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,6 +21,9 @@ import '../../../../support/widget_test_helpers.dart';
 class _FakeOnboardingRepository implements OnboardingRepository {
   int submitCalls = 0;
   List<OnboardingAnswer>? lastAnswers;
+
+  /// 설정하면 제출 응답을 이 Completer가 끝날 때까지 붙잡아 둔다.
+  Completer<void>? holdSubmit;
 
   @override
   Future<List<OnboardingQuestion>> fetchQuestions() async {
@@ -43,6 +48,7 @@ class _FakeOnboardingRepository implements OnboardingRepository {
   ) async {
     submitCalls += 1;
     lastAnswers = answers;
+    await holdSubmit?.future;
     return const OnboardingSubmitResult(desiredFields: []);
   }
 }
@@ -73,11 +79,21 @@ void main() {
     AuthSessionController? authSession,
     _FakeRecommendations? recommendations,
     Profile? profile,
+    String initialLocation = '/onboarding',
   }) async {
     final repository = _FakeOnboardingRepository();
     final router = GoRouter(
-      initialLocation: '/onboarding',
+      initialLocation: initialLocation,
       routes: [
+        GoRoute(
+          path: '/profile',
+          builder: (context, state) => Consumer(
+            builder: (context, ref, _) => TextButton(
+              onPressed: () => pushOnboardingForEdit(context, ref),
+              child: const Text('open onboarding'),
+            ),
+          ),
+        ),
         GoRoute(
           path: '/onboarding',
           builder: (context, state) => const OnboardingPage(),
@@ -257,6 +273,79 @@ void main() {
 
       expect(_isBadgeSelected(tester, '경영·회계'), isFalse);
       expect(isElevatedButtonEnabled(tester), isFalse);
+    });
+
+    testWidgets('로그인 상태면 뒤로가기 버튼이 있고 누르면 나간다', (tester) async {
+      await pumpOnboardingPage(
+        tester,
+        authSession: AuthSessionController()..restore(user),
+        profile: profile,
+        initialLocation: '/profile',
+      );
+      await tester.tap(find.text('open onboarding'));
+      await tester.pumpAndSettle();
+      expect(find.byType(OnboardingPage), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.arrow_back_ios_new));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OnboardingPage), findsNothing);
+      expect(find.text('open onboarding'), findsOneWidget);
+    });
+
+    testWidgets('회원가입 직후 온보딩에는 뒤로가기 버튼이 없다', (tester) async {
+      await pumpOnboardingPage(
+        tester,
+        authSession: AuthSessionController()..startOnboarding(user: user),
+      );
+
+      expect(find.byIcon(Icons.arrow_back_ios_new), findsNothing);
+    });
+
+    testWidgets('저장하지 않고 나갔다 다시 들어오면 서버 값으로 다시 시작한다', (tester) async {
+      await pumpOnboardingPage(
+        tester,
+        authSession: AuthSessionController()..restore(user),
+        profile: profile,
+        initialLocation: '/profile',
+      );
+      await tester.tap(find.text('open onboarding'));
+      await tester.pumpAndSettle();
+      // 서버 값(경영·회계)을 해제하고 다른 분야를 고른 뒤 저장 없이 나간다.
+      await tester.tap(find.text('경영·회계'));
+      await tester.tap(find.text('IT·정보통신'));
+      await tester.pump();
+      await tester.tap(find.byIcon(Icons.arrow_back_ios_new));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('open onboarding'));
+      await tester.pumpAndSettle();
+
+      expect(_isBadgeSelected(tester, '경영·회계'), isTrue);
+      expect(_isBadgeSelected(tester, 'IT·정보통신'), isFalse);
+    });
+
+    testWidgets('제출 중에는 뒤로가기를 눌러도 나가지 않는다', (tester) async {
+      final repository = await pumpOnboardingPage(
+        tester,
+        authSession: AuthSessionController()..restore(user),
+        profile: profile,
+        initialLocation: '/profile',
+        recommendations: _FakeRecommendations(),
+      );
+      repository.holdSubmit = Completer<void>();
+      await tester.tap(find.text('open onboarding'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('다음'));
+      await tester.pump();
+      await tester.tap(find.byIcon(Icons.arrow_back_ios_new));
+      await tester.pump();
+      expect(find.byType(OnboardingPage), findsOneWidget);
+
+      repository.holdSubmit!.complete();
+      await tester.pumpAndSettle();
+      expect(repository.submitCalls, 1);
     });
   });
 }

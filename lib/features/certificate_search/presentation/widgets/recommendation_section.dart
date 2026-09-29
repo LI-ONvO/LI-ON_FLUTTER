@@ -8,6 +8,7 @@ import 'package:li_on/core/network/api_exception.dart';
 import 'package:li_on/features/certificate_search/data/certificate.dart';
 import 'package:li_on/features/certificate_search/data/certificate_repository.dart';
 import 'package:li_on/features/certificate_search/presentation/view_models/certificate_recommendation_view_model.dart';
+import 'package:li_on/features/onboarding/presentation/pages/onboarding_page.dart';
 
 /// 탐색·내 정보 화면에서 함께 쓰는 "맞춤 추천 자격증" 섹션.
 /// 추천이 아직 없으면 만들기 카드를, 추천할 자격증이 없으면(서버가
@@ -116,7 +117,7 @@ class _NoRecommendationFallback extends ConsumerWidget {
             ),
             GestureDetector(
               onTap: onboardingIncomplete
-                  ? () => context.push('/onboarding')
+                  ? () => pushOnboardingForEdit(context, ref)
                   // 다시 GET 하면 저장된 빈 추천이 그대로 오니, 새로 만든다.
                   : () => ref
                         .read(certificateRecommendationsProvider.notifier)
