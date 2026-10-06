@@ -30,7 +30,11 @@ class SchedulePickerTheme {
               ? AppColors.white
               : AppColors.text,
         ),
-        todayForegroundColor: const WidgetStatePropertyAll(AppColors.primary),
+        todayForegroundColor: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.white
+              : AppColors.primary,
+        ),
         todayBorder: const BorderSide(color: AppColors.primary),
         dividerColor: AppColors.divider,
         cancelButtonStyle: TextButton.styleFrom(
