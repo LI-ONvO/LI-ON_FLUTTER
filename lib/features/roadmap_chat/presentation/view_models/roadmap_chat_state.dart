@@ -1,4 +1,4 @@
-import 'package:li_on/features/roadmap/data/chat_message.dart';
+import 'package:li_on/features/chat/data/chat_message.dart';
 
 class RoadmapChatState {
   final List<ChatMessage> messages;

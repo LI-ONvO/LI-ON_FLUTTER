@@ -1,11 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/network/api_exception.dart';
 import 'package:li_on/features/roadmap_chat/data/roadmap_chat_repository.dart';
-import 'package:li_on/features/roadmap/data/chat_message.dart';
+import 'package:li_on/features/chat/data/chat_message.dart';
 import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_session.dart';
 import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_state.dart';
 
-export 'package:li_on/features/roadmap/data/chat_message.dart';
 export 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_session.dart';
 export 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_state.dart';
 

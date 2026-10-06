@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/features/roadmap/data/roadmap_message_result.dart';
 import 'package:li_on/features/roadmap/data/roadmap_repository.dart';
-import 'package:li_on/features/roadmap/data/chat_message.dart';
+import 'package:li_on/features/chat/data/chat_message.dart';
 
 /// 세션 상세 조회 결과. 메시지 내역과 함께, "자료 추천" 같은 자격증
 /// 종속 기능이 필요로 하는 연결된 자격증(jmCd)도 같이 돌려준다.

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/features/chat_history/data/chat_history_item.dart';
-import 'package:li_on/features/roadmap/data/chat_session.dart';
+import 'package:li_on/features/chat/data/chat_session.dart';
 import 'package:li_on/features/roadmap/data/roadmap_repository.dart';
 
 /// 대화 내역 목록을 가져오는 방법을 추상화한다.

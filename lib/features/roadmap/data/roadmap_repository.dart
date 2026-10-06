@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/network/api_client.dart';
 import 'package:li_on/core/network/api_exception.dart';
-import 'package:li_on/features/roadmap/data/chat_session.dart';
-import 'package:li_on/features/roadmap/data/chat_session_detail.dart';
+import 'package:li_on/features/chat/data/chat_session.dart';
+import 'package:li_on/features/chat/data/chat_session_detail.dart';
 import 'package:li_on/features/roadmap/data/roadmap_detail.dart';
 import 'package:li_on/features/roadmap/data/roadmap_message_result.dart';
 import 'package:li_on/features/roadmap/data/roadmap_summary.dart';
