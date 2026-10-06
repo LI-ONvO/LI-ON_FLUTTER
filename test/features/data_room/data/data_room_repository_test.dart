@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:li_on/features/data_room/data/saved_material.dart';
-import 'package:li_on/features/data_room/data/data_room_repository.dart';
+import '../../../support/in_memory_data_room_repository.dart';
 
 Future<SavedMaterial> addSample(
   InMemoryDataRoomRepository repository, {

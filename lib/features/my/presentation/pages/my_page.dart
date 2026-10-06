@@ -19,7 +19,7 @@ import 'package:li_on/features/my/data/user_repository.dart';
 import 'package:li_on/features/my/presentation/widgets/custom_bottom_sheet.dart';
 import 'package:li_on/features/my/presentation/widgets/menu.dart';
 import 'package:li_on/features/my/presentation/widgets/my_page_profile.dart';
-import 'package:li_on/features/onboarding/presentation/pages/onboarding_page.dart';
+import 'package:li_on/features/onboarding/presentation/onboarding_navigation.dart';
 
 class MyPage extends ConsumerStatefulWidget {
   const MyPage({super.key});

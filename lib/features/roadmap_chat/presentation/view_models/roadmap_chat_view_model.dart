@@ -2,69 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/network/api_exception.dart';
 import 'package:li_on/features/roadmap_chat/data/roadmap_chat_repository.dart';
 import 'package:li_on/features/roadmap/data/chat_message.dart';
+import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_session.dart';
+import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_state.dart';
 
 export 'package:li_on/features/roadmap/data/chat_message.dart';
-
-class RoadmapChatSession {
-  const RoadmapChatSession({
-    required this.certificateName,
-    this.historyId,
-    this.jmCd,
-  });
-
-  final String certificateName;
-
-  /// 대화 내역에서 열었다면 그 서버 세션 ID. 새 대화면 null이고,
-  /// 첫 메시지를 보낼 때 세션이 만들어진다.
-  final int? historyId;
-
-  /// 특정 자격증 상세에서 들어왔다면 그 자격증의 jmCd. 자료 추천처럼
-  /// 자격증에 종속된 기능을 켤지 판단하는 데 쓴다.
-  final String? jmCd;
-
-  @override
-  bool operator ==(Object other) {
-    return other is RoadmapChatSession &&
-        certificateName == other.certificateName &&
-        historyId == other.historyId &&
-        jmCd == other.jmCd;
-  }
-
-  @override
-  int get hashCode => Object.hash(certificateName, historyId, jmCd);
-}
-
-class RoadmapChatState {
-  final List<ChatMessage> messages;
-  final bool isBotTyping;
-
-  /// 서버에 만들어진 채팅 세션 ID. 첫 메시지를 보내기 전(새 대화)에는 null.
-  final int? sessionId;
-
-  /// 이 대화가 연결된 자격증의 jmCd. 자료 추천 진입점을 보여줄지 결정한다.
-  final String? jmCd;
-
-  const RoadmapChatState({
-    this.messages = const [],
-    this.isBotTyping = false,
-    this.sessionId,
-    this.jmCd,
-  });
-
-  RoadmapChatState copyWith({
-    List<ChatMessage>? messages,
-    bool? isBotTyping,
-    int? sessionId,
-    String? jmCd,
-  }) {
-    return RoadmapChatState(
-      messages: messages ?? this.messages,
-      isBotTyping: isBotTyping ?? this.isBotTyping,
-      sessionId: sessionId ?? this.sessionId,
-      jmCd: jmCd ?? this.jmCd,
-    );
-  }
-}
+export 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_session.dart';
+export 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_state.dart';
 
 /// 새 대화와 대화 내역의 각 세션별로 독립된 대화 상태를 갖는다.
 class RoadmapChatViewModel extends Notifier<RoadmapChatState> {

@@ -18,19 +18,6 @@ import 'package:li_on/features/onboarding/data/onboarding_repository.dart';
 import 'package:li_on/features/onboarding/data/onboarding_submit_result.dart';
 import 'package:li_on/features/onboarding/presentation/view_models/onboarding_view_model.dart';
 
-/// 로그인한 사용자가 희망 분야를 고치러 온보딩에 들어간다.
-///
-/// 선택 상태는 화면을 나가도 남아 있어서, 저장하지 않고 나갔다 다시
-/// 들어오면 버린 선택이 저장된 값처럼 보이고 서버 값으로 미리 선택하는
-/// 것도 막는다. 나가는 길(뒤로가기 버튼·스와이프·시스템 뒤로가기)이 여럿이라
-/// 나갈 때 대신 들어가기 직전에 비워, 항상 서버 값에서 시작하게 한다.
-void pushOnboardingForEdit(BuildContext context, WidgetRef ref) {
-  ref.invalidate(onboardingSelectionViewModelProvider);
-  // 지난번 제출 실패의 오류 문구가 다시 들어왔을 때 남아 있지 않게 한다.
-  ref.invalidate(onboardingSubmitViewModelProvider);
-  context.push('/onboarding');
-}
-
 class OnboardingPage extends ConsumerWidget {
   const OnboardingPage({super.key});
 

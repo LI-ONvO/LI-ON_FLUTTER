@@ -9,6 +9,8 @@ import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/core/widgets/text_field/custom_text_field.dart';
 import 'package:li_on/features/calendar/presentation/view_models/calendar_view_model.dart';
 import 'package:li_on/features/calendar/presentation/pages/reminder_select_sheet.dart';
+import 'package:li_on/features/calendar/presentation/widgets/schedule_picker_theme.dart';
+import 'package:li_on/features/calendar/presentation/widgets/schedule_picker_field.dart';
 
 /// 일정을 추가하거나 수정하는 바텀시트. [event]를 주면 그 값으로 채워진
 /// 수정 폼이 되고, 주지 않으면 [initialDate]를 기본값으로 하는 추가 폼이
@@ -59,45 +61,8 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
       initialDate: initial,
       firstDate: DateTime(initial.year - 1),
       lastDate: DateTime(initial.year + 2),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: Theme.of(context).colorScheme.copyWith(
-            primary: AppColors.surface,
-            onPrimary: AppColors.white,
-            surface: AppColors.white,
-            onSurface: AppColors.text,
-          ),
-          datePickerTheme: DatePickerThemeData(
-            backgroundColor: AppColors.white,
-            surfaceTintColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            headerBackgroundColor: AppColors.primary,
-            headerForegroundColor: AppColors.white,
-            dayBackgroundColor: WidgetStateColor.resolveWith(
-              (states) => states.contains(WidgetState.selected)
-                  ? AppColors.primary
-                  : Colors.transparent,
-            ),
-            dayForegroundColor: WidgetStateColor.resolveWith(
-              (states) => states.contains(WidgetState.selected)
-                  ? AppColors.white
-                  : AppColors.text,
-            ),
-            todayForegroundColor: WidgetStatePropertyAll(AppColors.primary),
-            todayBorder: const BorderSide(color: AppColors.primary),
-            dividerColor: AppColors.divider,
-            cancelButtonStyle: TextButton.styleFrom(
-              foregroundColor: AppColors.subText,
-            ),
-            confirmButtonStyle: TextButton.styleFrom(
-              foregroundColor: AppColors.primary,
-            ),
-          ),
-        ),
-        child: child!,
-      ),
+      builder: (context, child) =>
+          Theme(data: SchedulePickerTheme.date(context), child: child!),
     );
     if (picked == null || !mounted) return;
     setState(() {
@@ -115,53 +80,8 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: initial,
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: Theme.of(context).colorScheme.copyWith(
-            primary: AppColors.primary,
-            onPrimary: AppColors.white,
-            surface: AppColors.white,
-            onSurface: AppColors.text,
-          ),
-          timePickerTheme: TimePickerThemeData(
-            backgroundColor: AppColors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            hourMinuteColor: WidgetStateColor.resolveWith(
-              (states) => states.contains(WidgetState.selected)
-                  ? AppColors.primary
-                  : AppColors.light,
-            ),
-            hourMinuteTextColor: WidgetStateColor.resolveWith(
-              (states) => states.contains(WidgetState.selected)
-                  ? AppColors.white
-                  : AppColors.text,
-            ),
-            dayPeriodColor: WidgetStateColor.resolveWith(
-              (states) => states.contains(WidgetState.selected)
-                  ? AppColors.primary
-                  : AppColors.white,
-            ),
-            dayPeriodTextColor: WidgetStateColor.resolveWith(
-              (states) => states.contains(WidgetState.selected)
-                  ? AppColors.white
-                  : AppColors.subText,
-            ),
-            dayPeriodBorderSide: const BorderSide(color: AppColors.border),
-            dialBackgroundColor: AppColors.light,
-            dialHandColor: AppColors.primary,
-            entryModeIconColor: AppColors.primary,
-            cancelButtonStyle: TextButton.styleFrom(
-              foregroundColor: AppColors.subText,
-            ),
-            confirmButtonStyle: TextButton.styleFrom(
-              foregroundColor: AppColors.primary,
-            ),
-          ),
-        ),
-        child: child!,
-      ),
+      builder: (context, child) =>
+          Theme(data: SchedulePickerTheme.time(context), child: child!),
     );
     if (picked == null || !mounted) return;
     setState(() {
@@ -238,6 +158,31 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
     }
   }
 
+  Widget _pickerRange({
+    required IconData icon,
+    required String startLabel,
+    required String endLabel,
+    required VoidCallback onStart,
+    required VoidCallback onEnd,
+  }) => Row(
+    children: [
+      Expanded(
+        child: SchedulePickerField(
+          icon: icon,
+          label: startLabel,
+          onTap: onStart,
+        ),
+      ),
+      const Padding(
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.space1),
+        child: Text('~', style: TextStyle(color: AppColors.placeholder)),
+      ),
+      Expanded(
+        child: SchedulePickerField(icon: icon, label: endLabel, onTap: onEnd),
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
     return AppBottomSheet(
@@ -261,61 +206,21 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
                 ),
                 const SizedBox(height: AppSpacing.space3),
                 const SheetLabel('날짜'),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _PickerField(
-                        icon: Icons.calendar_today_outlined,
-                        label: '${_startDate.month}/${_startDate.day}',
-                        onTap: () => _pickDate(isStart: true),
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: AppSpacing.space1,
-                      ),
-                      child: Text(
-                        '~',
-                        style: TextStyle(color: AppColors.placeholder),
-                      ),
-                    ),
-                    Expanded(
-                      child: _PickerField(
-                        icon: Icons.calendar_today_outlined,
-                        label: '${_endDate.month}/${_endDate.day}',
-                        onTap: () => _pickDate(isStart: false),
-                      ),
-                    ),
-                  ],
+                _pickerRange(
+                  icon: Icons.calendar_today_outlined,
+                  startLabel: '${_startDate.month}/${_startDate.day}',
+                  endLabel: '${_endDate.month}/${_endDate.day}',
+                  onStart: () => _pickDate(isStart: true),
+                  onEnd: () => _pickDate(isStart: false),
                 ),
                 const SizedBox(height: AppSpacing.space3),
                 const SheetLabel('시간'),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _PickerField(
-                        icon: Icons.access_time,
-                        label: formatKoreanTimeOfDay(_startTime),
-                        onTap: () => _pickTime(isStart: true),
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: AppSpacing.space1,
-                      ),
-                      child: Text(
-                        '~',
-                        style: TextStyle(color: AppColors.placeholder),
-                      ),
-                    ),
-                    Expanded(
-                      child: _PickerField(
-                        icon: Icons.access_time,
-                        label: formatKoreanTimeOfDay(_endTime),
-                        onTap: () => _pickTime(isStart: false),
-                      ),
-                    ),
-                  ],
+                _pickerRange(
+                  icon: Icons.access_time,
+                  startLabel: formatKoreanTimeOfDay(_startTime),
+                  endLabel: formatKoreanTimeOfDay(_endTime),
+                  onStart: () => _pickTime(isStart: true),
+                  onEnd: () => _pickTime(isStart: false),
                 ),
                 const SizedBox(height: AppSpacing.space3),
                 Row(
@@ -388,44 +293,6 @@ class _ScheduleFormSheetState extends ConsumerState<ScheduleFormSheet> {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _PickerField extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _PickerField({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        height: 48,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 16, color: AppColors.subText),
-            const SizedBox(width: AppSpacing.space1),
-            Text(
-              label,
-              style: AppTextStyle.mainText.copyWith(color: AppColors.text),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

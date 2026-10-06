@@ -14,6 +14,7 @@ import 'package:li_on/features/my/data/user_repository.dart';
 import 'package:li_on/features/onboarding/data/onboarding_question.dart';
 import 'package:li_on/features/onboarding/data/onboarding_repository.dart';
 import 'package:li_on/features/onboarding/data/onboarding_submit_result.dart';
+import 'package:li_on/features/onboarding/presentation/onboarding_navigation.dart';
 import 'package:li_on/features/onboarding/presentation/pages/onboarding_page.dart';
 
 import '../../../../support/widget_test_helpers.dart';
