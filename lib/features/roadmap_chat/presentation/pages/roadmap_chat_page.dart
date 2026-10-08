@@ -12,6 +12,9 @@ import 'package:li_on/features/roadmap_chat/presentation/widgets/chat_input_bar.
 import 'package:li_on/features/roadmap_chat/presentation/widgets/resource_recommendation_sheet.dart';
 import 'package:li_on/features/roadmap_chat/presentation/widgets/typing_bubble.dart';
 
+/// 대화 목록이 맨 아래에서 이 거리(px) 안이면 맨 아래를 보고 있다고 본다.
+const double _bottomSlack = 40;
+
 class RoadmapChatPage extends ConsumerStatefulWidget {
   final String certificateName;
 
@@ -42,6 +45,10 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
+  /// 사용자가 대화의 맨 아래를 보고 있는지. 키보드가 올라와 목록이 줄어들어도
+  /// 맨 아래를 보고 있었다면 그 자리를 따라가야 최신 메시지가 가려지지 않는다.
+  bool _isAtBottom = true;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -50,14 +57,43 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
   }
 
   void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!_scrollController.hasClients) return;
-      _scrollController.animateTo(
+      await _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOut,
       );
+      // 이동하는 동안 아래쪽 항목의 높이가 확정되면 끝이 더 멀어지므로 맞춘다.
+      if (!_scrollController.hasClients) return;
+      final ScrollPosition position = _scrollController.position;
+      if (position.extentAfter > 0) {
+        _scrollController.jumpTo(position.maxScrollExtent);
+      }
     });
+  }
+
+  /// 스크롤 위치가 실제로 움직였을 때만 맨 아래 여부를 갱신한다. 키보드로
+  /// 목록 높이만 줄어든 경우는 위치가 그대로라 직전 값이 유지된다.
+  bool _trackBottom(ScrollNotification notification) {
+    if (notification is ScrollUpdateNotification ||
+        notification is ScrollEndNotification) {
+      _isAtBottom = notification.metrics.extentAfter < _bottomSlack;
+    }
+    return false;
+  }
+
+  /// 키보드 등으로 보이는 영역이 줄거나 항목 높이가 확정돼 끝 위치가 바뀌었을
+  /// 때, 맨 아래를 보고 있었다면 새 끝으로 따라간다. 이동 중이면 그 이동이
+  /// 끝에서 맞추므로 건드리지 않는다.
+  bool _followBottom(ScrollMetricsNotification notification) {
+    if (!_isAtBottom || notification.metrics.extentAfter <= 0) return false;
+    if (_scrollController.position.isScrollingNotifier.value) return false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    });
+    return false;
   }
 
   /// 대화 내역에서 들어온 화면이면 그 화면으로 되돌아가고, 아니면 새로 연다.
@@ -75,6 +111,7 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
     if (text.trim().isEmpty) return;
     viewModel.sendMessage(text);
     _controller.clear();
+    _isAtBottom = true;
     _scrollToBottom();
   }
 
@@ -145,15 +182,22 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
         enabled: !state.isBotTyping,
         onSend: () => _handleSend(viewModel),
       ),
-      child: ListView.separated(
-        controller: _scrollController,
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.space3),
-        itemCount: state.messages.length + (state.isBotTyping ? 1 : 0),
-        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.space1),
-        itemBuilder: (context, index) {
-          if (index == state.messages.length) return const TypingBubble();
-          return ChatBubble(message: state.messages[index]);
-        },
+      child: NotificationListener<ScrollNotification>(
+        onNotification: _trackBottom,
+        child: NotificationListener<ScrollMetricsNotification>(
+          onNotification: _followBottom,
+          child: ListView.separated(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.space3),
+            itemCount: state.messages.length + (state.isBotTyping ? 1 : 0),
+            separatorBuilder: (_, _) =>
+                const SizedBox(height: AppSpacing.space1),
+            itemBuilder: (context, index) {
+              if (index == state.messages.length) return const TypingBubble();
+              return ChatBubble(message: state.messages[index]);
+            },
+          ),
+        ),
       ),
     );
   }
