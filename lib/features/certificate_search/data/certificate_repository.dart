@@ -13,8 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// 자격증 목록을 가져오는 방법을 추상화한다.
 abstract class CertificateRepository {
-  /// 자격증 목록. [keyword]·[fieldId]를 주면 서버에서 필터링해 준다.
-  Future<List<Certificate>> fetchCertificates({String? keyword, int? fieldId});
+  /// 자격증 목록. [keyword]를 주면 서버에서 필터링해 준다.
+  Future<List<Certificate>> fetchCertificates({String? keyword});
   Future<CertificateDetail?> fetchCertificateDetail(String id);
 
   /// `GET /api/recommendations` — 생성된 추천이 없으면 null.
@@ -58,13 +58,12 @@ class HttpCertificateRepository implements CertificateRepository {
   static const Duration _cacheTtl = Duration(days: 1);
 
   @override
-  Future<List<Certificate>> fetchCertificates({String? keyword, int? fieldId}) {
+  Future<List<Certificate>> fetchCertificates({String? keyword}) {
     return guardApiCall(() async {
       // 캐시는 "필터 없이 전체 목록"을 부르는 호출에만 쓴다. 화면이
       // 서버 필터링 없이 전체를 받아 클라이언트에서 걸러내는 방식이라,
       // 지금은 이 경우만 실제로 쓰인다.
-      final bool isFullList =
-          (keyword == null || keyword.isEmpty) && fieldId == null;
+      final bool isFullList = keyword == null || keyword.isEmpty;
 
       if (isFullList) {
         final List<Certificate>? cached = await _readCache();
@@ -77,7 +76,6 @@ class HttpCertificateRepository implements CertificateRepository {
           '/api/certificates',
           queryParameters: {
             if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
-            'fieldId': ?fieldId,
             'page': page,
             'size': _pageSize,
           },

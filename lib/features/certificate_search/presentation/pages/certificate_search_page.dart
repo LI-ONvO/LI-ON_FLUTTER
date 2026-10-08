@@ -57,13 +57,16 @@ class CertificateSearchPage extends ConsumerWidget {
                     (state) => state.selectedCategory,
                   ),
                 );
+                final List<String> categories = ref.watch(
+                  certificateCategoriesProvider,
+                );
                 return ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemCount: certificateCategories.length,
+                  itemCount: categories.length,
                   separatorBuilder: (_, _) =>
                       const SizedBox(width: AppSpacing.space0),
                   itemBuilder: (context, index) {
-                    final category = certificateCategories[index];
+                    final category = categories[index];
                     return CustomBadge(
                       field: category,
                       selected: selectedCategory == category,

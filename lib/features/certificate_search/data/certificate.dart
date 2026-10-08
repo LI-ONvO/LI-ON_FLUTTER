@@ -6,14 +6,8 @@ part 'certificate.g.dart';
 
 const String allCategory = '전체';
 
-const List<String> certificateCategories = [
-  allCategory,
-  'IT',
-  '경영',
-  '건축',
-  '보건',
-  '교육',
-];
+/// 칩으로 따로 보여주지 않는 category(드문 전문자격 이름, 빈 값)를 묶는 칩.
+const String otherCategory = '기타';
 
 const Map<String, Color> _categoryColors = {
   'IT': Color(0xFF2563EB),
