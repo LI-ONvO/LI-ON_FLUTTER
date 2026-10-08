@@ -20,10 +20,20 @@ class AppShell extends StatelessWidget {
       // 이미 이 Scaffold가 bottomNavigationBar 위쪽 공간에 배치해주므로,
       // 화면 안쪽 BaseScaffold의 SafeArea가 세이프 에어리어를 또 더하지
       // 않도록 여기서 bottom padding을 명시적으로 제거한다.
-      body: MediaQuery.removePadding(
+      //
+      // 키보드 높이(viewInsets)도 마찬가지다. 이 Scaffold가 이미 body를 키보드
+      // 위로 줄여 주는데 안쪽 BaseScaffold가 같은 높이를 또 빼면 화면이
+      // 쪼그라들어 채팅 입력창 같은 하단 요소가 엉뚱한 곳에 놓인다.
+      body: MediaQuery.removeViewInsets(
         context: context,
         removeBottom: true,
-        child: navigationShell,
+        child: Builder(
+          builder: (context) => MediaQuery.removePadding(
+            context: context,
+            removeBottom: true,
+            child: navigationShell,
+          ),
+        ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: navigationShell.currentIndex,

@@ -31,21 +31,26 @@ class BaseScaffold extends StatelessWidget {
       appBar: appBar,
       floatingActionButton: floatingActionButton,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+      // bottomNavigationBar는 키보드가 올라와도 밀려 올라가지 않아 하단 버튼이
+      // 키보드에 가려진다. 본문 Column 아래에 두면 줄어든 body와 함께 키보드
+      // 위로 올라온다.
       body: SafeArea(
-        bottom: bottomBar == null,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: child,
-        ),
-      ),
-      bottomNavigationBar: bottomBar == null
-          ? null
-          : SafeArea(
+        child: Column(
+          children: [
+            Expanded(
               child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: child,
+              ),
+            ),
+            if (bottomBar != null)
+              Padding(
                 padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
                 child: bottomBar,
               ),
-            ),
+          ],
+        ),
+      ),
     );
   }
 }
