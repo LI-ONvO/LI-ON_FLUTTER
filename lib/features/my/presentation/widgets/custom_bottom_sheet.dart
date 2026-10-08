@@ -8,6 +8,7 @@ import 'package:li_on/core/network/api_exception.dart';
 import 'package:li_on/core/network/token_storage.dart';
 import 'package:li_on/core/utils/validators.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
+import 'package:li_on/core/widgets/layout/app_bottom_sheet.dart';
 import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/core/widgets/text_field/custom_text_field.dart';
 import 'package:li_on/features/my/data/info_edit.dart';
@@ -95,120 +96,91 @@ class _CustomBottomSheetState extends ConsumerState<CustomBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        // 키보드가 올라온 만큼 시트를 밀어 올려 입력창·저장 버튼이 가리지
-        // 않게 한다.
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(context).bottom,
-        ),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
-          decoration: const BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    margin: const EdgeInsets.fromLTRB(0, 10, 0, 14),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
+    return AppBottomSheet(
+      title: '내 정보 수정',
+      children: [
+        Flexible(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(top: AppSpacing.space4),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CustomTextField(
+                    label: '이름',
+                    hintText: '',
+                    controller: _nameController,
+                    validator: (value) => Validators.nickname(value?.trim()),
                   ),
-                ),
-                Row(
-                  children: [
-                    Text('내 정보 수정', style: AppTextStyle.section),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
-                      behavior: HitTestBehavior.opaque,
-                      child: const Icon(Icons.close, color: AppColors.text),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.space4),
-                CustomTextField(
-                  label: '이름',
-                  hintText: '',
-                  controller: _nameController,
-                  validator: (value) => Validators.nickname(value?.trim()),
-                ),
-                const SizedBox(height: AppSpacing.space3),
-                CustomTextField(
-                  label: '이메일',
-                  hintText: '',
-                  controller: _emailController,
-                  enabled: false,
-                  fillColor: AppColors.surface,
-                ),
-                const SizedBox(height: AppSpacing.space3),
-                GestureDetector(
-                  // 비밀번호 변경 화면이 아직 없어, 무반응 대신 준비 중임을
-                  // 알린다.
-                  onTap: () => CustomSnackbar.show(
-                    context,
-                    message: '아직 준비 중인 기능이에요',
-                    type: SnackbarType.info,
+                  const SizedBox(height: AppSpacing.space3),
+                  CustomTextField(
+                    label: '이메일',
+                    hintText: '',
+                    controller: _emailController,
+                    enabled: false,
+                    fillColor: AppColors.surface,
                   ),
-                  behavior: HitTestBehavior.opaque,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '비밀번호 변경',
-                        style: AppTextStyle.mainText.copyWith(
+                  const SizedBox(height: AppSpacing.space3),
+                  GestureDetector(
+                    // 비밀번호 변경 화면이 아직 없어, 무반응 대신 준비 중임을
+                    // 알린다.
+                    onTap: () => CustomSnackbar.show(
+                      context,
+                      message: '아직 준비 중인 기능이에요',
+                      type: SnackbarType.info,
+                    ),
+                    behavior: HitTestBehavior.opaque,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '비밀번호 변경',
+                          style: AppTextStyle.mainText.copyWith(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const Icon(
+                          Icons.arrow_forward_ios_sharp,
+                          size: 14,
                           color: AppColors.primary,
                         ),
-                      ),
-                      const Icon(
-                        Icons.arrow_forward_ios_sharp,
-                        size: 14,
-                        color: AppColors.primary,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.space4),
-                if (_errorMessage != null) ...[
-                  Text(
-                    _errorMessage!,
-                    style: AppTextStyle.mainText.copyWith(
-                      color: AppColors.danger,
+                      ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.space2),
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: AppSpacing.space3),
+                    Text(
+                      _errorMessage!,
+                      style: AppTextStyle.mainText.copyWith(
+                        color: AppColors.danger,
+                      ),
+                    ),
+                  ],
                 ],
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.space4),
-                  child: ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _nameController,
-                    builder: (context, value, _) {
-                      final bool canSave =
-                          value.text.trim().isNotEmpty && !_isSaving;
-                      return CustomElevatedButton(
-                        text: _isSaving ? '저장 중...' : '저장',
-                        backgroundColor: AppColors.primary,
-                        onPressed: canSave ? _save : null,
-                      );
-                    },
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
+        Padding(
+          padding: const EdgeInsets.only(
+            top: AppSpacing.space4,
+            bottom: AppSpacing.space4,
+          ),
+          child: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _nameController,
+            builder: (context, value, _) {
+              final bool canSave = value.text.trim().isNotEmpty && !_isSaving;
+              return CustomElevatedButton(
+                text: _isSaving ? '저장 중...' : '저장',
+                backgroundColor: AppColors.primary,
+                onPressed: canSave ? _save : null,
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
