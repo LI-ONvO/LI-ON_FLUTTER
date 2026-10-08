@@ -10,6 +10,9 @@ import 'package:li_on/features/certificate_search/data/certificate_repository.da
 import 'package:li_on/features/certificate_search/presentation/view_models/certificate_recommendation_view_model.dart';
 import 'package:li_on/features/onboarding/presentation/onboarding_navigation.dart';
 
+/// 글자 배율 1.0일 때 추천 카드 목록의 높이.
+const double _listHeight = 128;
+
 /// 탐색·내 정보 화면에서 함께 쓰는 "맞춤 추천 자격증" 섹션.
 /// 추천이 아직 없으면 만들기 카드를, 추천할 자격증이 없으면(서버가
 /// 빈 목록이나 `NO_CANDIDATE_CERTIFICATE`를 주면) 안내 문구와 무작위
@@ -21,6 +24,10 @@ class RecommendationSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<CertificateRecommendationResult?> recommendationAsync = ref
         .watch(certificateRecommendationsProvider);
+    // 카드 안 글자가 커져도 잘리지 않도록 목록 높이도 글자 배율만큼 키운다.
+    final double listHeight = MediaQuery.textScalerOf(
+      context,
+    ).scale(_listHeight);
 
     return recommendationAsync.when(
       data: (result) {
@@ -37,7 +44,7 @@ class RecommendationSection extends ConsumerWidget {
           );
         }
         return SizedBox(
-          height: 128,
+          height: listHeight,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: result.items.length,
@@ -48,9 +55,9 @@ class RecommendationSection extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const SizedBox(
-        height: 128,
-        child: Center(child: CircularProgressIndicator()),
+      loading: () => SizedBox(
+        height: listHeight,
+        child: const Center(child: CircularProgressIndicator()),
       ),
       error: (error, stackTrace) {
         if (error is ApiException) {

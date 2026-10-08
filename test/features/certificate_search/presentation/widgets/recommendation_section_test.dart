@@ -42,6 +42,7 @@ void main() {
   Future<void> pumpSection(
     WidgetTester tester, {
     required CertificateRecommendations Function() recommendations,
+    double textScale = 1.0,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -49,7 +50,15 @@ void main() {
           certificateRecommendationsProvider.overrideWith(recommendations),
           certificatesProvider.overrideWith((ref) async => certificates),
         ],
-        child: const MaterialApp(home: Scaffold(body: RecommendationSection())),
+        child: MaterialApp(
+          builder: (context, home) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(textScale)),
+            child: home!,
+          ),
+          home: const Scaffold(body: RecommendationSection()),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -136,5 +145,28 @@ void main() {
     await tester.pump();
 
     expect(notifier.generateCalls, 1);
+  });
+
+  testWidgets('글자가 커지면 추천 카드 목록도 함께 높아져 카드 내용이 넘치지 않는다', (tester) async {
+    await pumpSection(
+      tester,
+      textScale: 3.0,
+      recommendations: () => _FixedResultRecommendations(
+        const CertificateRecommendationResult(
+          recommendationId: 1,
+          items: [
+            CertificateRecommendationItem(
+              jmCd: 'C001',
+              name: '정보처리기사',
+              category: 'IT',
+              reason: '온보딩에서 선택한 분야와 가장 잘 맞아요',
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('정보처리기사'), findsOneWidget);
   });
 }

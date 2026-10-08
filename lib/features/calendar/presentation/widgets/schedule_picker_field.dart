@@ -21,7 +21,7 @@ class SchedulePickerField extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        height: 48,
+        constraints: const BoxConstraints(minHeight: 48),
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -31,9 +31,11 @@ class SchedulePickerField extends StatelessWidget {
           children: [
             Icon(icon, size: 16, color: AppColors.subText),
             const SizedBox(width: AppSpacing.space1),
-            Text(
-              label,
-              style: AppTextStyle.mainText.copyWith(color: AppColors.text),
+            Flexible(
+              child: Text(
+                label,
+                style: AppTextStyle.mainText.copyWith(color: AppColors.text),
+              ),
             ),
           ],
         ),

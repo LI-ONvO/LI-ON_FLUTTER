@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
+import 'package:li_on/core/constants/spacing.dart';
 
 class CertificateInfoRow extends StatelessWidget {
   final String label;
@@ -15,7 +16,8 @@ class CertificateInfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 45,
+      constraints: const BoxConstraints(minHeight: 45),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.space1),
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
@@ -23,7 +25,14 @@ class CertificateInfoRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: AppTextStyle.mainText),
-          Text(value, style: AppTextStyle.baseTextStyle.copyWith(fontSize: 14)),
+          const SizedBox(width: AppSpacing.space2),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: AppTextStyle.baseTextStyle.copyWith(fontSize: 14),
+            ),
+          ),
         ],
       ),
     );

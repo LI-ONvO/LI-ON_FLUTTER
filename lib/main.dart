@@ -35,6 +35,10 @@ Future<void> main() async {
   runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
 }
 
+/// 기기의 글자 크기 설정을 따르되, 이 배율까지만 키운다. 설정을 아주 크게 한
+/// 기기에서 레이아웃이 깨지거나 잘리는 것을 막는다.
+const double _maxTextScale = 1.3;
+
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
@@ -45,8 +49,11 @@ class MyApp extends ConsumerWidget {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       routerConfig: createAppRouter(authSession),
-      // 웹에서 창이 넓을 때만 화면을 휴대폰 폭으로 가운데 정렬한다.
-      builder: (context, child) => WebFrame(child: child ?? const SizedBox()),
+      builder: (context, child) => MediaQuery.withClampedTextScaling(
+        maxScaleFactor: _maxTextScale,
+        // 웹에서 창이 넓을 때만 화면을 휴대폰 폭으로 가운데 정렬한다.
+        child: WebFrame(child: child ?? const SizedBox()),
+      ),
     );
   }
 }

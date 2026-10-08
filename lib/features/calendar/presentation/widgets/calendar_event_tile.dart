@@ -28,11 +28,14 @@ class CalendarEventTile extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppSpacing.space1),
       child: Container(
-        height: 56,
-        color: AppColors.surface,
+        // 글자가 커지면 타일도 함께 커지도록 높이를 고정하지 않는다.
+        constraints: const BoxConstraints(minHeight: 56),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          border: Border(left: BorderSide(color: AppColors.primary, width: 4)),
+        ),
         child: Row(
           children: [
-            Container(width: 4, color: AppColors.primary),
             Expanded(
               child: GestureDetector(
                 onTap: onTap,
@@ -40,6 +43,7 @@ class CalendarEventTile extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.space2,
+                    vertical: AppSpacing.space1,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
