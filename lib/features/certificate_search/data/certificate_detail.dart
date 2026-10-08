@@ -89,6 +89,16 @@ class CertificateDetail {
     this.examSchedules = const [],
   });
 
+  /// 이름 외에 보여줄 값이 하나도 없으면 false.
+  bool get hasContent =>
+      category.isNotEmpty ||
+      description.isNotEmpty ||
+      docPassRate != null ||
+      pracPassRate != null ||
+      docFee != null ||
+      pracFee != null ||
+      examSchedules.isNotEmpty;
+
   factory CertificateDetail.fromJson(Map<String, dynamic> json) =>
       _$CertificateDetailFromJson(json);
 

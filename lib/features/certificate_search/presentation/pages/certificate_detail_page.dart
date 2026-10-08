@@ -52,10 +52,8 @@ class CertificateDetailPage extends ConsumerWidget {
         },
       ),
       child: detailAsync.when(
-        data: (detail) => detail == null
-            ? Center(
-                child: Text('자격증 정보를 찾을 수 없어요', style: AppTextStyle.subText),
-              )
+        data: (detail) => detail == null || !detail.hasContent
+            ? Center(child: Text('자격증 상세 내용이 없어요', style: AppTextStyle.subText))
             : CertificateDetailBody(detail: detail),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) =>

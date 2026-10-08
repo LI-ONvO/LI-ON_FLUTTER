@@ -58,10 +58,7 @@ class HttpCertificateRepository implements CertificateRepository {
   static const Duration _cacheTtl = Duration(days: 1);
 
   @override
-  Future<List<Certificate>> fetchCertificates({
-    String? keyword,
-    int? fieldId,
-  }) {
+  Future<List<Certificate>> fetchCertificates({String? keyword, int? fieldId}) {
     return guardApiCall(() async {
       // 캐시는 "필터 없이 전체 목록"을 부르는 호출에만 쓴다. 화면이
       // 서버 필터링 없이 전체를 받아 클라이언트에서 걸러내는 방식이라,
@@ -127,10 +124,7 @@ class HttpCertificateRepository implements CertificateRepository {
         _cacheKey,
         jsonEncode(certificates.map((c) => c.toJson()).toList()),
       );
-      await prefs.setString(
-        _cacheSavedAtKey,
-        DateTime.now().toIso8601String(),
-      );
+      await prefs.setString(_cacheSavedAtKey, DateTime.now().toIso8601String());
     } catch (_) {
       // 캐시 저장 실패는 무시한다 — 다음에 다시 네트워크로 받아오면 된다.
     }
@@ -141,7 +135,10 @@ class HttpCertificateRepository implements CertificateRepository {
     return guardApiCall(() async {
       try {
         final response = await apiClient.dio.get('/api/certificates/$id');
-        return CertificateDetail.fromJson(response.data);
+        // 본문이 비어서 오면(200이지만 내용 없음) 파싱하지 않고 null로 알린다.
+        final dynamic data = response.data;
+        if (data is! Map<String, dynamic> || data.isEmpty) return null;
+        return CertificateDetail.fromJson(data);
       } on DioException catch (exception) {
         // 존재하지 않는 자격증은 오류가 아니라 null로 알려, 화면이
         // "찾을 수 없음" 상태를 그리게 한다.
