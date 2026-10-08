@@ -5,6 +5,9 @@ import 'package:li_on/core/constants/font.dart';
 class CustomSearchBar extends StatelessWidget {
   final String hintText;
   final TextEditingController? controller;
+
+  /// 검색창의 포커스 여부를 바깥에서 알아야 할 때 넘긴다.
+  final FocusNode? focusNode;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final VoidCallback? onTap;
@@ -14,6 +17,7 @@ class CustomSearchBar extends StatelessWidget {
     super.key,
     this.hintText = '자격증 검색',
     this.controller,
+    this.focusNode,
     this.onChanged,
     this.onSubmitted,
     this.onTap,
@@ -36,6 +40,7 @@ class CustomSearchBar extends StatelessWidget {
             child: TextField(
               cursorColor: AppColors.primary,
               controller: controller,
+              focusNode: focusNode,
               onChanged: onChanged,
               onSubmitted: onSubmitted,
               onTap: onTap,

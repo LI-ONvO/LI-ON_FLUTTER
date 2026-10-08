@@ -13,11 +13,31 @@ import 'package:li_on/features/certificate_search/data/certificate_repository.da
 import 'package:li_on/features/certificate_search/presentation/view_models/certificate_search_view_model.dart';
 import 'package:li_on/features/certificate_search/presentation/widgets/recommendation_section.dart';
 
-class CertificateSearchPage extends ConsumerWidget {
+class CertificateSearchPage extends ConsumerStatefulWidget {
   const CertificateSearchPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CertificateSearchPage> createState() =>
+      _CertificateSearchPageState();
+}
+
+class _CertificateSearchPageState extends ConsumerState<CertificateSearchPage> {
+  final FocusNode _searchFocus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _searchFocus.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _searchFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // 검색어가 바뀔 때마다 화면 전체가 다시 그려지지 않도록, 상태를 쓰는
     // 부분(카테고리 칩·결과 목록)만 아래에서 Consumer로 지켜본다.
     final CertificateSearchViewModel viewModel = ref.read(
@@ -28,10 +48,6 @@ class CertificateSearchPage extends ConsumerWidget {
 
     return BaseScaffold(
       appBar: null,
-      // 검색창이 화면 위쪽에 고정돼 있어 키보드가 올라와도 계속 보인다.
-      // 본문 높이를 줄이면 추천 섹션 등 고정 크기 요소들 때문에 남는
-      // 공간이 모자라 결과 목록에서 오버플로우가 났었다.
-      resizeToAvoidBottomInset: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -43,10 +59,22 @@ class CertificateSearchPage extends ConsumerWidget {
               fontSize: 16,
             ),
           ),
-          const SizedBox(height: AppSpacing.space3),
-          const RecommendationSection(),
+          // 검색 중에는 추천 카드를 접는다. 키보드가 올라온 화면에서 추천이
+          // 자리를 차지하면 결과 목록이 거의 남지 않는다.
+          _Collapsible(
+            collapsed: _searchFocus.hasFocus,
+            child: const Column(
+              children: [
+                SizedBox(height: AppSpacing.space3),
+                RecommendationSection(),
+              ],
+            ),
+          ),
           const SizedBox(height: AppSpacing.space2),
-          CustomSearchBar(onChanged: viewModel.setQuery),
+          CustomSearchBar(
+            focusNode: _searchFocus,
+            onChanged: viewModel.setQuery,
+          ),
           const SizedBox(height: AppSpacing.space2),
           SizedBox(
             height: 32,
@@ -133,6 +161,32 @@ class CertificateSearchPage extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// [collapsed]가 true면 [child]를 위에서부터 접어 높이를 0으로 만든다.
+/// 접혀 있는 동안에도 [child]는 트리에 남아 상태(불러온 추천 등)를 유지한다.
+class _Collapsible extends StatelessWidget {
+  const _Collapsible({required this.collapsed, required this.child});
+
+  final bool collapsed;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: collapsed ? 0 : 1),
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      builder: (context, openness, child) => ClipRect(
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: openness,
+          child: ExcludeSemantics(excluding: collapsed, child: child),
+        ),
+      ),
+      child: child,
     );
   }
 }
