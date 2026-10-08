@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/badge/custom_badge.dart';
@@ -33,7 +34,24 @@ class DataRoomPage extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: AppSpacing.space4),
-              Text('자료방', style: AppTextStyle.semiBold.copyWith(fontSize: 18)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '자료방',
+                    style: AppTextStyle.semiBold.copyWith(fontSize: 18),
+                  ),
+                  GestureDetector(
+                    onTap: () => openMaterialAddSheet(context),
+                    behavior: HitTestBehavior.opaque,
+                    child: const Icon(
+                      Icons.add,
+                      size: 24,
+                      color: AppColors.text,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 14),
               SizedBox(
                 height: 32,

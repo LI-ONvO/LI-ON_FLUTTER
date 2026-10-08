@@ -4,10 +4,19 @@ import 'package:li_on/core/widgets/layout/app_bottom_sheet.dart';
 import 'package:li_on/core/widgets/dialog/confirm_dialog.dart';
 import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/features/data_room/presentation/view_models/data_room_view_model.dart';
+import 'package:li_on/features/data_room/presentation/pages/material_add_sheet.dart';
 import 'package:li_on/features/data_room/presentation/pages/material_edit_sheet.dart';
 
 /// 자료방 목록과 자료 상세 화면이 같은 방식으로 자료를 수정·삭제하도록
 /// ⋮ 메뉴의 동작을 한곳에 모아둔다.
+
+/// 자료 추가 시트를 띄운다.
+Future<void> openMaterialAddSheet(BuildContext context) {
+  return showAppBottomSheet<bool>(
+    context: context,
+    builder: (context) => const MaterialAddSheet(),
+  );
+}
 
 /// 자료 수정 시트를 띄운다.
 Future<void> openMaterialEditSheet(
