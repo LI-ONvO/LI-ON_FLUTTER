@@ -43,6 +43,7 @@ class PushNotificationService {
     );
 
     _messaging.onTokenRefresh.listen(onTokenRefresh);
+    if (kDebugMode) _logToken();
 
     FirebaseMessaging.onMessage.listen((message) {
       debugPrint('[FCM] foreground message: ${message.messageId}');
@@ -51,6 +52,17 @@ class PushNotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
       debugPrint('[FCM] opened from notification: ${message.messageId}');
     });
+  }
+
+  /// Firebase 콘솔의 테스트 메시지에 붙여 넣을 수 있게 디버그 빌드에서만
+  /// 토큰을 로그로 찍는다. 토큰을 못 받는 환경(iOS 시뮬레이터 등)이어도
+  /// 앱 시작을 막지 않도록 await하지 않고 오류는 로그로만 남긴다.
+  static Future<void> _logToken() async {
+    try {
+      debugPrint('[FCM] token: ${await _messaging.getToken()}');
+    } catch (error) {
+      debugPrint('[FCM] token unavailable: $error');
+    }
   }
 
   /// 현재 기기의 FCM 토큰. 로그인·로그아웃 시 서버에 등록/해제할 때 쓴다.
