@@ -24,6 +24,10 @@ class CustomTextField extends StatefulWidget {
   final int? maxLines;
   final int? minLines;
 
+  /// 포커스를 받을 때 입력창 주변으로 확보할 스크롤 여백. 키보드 위에서
+  /// 여러 줄 입력창이 통째로 보이게 하려면 크게 준다.
+  final EdgeInsets scrollPadding;
+
   const CustomTextField({
     super.key,
     this.label,
@@ -46,6 +50,7 @@ class CustomTextField extends StatefulWidget {
     ),
     this.maxLines = 1,
     this.minLines,
+    this.scrollPadding = const EdgeInsets.all(20),
   });
 
   @override
@@ -95,6 +100,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           onTapOutside: (event) => FocusScope.of(context).unfocus(),
           maxLines: widget.maxLines,
           minLines: widget.minLines,
+          scrollPadding: widget.scrollPadding,
           // 여러 줄 입력창은 커서가 위에서부터 시작해야 자연스럽다.
           textAlignVertical: widget.maxLines == 1
               ? TextAlignVertical.center

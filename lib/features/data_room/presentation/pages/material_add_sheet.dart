@@ -98,6 +98,7 @@ class _MaterialAddSheetState extends ConsumerState<MaterialAddSheet> {
                   hintText: '메모를 남겨보세요',
                   controller: _memoController,
                   minLines: 3,
+                  scrollPadding: const EdgeInsets.fromLTRB(20, 20, 20, 80),
                   maxLines: 5,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 15,

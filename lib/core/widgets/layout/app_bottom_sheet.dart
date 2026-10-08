@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
@@ -42,6 +44,20 @@ class AppBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Size screenSize = MediaQuery.sizeOf(context);
+    final double keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+    // 모달 라우트는 MediaQuery의 위쪽 여백을 지우므로 상태바 높이는 뷰에서
+    // 직접 읽는다.
+    final double statusBarHeight = MediaQueryData.fromView(
+      View.of(context),
+    ).padding.top;
+    // 키보드를 뺀 남은 공간 안에서만 시트가 자라도록 한다. 키보드 높이를
+    // 최대 높이 안쪽에서 빼면 스크롤 영역이 너무 좁아져 입력창이 잘린다.
+    final double maxSheetHeight = math.min(
+      screenSize.height * 0.85,
+      screenSize.height - keyboardHeight - statusBarHeight - AppSpacing.space2,
+    );
+
     return SafeArea(
       top: false,
       // heightFactor 1로 내용 높이만큼만 차지해야 시트가 화면 가운데로 뜨지
@@ -49,17 +65,13 @@ class AppBottomSheet extends StatelessWidget {
       child: Align(
         alignment: Alignment.bottomCenter,
         heightFactor: 1,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: _maxSheetWidth,
-            // 키보드가 올라오거나 내용이 길어져도 시트가 상태바 아래까지
-            // 차오르지 않도록 제한한다.
-            maxHeight: MediaQuery.sizeOf(context).height * 0.85,
-          ),
-          child: Padding(
-            // 키보드가 올라온 만큼 시트를 밀어 올려 입력창이 가리지 않게 한다.
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.viewInsetsOf(context).bottom,
+        child: Padding(
+          // 키보드가 올라온 만큼 시트를 밀어 올려 입력창이 가리지 않게 한다.
+          padding: EdgeInsets.only(bottom: keyboardHeight),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: _maxSheetWidth,
+              maxHeight: maxSheetHeight,
             ),
             child: Container(
               padding: const EdgeInsets.symmetric(

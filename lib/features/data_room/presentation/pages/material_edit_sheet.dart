@@ -110,6 +110,7 @@ class _MaterialEditSheetState extends ConsumerState<MaterialEditSheet> {
                   controller: _memoController,
                   // 메모가 길어지면 5줄까지 늘어나고 그 뒤로는 안에서 스크롤된다.
                   minLines: 3,
+                  scrollPadding: const EdgeInsets.fromLTRB(20, 20, 20, 80),
                   maxLines: 5,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 15,
