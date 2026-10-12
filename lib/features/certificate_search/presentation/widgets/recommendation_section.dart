@@ -10,8 +10,16 @@ import 'package:li_on/features/certificate_search/data/certificate_repository.da
 import 'package:li_on/features/certificate_search/presentation/view_models/certificate_recommendation_view_model.dart';
 import 'package:li_on/features/onboarding/presentation/onboarding_navigation.dart';
 
-/// 글자 배율 1.0일 때 추천 카드 목록의 높이.
-const double _listHeight = 128;
+/// 추천을 불러오는 동안 스피너가 차지하는 높이.
+const double _loadingHeight = 128;
+
+/// 추천 카드 폭의 범위. 화면 폭에 비례해 늘리되 이 안에서만 움직인다.
+const double _minCardWidth = 200;
+const double _maxCardWidth = 280;
+
+/// 화면 폭 중 카드 하나가 차지하는 비율. 1보다 작아야 옆 카드가 살짝
+/// 보여 가로로 넘길 수 있다는 걸 알 수 있다.
+const double _cardWidthFraction = 0.7;
 
 /// 탐색·내 정보 화면에서 함께 쓰는 "맞춤 추천 자격증" 섹션.
 /// 추천이 아직 없으면 만들기 카드를, 추천할 자격증이 없으면(서버가
@@ -24,10 +32,6 @@ class RecommendationSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<CertificateRecommendationResult?> recommendationAsync = ref
         .watch(certificateRecommendationsProvider);
-    // 카드 안 글자가 커져도 잘리지 않도록 목록 높이도 글자 배율만큼 키운다.
-    final double listHeight = MediaQuery.textScalerOf(
-      context,
-    ).scale(_listHeight);
 
     return recommendationAsync.when(
       data: (result) {
@@ -43,21 +47,11 @@ class RecommendationSection extends ConsumerWidget {
             reason: _NoRecommendationReason.noCandidate,
           );
         }
-        return SizedBox(
-          height: listHeight,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: result.items.length,
-            separatorBuilder: (_, _) =>
-                const SizedBox(width: AppSpacing.space2),
-            itemBuilder: (context, index) =>
-                _RecommendationCard(item: result.items[index]),
-          ),
-        );
+        return _RecommendationList(items: result.items);
       },
-      loading: () => SizedBox(
-        height: listHeight,
-        child: const Center(child: CircularProgressIndicator()),
+      loading: () => const SizedBox(
+        height: _loadingHeight,
+        child: Center(child: CircularProgressIndicator()),
       ),
       error: (error, stackTrace) {
         if (error is ApiException) {
@@ -78,6 +72,39 @@ class RecommendationSection extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.space2),
             child: Text('추천을 불러오지 못했어요 · 다시 시도', style: AppTextStyle.subText),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 추천 카드를 가로로 늘어놓는다. 높이를 정해 두지 않고 가장 큰 카드에
+/// 맞춰 모든 카드를 같은 높이로 늘리므로, 기기의 글자 크기·글꼴이 달라도
+/// 카드 내용이 넘치지 않는다. 폭은 화면 폭에 비례한다.
+class _RecommendationList extends StatelessWidget {
+  const _RecommendationList({required this.items});
+
+  final List<CertificateRecommendationItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double cardWidth = (constraints.maxWidth * _cardWidthFraction)
+            .clamp(_minCardWidth, _maxCardWidth);
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (int i = 0; i < items.length; i++) ...[
+                  if (i > 0) const SizedBox(width: AppSpacing.space2),
+                  _RecommendationCard(item: items[i], width: cardWidth),
+                ],
+              ],
+            ),
           ),
         );
       },
@@ -226,9 +253,10 @@ class _GenerateCard extends StatelessWidget {
 }
 
 class _RecommendationCard extends StatelessWidget {
-  const _RecommendationCard({required this.item});
+  const _RecommendationCard({required this.item, required this.width});
 
   final CertificateRecommendationItem item;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
@@ -238,7 +266,7 @@ class _RecommendationCard extends StatelessWidget {
         context.push('/search/certificate/${item.jmCd}', extra: item.name);
       },
       child: Container(
-        width: 220,
+        width: width,
         padding: const EdgeInsets.all(AppSpacing.space3),
         decoration: BoxDecoration(
           color: AppColors.white,
@@ -252,6 +280,8 @@ class _RecommendationCard extends StatelessWidget {
             Text(
               item.category,
               style: AppTextStyle.subText.copyWith(color: AppColors.primary),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: AppSpacing.space1),
             Text(
@@ -264,7 +294,7 @@ class _RecommendationCard extends StatelessWidget {
             Text(
               item.reason,
               style: AppTextStyle.subText,
-              maxLines: 3,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ],

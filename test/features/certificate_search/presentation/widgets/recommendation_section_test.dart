@@ -43,7 +43,13 @@ void main() {
     WidgetTester tester, {
     required CertificateRecommendations Function() recommendations,
     double textScale = 1.0,
+    TextScaler? textScaler,
+    Size? surfaceSize,
   }) async {
+    if (surfaceSize != null) {
+      await tester.binding.setSurfaceSize(surfaceSize);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+    }
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -54,7 +60,7 @@ void main() {
           builder: (context, home) => MediaQuery(
             data: MediaQuery.of(
               context,
-            ).copyWith(textScaler: TextScaler.linear(textScale)),
+            ).copyWith(textScaler: textScaler ?? TextScaler.linear(textScale)),
             child: home!,
           ),
           home: const Scaffold(body: RecommendationSection()),
@@ -64,9 +70,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('추천 후보가 없다는 422 에러면 안내 문구와 무작위 자격증을 보여준다', (
-    tester,
-  ) async {
+  testWidgets('추천 후보가 없다는 422 에러면 안내 문구와 무작위 자격증을 보여준다', (tester) async {
     await pumpSection(
       tester,
       recommendations: () => _ThrowingRecommendations(
@@ -94,9 +98,7 @@ void main() {
     expect(find.text('정보처리기사'), findsOneWidget);
   });
 
-  testWidgets('온보딩 미완료(409)면 온보딩으로 안내하는 문구·버튼과 무작위 자격증을 보여준다', (
-    tester,
-  ) async {
+  testWidgets('온보딩 미완료(409)면 온보딩으로 안내하는 문구·버튼과 무작위 자격증을 보여준다', (tester) async {
     await pumpSection(
       tester,
       recommendations: () => _ThrowingRecommendations(
@@ -135,9 +137,7 @@ void main() {
     expect(find.text('추천드릴 자격증이 없습니다'), findsNothing);
   });
 
-  testWidgets('추천이 비어 있을 때 다시 시도하면 저장된 추천을 다시 읽지 않고 새로 만든다', (
-    tester,
-  ) async {
+  testWidgets('추천이 비어 있을 때 다시 시도하면 저장된 추천을 다시 읽지 않고 새로 만든다', (tester) async {
     final notifier = _CountingGenerateRecommendations();
     await pumpSection(tester, recommendations: () => notifier);
 
@@ -169,4 +169,89 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('정보처리기사'), findsOneWidget);
   });
+
+  group('기기마다 글자 크기·화면 폭이 달라도 추천 카드가 넘치지 않는다', () {
+    const longReason =
+        '온보딩에서 선택한 희망 분야와 보유 자격증, 목표 취득 시기를 함께 고려했을 때 지금 도전하기 가장 알맞은 자격증이에요';
+    const result = CertificateRecommendationResult(
+      recommendationId: 1,
+      items: [
+        CertificateRecommendationItem(
+          jmCd: 'C001',
+          name: '정보처리기사 실기 대비 종합 과정 자격증',
+          category: '정보기술 · 컴퓨터 시스템 응용',
+          reason: longReason,
+        ),
+        CertificateRecommendationItem(
+          jmCd: 'C002',
+          name: 'SQLD',
+          category: 'IT',
+          reason: '짧은 이유',
+        ),
+      ],
+    );
+
+    const widths = <double>[320, 360, 412, 768];
+    const linearScales = <double>[0.8, 0.85, 1.0, 1.15, 1.3];
+
+    for (final double width in widths) {
+      for (final double scale in linearScales) {
+        testWidgets('폭 $width · 글자 $scale배', (tester) async {
+          await pumpSection(
+            tester,
+            surfaceSize: Size(width, 800),
+            textScale: scale,
+            recommendations: () => _FixedResultRecommendations(result),
+          );
+
+          expect(tester.takeException(), isNull);
+          expect(find.text('SQLD'), findsOneWidget);
+        });
+      }
+
+      // 안드로이드 14+의 비선형 글자 확대: 큰 글자 크기는 거의 안 커지고
+      // 작은 글자만 커지므로, 고정 높이를 배율로 키우는 방식으로는 못 따라간다.
+      testWidgets('폭 $width · 비선형 글자 1.3배', (tester) async {
+        await pumpSection(
+          tester,
+          surfaceSize: Size(width, 800),
+          textScaler: const _NonLinearTextScaler(),
+          recommendations: () => _FixedResultRecommendations(result),
+        );
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('SQLD'), findsOneWidget);
+      });
+    }
+  });
+}
+
+/// 안드로이드 14+가 글자 배율 1.3에서 쓰는 비선형 변환표(dp → sp)를 그대로 옮긴
+/// 글자 크기 변환기. 100 이상은 그대로 두고, 작은 글자일수록 더 크게 키운다.
+class _NonLinearTextScaler extends TextScaler {
+  const _NonLinearTextScaler();
+
+  static const List<double> _fromDp = [8, 10, 12, 14, 18, 20, 24, 30, 100];
+  static const List<double> _toSp = [
+    10.4, 13, 15.6, 18.2, 23.4, 26, 31.2, 36, 100, //
+  ];
+
+  @override
+  double scale(double fontSize) {
+    if (fontSize >= _fromDp.last) return fontSize;
+    if (fontSize <= _fromDp.first) {
+      return fontSize * _toSp.first / _fromDp.first;
+    }
+    for (int i = 1; i < _fromDp.length; i++) {
+      if (fontSize <= _fromDp[i]) {
+        final double t =
+            (fontSize - _fromDp[i - 1]) / (_fromDp[i] - _fromDp[i - 1]);
+        return _toSp[i - 1] + t * (_toSp[i] - _toSp[i - 1]);
+      }
+    }
+    return fontSize;
+  }
+
+  @override
+  double get textScaleFactor => 1.3;
 }
