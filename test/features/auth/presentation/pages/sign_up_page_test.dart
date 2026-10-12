@@ -44,10 +44,6 @@ class _FakeAuthRepository implements AuthRepository {
     required String email,
     required String code,
   }) => throw UnimplementedError();
-
-  @override
-  Future<EmailCheckResult> checkEmail({required String email}) =>
-      throw UnimplementedError();
 }
 
 Finder _fieldInput(Key fieldKey) {

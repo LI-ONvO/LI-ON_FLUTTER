@@ -3,7 +3,6 @@ abstract final class Validators {
 
   static const int minEmailLength = 6;
   static const int minPasswordLength = 8;
-  static const int verificationCodeLength = 6;
   static const int minNicknameLength = 2;
   static const int maxNicknameLength = 10;
 

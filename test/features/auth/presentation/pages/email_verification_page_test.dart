@@ -63,10 +63,6 @@ class _VerificationAuthRepository implements AuthRepository {
       user: AuthUser(userId: 1, email: email, nickname: '홍길동'),
     );
   }
-
-  @override
-  Future<EmailCheckResult> checkEmail({required String email}) =>
-      throw UnimplementedError();
 }
 
 class _MemoryTokenStorage extends TokenStorage {

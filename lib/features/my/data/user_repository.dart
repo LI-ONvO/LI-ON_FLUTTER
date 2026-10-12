@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/network/api_client.dart';
 import 'package:li_on/core/network/api_exception.dart';
-import 'package:li_on/features/my/data/desired_fields_update_result.dart';
 import 'package:li_on/features/my/data/info_edit.dart';
 import 'package:li_on/features/my/data/profile.dart';
 
@@ -12,11 +11,6 @@ abstract class UserRepository {
 
   /// `PATCH /api/users/me` — 닉네임·직무 부분 수정.
   Future<InfoEditResponse> updateInfo(InfoEditRequest request);
-
-  /// `PUT /api/users/me/desired-fields` — 희망 분야 전체 교체.
-  Future<DesiredFieldsUpdateResult> updateDesiredFields(
-    List<int> desiredFieldIds,
-  );
 }
 
 class HttpUserRepository implements UserRepository {
@@ -40,19 +34,6 @@ class HttpUserRepository implements UserRepository {
         data: request.toJson(),
       );
       return InfoEditResponse.fromJson(response.data);
-    });
-  }
-
-  @override
-  Future<DesiredFieldsUpdateResult> updateDesiredFields(
-    List<int> desiredFieldIds,
-  ) {
-    return guardApiCall(() async {
-      final response = await apiClient.dio.put(
-        '/api/users/me/desired-fields',
-        data: {'desiredFieldIds': desiredFieldIds},
-      );
-      return DesiredFieldsUpdateResult.fromJson(response.data);
     });
   }
 }

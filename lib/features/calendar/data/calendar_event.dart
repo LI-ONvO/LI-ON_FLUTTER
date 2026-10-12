@@ -79,14 +79,6 @@ class CalendarEvent {
     return !target.isBefore(startDate) && !target.isAfter(endDate);
   }
 
-  /// "7/20" 또는 여러 날에 걸치면 "7/20 ~ 7/27" 형식.
-  /// intl 의존성이 없어 직접 포맷한다.
-  String get dateRangeLabel {
-    final String start = '${startAt.month}/${startAt.day}';
-    if (startDate == endDate) return start;
-    return '$start ~ ${effectiveEndAt.month}/${effectiveEndAt.day}';
-  }
-
   /// "오후 7:00" 형식의 시작 시각 표기.
   String get timeLabel => formatKoreanTime(startAt);
 }

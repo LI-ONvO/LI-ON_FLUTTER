@@ -148,22 +148,3 @@ class ResourceCreateResult {
 
   Map<String, dynamic> toJson() => _$ResourceCreateResultToJson(this);
 }
-
-/// `PATCH /api/resources/{resourceId}` 응답: `{ id, title, memo }`.
-@JsonSerializable()
-class ResourceUpdateResult {
-  final int id;
-  final String title;
-  final String memo;
-
-  const ResourceUpdateResult({
-    required this.id,
-    required this.title,
-    required this.memo,
-  });
-
-  factory ResourceUpdateResult.fromJson(Map<String, dynamic> json) =>
-      _$ResourceUpdateResultFromJson(json);
-
-  Map<String, dynamic> toJson() => _$ResourceUpdateResultToJson(this);
-}

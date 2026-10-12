@@ -9,7 +9,6 @@ import 'package:li_on/core/auth/auth_session.dart';
 import 'package:li_on/core/auth/auth_user.dart';
 import 'package:li_on/core/network/token_storage.dart';
 import 'package:li_on/core/widgets/layout/app_bottom_sheet.dart';
-import 'package:li_on/features/my/data/desired_fields_update_result.dart';
 import 'package:li_on/features/my/data/info_edit.dart';
 import 'package:li_on/features/my/data/profile.dart';
 import 'package:li_on/features/my/data/user_repository.dart';
@@ -136,11 +135,6 @@ class _FakeUserRepository implements UserRepository {
 
   @override
   Future<Profile> fetchMyProfile() => Completer<Profile>().future;
-
-  @override
-  Future<DesiredFieldsUpdateResult> updateDesiredFields(
-    List<int> desiredFieldIds,
-  ) => throw UnimplementedError();
 }
 
 class _MemoryTokenStorage extends TokenStorage {

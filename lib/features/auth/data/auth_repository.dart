@@ -26,8 +26,6 @@ abstract class AuthRepository {
     required String code,
   });
 
-  Future<EmailCheckResult> checkEmail({required String email});
-
   /// `POST /api/auth/logout` — 서버의 refreshToken을 무효화한다.
   Future<void> logout();
 }
@@ -93,17 +91,6 @@ class HttpAuthRepository implements AuthRepository {
         data: {'email': email, 'code': code},
       );
       return EmailVerifyCodeResult.fromJson(response.data);
-    });
-  }
-
-  @override
-  Future<EmailCheckResult> checkEmail({required String email}) {
-    return guardApiCall(() async {
-      final response = await apiClient.dio.get(
-        '/api/auth/check-email',
-        queryParameters: {'email': email},
-      );
-      return EmailCheckResult.fromJson(response.data);
     });
   }
 

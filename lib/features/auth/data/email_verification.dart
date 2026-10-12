@@ -42,16 +42,3 @@ class EmailVerifyCodeResult {
 
   Map<String, dynamic> toJson() => _$EmailVerifyCodeResultToJson(this);
 }
-
-/// `GET /api/auth/check-email` 응답.
-@JsonSerializable()
-class EmailCheckResult {
-  final bool available;
-
-  const EmailCheckResult({required this.available});
-
-  factory EmailCheckResult.fromJson(Map<String, dynamic> json) =>
-      _$EmailCheckResultFromJson(json);
-
-  Map<String, dynamic> toJson() => _$EmailCheckResultToJson(this);
-}
