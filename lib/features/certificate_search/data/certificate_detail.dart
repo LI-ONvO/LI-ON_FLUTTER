@@ -14,31 +14,33 @@ class ExamSchedule {
   @JsonKey(fromJson: looseIntFromJson)
   final int implSeq;
 
-  final DateTime docRegStartDt;
-  final DateTime docRegEndDt;
-  final DateTime docExamStartDt;
-  final DateTime docExamEndDt;
-  final DateTime docPassDt;
+  /// 아래 일정 필드는 필기만(또는 실기만) 있거나 아직 일정이 정해지지 않은
+  /// 회차에서 서버가 `null`로 내려주므로 모두 nullable이다.
+  final DateTime? docRegStartDt;
+  final DateTime? docRegEndDt;
+  final DateTime? docExamStartDt;
+  final DateTime? docExamEndDt;
+  final DateTime? docPassDt;
 
-  final DateTime pracRegStartDt;
-  final DateTime pracRegEndDt;
-  final DateTime pracExamStartDt;
-  final DateTime pracExamEndDt;
-  final DateTime pracPassDt;
+  final DateTime? pracRegStartDt;
+  final DateTime? pracRegEndDt;
+  final DateTime? pracExamStartDt;
+  final DateTime? pracExamEndDt;
+  final DateTime? pracPassDt;
 
   const ExamSchedule({
     required this.implYy,
     required this.implSeq,
-    required this.docRegStartDt,
-    required this.docRegEndDt,
-    required this.docExamStartDt,
-    required this.docExamEndDt,
-    required this.docPassDt,
-    required this.pracRegStartDt,
-    required this.pracRegEndDt,
-    required this.pracExamStartDt,
-    required this.pracExamEndDt,
-    required this.pracPassDt,
+    this.docRegStartDt,
+    this.docRegEndDt,
+    this.docExamStartDt,
+    this.docExamEndDt,
+    this.docPassDt,
+    this.pracRegStartDt,
+    this.pracRegEndDt,
+    this.pracExamStartDt,
+    this.pracExamEndDt,
+    this.pracPassDt,
   });
 
   factory ExamSchedule.fromJson(Map<String, dynamic> json) =>
@@ -57,6 +59,10 @@ class CertificateDetail {
   /// 분류가 없는 자격증은 `null`로 오므로 빈 문자열로 받는다.
   @JsonKey(defaultValue: '')
   final String category;
+
+  /// 자격구분코드(T·S·W·C). 값 의미는 [qualGbLabel] 참고.
+  @JsonKey(defaultValue: '')
+  final String qualGbCd;
 
   /// 값이 없을 때 키가 빠지는 대신 `null`로 오는 경우가 있어 기본값을 둔다.
   @JsonKey(defaultValue: '')
@@ -81,6 +87,7 @@ class CertificateDetail {
     required this.id,
     required this.name,
     required this.category,
+    this.qualGbCd = '',
     this.description = '',
     this.docPassRate,
     this.pracPassRate,

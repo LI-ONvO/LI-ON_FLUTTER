@@ -129,7 +129,7 @@ class _CertificateSearchPageState extends ConsumerState<CertificateSearchPage> {
                             return CustomCard(
                               initial: certificate.initial,
                               title: certificate.name,
-                              subtitle: certificate.category,
+                              subtitle: certificate.subtitle,
                               avatarBackgroundColor: certificate.accentColor
                                   .withValues(alpha: 0.1),
                               avatarTextColor: certificate.accentColor,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
+import 'package:li_on/features/certificate_search/data/certificate.dart';
 import 'package:li_on/features/certificate_search/data/certificate_detail.dart';
 
 class CertificateHeaderCard extends StatelessWidget {
@@ -11,6 +12,11 @@ class CertificateHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final List<String> tags = [
+      detail.category,
+      qualGbLabel(detail.qualGbCd),
+    ].where((tag) => tag.isNotEmpty).toList();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.space4),
@@ -28,25 +34,40 @@ class CertificateHeaderCard extends StatelessWidget {
               fontSize: 20,
             ),
           ),
-          if (detail.category.isNotEmpty) ...[
+          if (tags.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.space1),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-              decoration: BoxDecoration(
-                color: const Color(0xFFDBEAFE),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                detail.category,
-                style: AppTextStyle.baseTextStyle.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: AppColors.dark,
-                ),
-              ),
+            Wrap(
+              spacing: AppSpacing.space1,
+              runSpacing: AppSpacing.space1,
+              children: [for (final tag in tags) _Tag(tag)],
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _Tag extends StatelessWidget {
+  final String label;
+
+  const _Tag(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDBEAFE),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: AppTextStyle.baseTextStyle.copyWith(
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+          color: AppColors.dark,
+        ),
       ),
     );
   }

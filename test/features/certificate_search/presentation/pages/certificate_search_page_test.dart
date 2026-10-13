@@ -34,7 +34,10 @@ void main() {
   ];
 
   /// 탭 셸 안에서 연다. 키보드가 올라올 때 남는 높이가 실제 앱과 같아야 한다.
-  Future<void> pumpPage(WidgetTester tester) async {
+  Future<void> pumpPage(
+    WidgetTester tester, {
+    List<Certificate>? certificatesOverride,
+  }) async {
     useSmallPhone(tester, textScale: 1.3);
     final GoRouter router = GoRouter(
       initialLocation: '/search',
@@ -61,7 +64,9 @@ void main() {
           certificateRecommendationsProvider.overrideWith(
             _FixedRecommendations.new,
           ),
-          certificatesProvider.overrideWith((ref) async => certificates),
+          certificatesProvider.overrideWith(
+            (ref) async => certificatesOverride ?? certificates,
+          ),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),
@@ -101,5 +106,19 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(searchTop(tester), closeTo(expandedTop, 1));
+  });
+
+  testWidgets('이름이 같은 자격증도 자격구분으로 구분해 보여준다', (tester) async {
+    await pumpPage(
+      tester,
+      certificatesOverride: const [
+        Certificate(id: 'A1', name: '프로그래밍기능사', category: '기능사', qualGbCd: 'T'),
+        Certificate(id: 'A1', name: '프로그래밍기능사', category: '기능사', qualGbCd: 'C'),
+      ],
+    );
+
+    expect(find.text('프로그래밍기능사'), findsNWidgets(2));
+    expect(find.text('기능사 · 국가기술자격'), findsOneWidget);
+    expect(find.text('기능사 · 과정평가형자격'), findsOneWidget);
   });
 }
