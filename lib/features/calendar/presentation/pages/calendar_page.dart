@@ -16,7 +16,15 @@ import 'package:li_on/features/calendar/presentation/widgets/calendar_month_head
 /// 캘린더 탭 첫 화면. 월간·주간으로 일정을 훑어보고, 오른쪽 아래 버튼으로
 /// 새 일정을 추가한다.
 class CalendarPage extends ConsumerStatefulWidget {
-  const CalendarPage({super.key});
+  const CalendarPage({super.key, this.focusEventId, this.focusRequest});
+
+  /// 일정 알림을 눌러 들어왔을 때 보여 줄 일정의 id. 있으면 그 일정이 있는
+  /// 달과 날짜를 골라 보여 준다.
+  final int? focusEventId;
+
+  /// 알림을 누를 때마다 달라지는 값. 같은 일정의 알림을 다시 눌러도 그 일정을
+  /// 다시 보여 주려고 [focusEventId]와 함께 비교한다.
+  final String? focusRequest;
 
   @override
   ConsumerState<CalendarPage> createState() => _CalendarPageState();
@@ -26,6 +34,63 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   late DateTime _focusedMonth = _firstOfMonth(DateTime.now());
   late DateTime _selectedDate = _defaultSelectedDate();
   CalendarViewMode _viewMode = CalendarViewMode.monthly;
+
+  /// 일정 목록을 받으면 보여 줄 일정의 id. 보여 주고 나면 비운다.
+  int? _eventToFocus;
+
+  /// 목록에서 [_eventToFocus]를 못 찾아 목록을 새로 받아 본 적이 있는지.
+  bool _refreshedForFocus = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startFocusing(widget.focusEventId);
+  }
+
+  @override
+  void didUpdateWidget(CalendarPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.focusEventId != oldWidget.focusEventId ||
+        widget.focusRequest != oldWidget.focusRequest) {
+      _startFocusing(widget.focusEventId);
+    }
+  }
+
+  void _startFocusing(int? eventId) {
+    _eventToFocus = eventId;
+    _refreshedForFocus = false;
+    if (eventId == null) return;
+    // 이미 받아 둔 목록에 있으면 목록이 바뀌지 않아 listen이 불리지 않으므로,
+    // 빌드가 끝난 뒤 지금 목록으로 한 번 찾아 본다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusEvent(ref.read(calendarEventsProvider));
+    });
+  }
+
+  void _focusEvent(AsyncValue<List<CalendarEvent>> events) {
+    final int? eventId = _eventToFocus;
+    if (eventId == null || events.isLoading || !events.hasValue) return;
+    final CalendarEvent? event = events.requireValue
+        .where((event) => event.id == eventId)
+        .firstOrNull;
+    // 알림은 다른 기기에서 만든 일정을 가리킬 수 있으므로, 목록에 없으면 한 번
+    // 새로 받아서 다시 찾는다.
+    if (event == null && !_refreshedForFocus) {
+      _refreshedForFocus = true;
+      ref.invalidate(calendarEventsProvider);
+      return;
+    }
+    _eventToFocus = null;
+    if (event == null) {
+      CustomSnackbar.show(
+        context,
+        message: '알림의 일정을 찾을 수 없어요',
+        type: SnackbarType.error,
+      );
+      return;
+    }
+    _selectDate(event.startDate);
+  }
 
   static DateTime _firstOfMonth(DateTime date) =>
       DateTime(date.year, date.month, 1);
@@ -89,6 +154,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(calendarEventsProvider, (previous, next) => _focusEvent(next));
     final AsyncValue<List<CalendarEvent>> eventsAsync = ref.watch(
       calendarEventsProvider,
     );

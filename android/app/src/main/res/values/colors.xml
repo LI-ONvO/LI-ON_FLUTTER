@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#FFFFFF</color>
+    <!-- 알림 아이콘 색. lib/core/constants/color.dart의 AppColors.primary와 같다. -->
+    <color name="notification_accent">#2563EB</color>
 </resources>

@@ -1,3 +1,4 @@
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -118,6 +119,21 @@ class _MyPageState extends ConsumerState<MyPage> {
     });
   }
 
+  /// 알림 수신 여부는 기기(OS)가 관리하므로 이 앱의 시스템 알림 설정
+  /// 화면을 연다. 열지 못하면 이유를 알린다.
+  Future<void> _openNotificationSettings(BuildContext context) async {
+    try {
+      await AppSettings.openAppSettings(type: AppSettingsType.notification);
+    } catch (_) {
+      if (!context.mounted) return;
+      CustomSnackbar.show(
+        context,
+        message: '알림 설정을 열지 못했어요',
+        type: SnackbarType.error,
+      );
+    }
+  }
+
   /// 로그아웃을 한 번 더 확인받고, 확인하면 로그인 화면으로 돌아간다.
   /// go_router 스택 전체를 대체해 로그아웃 후 뒤로가기로 이전 화면에
   /// 남지 않게 한다.
@@ -194,12 +210,7 @@ class _MyPageState extends ConsumerState<MyPage> {
             Menu(
               menu: '알림 설정',
               icon: Icons.notifications_outlined,
-              statusLabel: '준비 중',
-            ),
-            Menu(
-              menu: '이용약관',
-              icon: Icons.article_outlined,
-              statusLabel: '준비 중',
+              onTap: () => _openNotificationSettings(context),
             ),
             Menu(
               menu: '로그아웃',

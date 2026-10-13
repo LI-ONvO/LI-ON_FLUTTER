@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:li_on/core/network/token_storage.dart';
+import 'package:li_on/core/notification/device_token_repository.dart';
+import 'package:li_on/core/notification/notification_navigation.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/auth/auth_session.dart';
 import 'package:li_on/core/auth/auth_user.dart';
@@ -57,9 +61,19 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     if (!mounted) return;
     final String? storedAccessToken = results[0] as String?;
     final AuthUser? storedUser = results[1] as AuthUser?;
+    // 앱이 종료된 상태에서 알림을 눌러 켜졌다면, 세션을 복원한 뒤 그 알림의
+    // 화면으로 바로 간다. 로그인돼 있지 않으면 쓰지 않고 버린다.
+    final String? notificationRoute = ref
+        .read(pendingNotificationRouteProvider.notifier)
+        .take();
     if (storedAccessToken?.isNotEmpty == true) {
       ref.read(authSessionProvider).restore(storedUser);
-      context.go('/search');
+      // 앱이 꺼져 있는 동안 바뀐 FCM 토큰은 시작 직후의 갱신 알림으로는 등록하지
+      // 못한다(그때는 아직 로그인 상태가 아니다). 세션을 복원한 지금 다시 등록한다.
+      unawaited(
+        registerCurrentDeviceToken(ref.read(deviceTokenRepositoryProvider)),
+      );
+      context.go(notificationRoute ?? '/search');
       return;
     }
     context.go('/login');

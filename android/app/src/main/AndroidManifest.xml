@@ -27,6 +27,18 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- 앱이 백그라운드·종료 상태일 때 시스템이 직접 띄우는 FCM 알림이 쓸 채널과
+             아이콘. 채널 id는 lib/core/notification/local_notification_service.dart의
+             scheduleAlarmChannelId와 같아야 하며, 앱이 시작할 때 그 채널을 만든다. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="schedule_alarm" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_accent" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

@@ -161,7 +161,13 @@ GoRouter createAppRouter(AuthSessionController authSession) => GoRouter(
           routes: [
             GoRoute(
               path: '/calendar',
-              builder: (context, state) => const CalendarPage(),
+              // 일정 알림을 눌러 들어오면 그 일정의 id가 쿼리로 온다.
+              builder: (context, state) => CalendarPage(
+                focusEventId: int.tryParse(
+                  state.uri.queryParameters['eventId'] ?? '',
+                ),
+                focusRequest: state.uri.queryParameters['tap'],
+              ),
             ),
           ],
         ),

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 상태바에 쓰는 알림 아이콘. 상태바 아이콘은 투명도만 쓰므로 assets/images/lion.svg의
+     선을 흰색으로 옮겨 그린다. 로고 SVG가 바뀌면 같이 고친다. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="800"
+    android:viewportHeight="800">
+    <group>
+        <path
+            android:pathData="M710 90H160C141.435 90 123.63 97.375 110.503 110.503C97.375 123.63 90 141.435 90 160V640C90 658.565 97.375 676.37 110.503 689.497C123.63 702.625 141.435 710 160 710H215"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="36"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M285 250V710"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="36"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M425 250C434.995 248.557 445.184 249.293 454.867 252.159C464.55 255.024 473.499 259.951 481.099 266.601C488.699 273.251 494.77 281.466 498.896 290.684C503.021 299.901 505.104 309.902 505 320V640C505.104 650.098 503.021 660.099 498.896 669.316C494.77 678.533 488.699 686.749 481.099 693.399C473.499 700.049 464.55 704.975 454.867 707.841C445.184 710.706 434.995 711.443 425 710C406.435 710 388.63 702.625 375.503 689.497C362.375 676.37 355 658.565 355 640V320C355 301.435 362.375 283.63 375.503 270.502C388.63 257.375 406.435 250 425 250Z"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="36"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M575 250V710"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="36"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M575 250L710 710"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="36"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M710 250V710"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="36"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
+</vector>
