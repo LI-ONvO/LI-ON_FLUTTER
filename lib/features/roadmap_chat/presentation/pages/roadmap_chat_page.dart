@@ -10,6 +10,7 @@ import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_cha
 import 'package:li_on/features/roadmap_chat/presentation/widgets/chat_bubble.dart';
 import 'package:li_on/features/roadmap_chat/presentation/widgets/chat_input_bar.dart';
 import 'package:li_on/features/roadmap_chat/presentation/widgets/resource_recommendation_sheet.dart';
+import 'package:li_on/features/roadmap_chat/presentation/widgets/roadmap_steps_sheet.dart';
 import 'package:li_on/features/roadmap_chat/presentation/widgets/typing_bubble.dart';
 
 /// 대화 목록이 맨 아래에서 이 거리(px) 안이면 맨 아래를 보고 있다고 본다.
@@ -131,6 +132,15 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
     );
   }
 
+  /// 이 대화의 로드맵을 확인하는 시트를 연다. 로드맵은 세션에 붙어 만들어져,
+  /// 첫 메시지를 보내 세션이 생긴 뒤에야 버튼이 보인다.
+  void _openRoadmapSteps(BuildContext context, int sessionId) {
+    showAppBottomSheet<void>(
+      context: context,
+      builder: (_) => RoadmapStepsSheet(sessionId: sessionId),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = roadmapChatViewModelProvider(
@@ -154,6 +164,18 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
         title: '${widget.certificateName} 로드맵',
         showBackButton: !widget.isRootChat,
         actions: [
+          if (state.sessionId != null) ...[
+            GestureDetector(
+              onTap: () => _openRoadmapSteps(context, state.sessionId!),
+              behavior: HitTestBehavior.opaque,
+              child: const Icon(
+                Icons.route_outlined,
+                size: 20,
+                color: AppColors.text,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.space3),
+          ],
           if (state.jmCd != null && state.sessionId != null) ...[
             GestureDetector(
               onTap: () => _openResourceRecommendations(context, state),

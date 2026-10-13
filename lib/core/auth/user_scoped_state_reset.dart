@@ -13,6 +13,7 @@ import 'package:li_on/features/data_room/presentation/view_models/data_room_view
 import 'package:li_on/features/my/data/user_repository.dart';
 import 'package:li_on/features/onboarding/presentation/view_models/onboarding_view_model.dart';
 import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_view_model.dart';
+import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_steps_provider.dart';
 
 /// 세션이 있던 상태에서 없는 상태로 바뀔 때마다 사용자별 캐시를 비운다.
 ///
@@ -49,4 +50,5 @@ void _resetUserScopedState(ProviderContainer container) {
   container.invalidate(chatHistoryViewModelProvider);
   container.invalidate(chatHistoriesProvider);
   container.invalidate(roadmapChatViewModelProvider);
+  container.invalidate(roadmapStepsProvider);
 }
