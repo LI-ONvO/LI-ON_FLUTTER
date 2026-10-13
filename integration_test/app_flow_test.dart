@@ -4,7 +4,8 @@ import 'package:integration_test/integration_test.dart';
 import 'package:li_on/main.dart' as app;
 
 /// 실제 앱을 띄워 로그인부터 로그아웃까지 주요 흐름을 서버(API)와 함께
-/// 검증한다. `--dart-define=API_BASE_URL`이 가리키는 서버가 떠 있어야 한다.
+/// 검증한다. 프로젝트 루트 `.env`의 `API_BASE_URL`이 가리키는 서버가 떠 있어야
+/// 한다(`--dart-define`은 읽지 않는다).
 ///
 /// 실행: flutter test integration_test -d <기기 id>
 void main() {
