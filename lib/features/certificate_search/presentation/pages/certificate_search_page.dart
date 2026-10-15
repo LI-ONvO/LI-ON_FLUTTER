@@ -7,6 +7,7 @@ import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/card/custom_card.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
+import 'package:li_on/core/widgets/progress/custom_progress_indicator.dart';
 import 'package:li_on/core/widgets/search_bar/custom_search_bar.dart';
 import 'package:li_on/core/auth/auth_session.dart';
 import 'package:li_on/features/certificate_search/data/certificate_repository.dart';
@@ -150,8 +151,7 @@ class _CertificateSearchPageState extends ConsumerState<CertificateSearchPage> {
                             );
                           },
                         ),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => const CustomProgressIndicator(),
                   error: (error, stackTrace) => _SearchRetryError(
                     onRetry: () => ref.invalidate(certificatesProvider),
                   ),

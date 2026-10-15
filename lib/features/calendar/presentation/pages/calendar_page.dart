@@ -5,6 +5,7 @@ import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
+import 'package:li_on/core/widgets/progress/custom_progress_indicator.dart';
 import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/features/calendar/presentation/view_models/calendar_view_model.dart';
 import 'package:li_on/features/calendar/presentation/pages/calendar_event_actions.dart';
@@ -211,7 +212,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                         );
                       },
                     ),
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const CustomProgressIndicator(),
               error: (error, stackTrace) => _RetryError(
                 message: '일정을 불러오지 못했어요',
                 onRetry: () => ref.invalidate(calendarEventsProvider),

@@ -6,6 +6,7 @@ import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
+import 'package:li_on/core/widgets/progress/custom_progress_indicator.dart';
 import 'package:li_on/features/certificate_search/data/certificate_detail.dart';
 import 'package:li_on/features/certificate_search/data/certificate_repository.dart';
 import 'package:li_on/features/certificate_search/presentation/widgets/bookmark_button.dart';
@@ -55,7 +56,7 @@ class CertificateDetailPage extends ConsumerWidget {
         data: (detail) => detail == null || !detail.hasContent
             ? Center(child: Text('자격증 상세 내용이 없어요', style: AppTextStyle.subText))
             : CertificateDetailBody(detail: detail),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const CustomProgressIndicator(),
         error: (error, stackTrace) =>
             Center(child: Text('정보를 불러오지 못했어요', style: AppTextStyle.subText)),
       ),

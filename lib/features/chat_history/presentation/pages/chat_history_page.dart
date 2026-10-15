@@ -5,6 +5,7 @@ import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
+import 'package:li_on/core/widgets/progress/custom_progress_indicator.dart';
 import 'package:li_on/core/widgets/search_bar/custom_search_bar.dart';
 import 'package:li_on/features/chat_history/presentation/view_models/chat_history_view_model.dart';
 import 'package:li_on/features/chat_history/data/chat_history_repository.dart';
@@ -71,8 +72,7 @@ class ChatHistoryPage extends ConsumerWidget {
                             );
                           },
                         ),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => const CustomProgressIndicator(),
                   error: (error, stackTrace) => _ChatHistoryRetryError(
                     onRetry: () => ref.invalidate(chatHistoriesProvider),
                   ),

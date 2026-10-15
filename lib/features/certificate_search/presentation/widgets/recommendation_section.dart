@@ -5,6 +5,7 @@ import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/network/api_exception.dart';
+import 'package:li_on/core/widgets/progress/custom_progress_indicator.dart';
 import 'package:li_on/features/certificate_search/data/certificate.dart';
 import 'package:li_on/features/certificate_search/data/certificate_repository.dart';
 import 'package:li_on/features/certificate_search/presentation/view_models/certificate_recommendation_view_model.dart';
@@ -51,7 +52,7 @@ class RecommendationSection extends ConsumerWidget {
       },
       loading: () => const SizedBox(
         height: _loadingHeight,
-        child: Center(child: CircularProgressIndicator()),
+        child: CustomProgressIndicator(),
       ),
       error: (error, stackTrace) {
         if (error is ApiException) {

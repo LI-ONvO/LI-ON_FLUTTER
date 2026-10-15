@@ -6,6 +6,7 @@ import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
+import 'package:li_on/core/widgets/progress/custom_progress_indicator.dart';
 import 'package:li_on/features/data_room/presentation/view_models/data_room_view_model.dart';
 import 'package:li_on/features/data_room/presentation/pages/material_actions.dart';
 import 'package:li_on/features/data_room/presentation/widgets/saved_material_tile.dart';
@@ -101,8 +102,7 @@ class DataRoomPage extends ConsumerWidget {
                             );
                           },
                         ),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => const CustomProgressIndicator(),
                   error: (error, stackTrace) => _MaterialsRetryError(
                     onRetry: () => ref.invalidate(dataRoomMaterialsProvider),
                   ),

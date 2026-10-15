@@ -5,6 +5,7 @@ import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
+import 'package:li_on/core/widgets/progress/custom_progress_indicator.dart';
 import 'package:li_on/features/data_room/presentation/view_models/data_room_view_model.dart';
 import 'package:li_on/features/data_room/presentation/pages/material_actions.dart';
 import 'package:li_on/features/data_room/presentation/widgets/material_link_card.dart';
@@ -116,7 +117,7 @@ class MaterialDetailPage extends ConsumerWidget {
           child: SizedBox(
             height: double.infinity,
             child: materialsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const CustomProgressIndicator(),
               error: (error, stackTrace) => Center(
                 child: Text('자료를 불러오지 못했어요', style: AppTextStyle.subText),
               ),

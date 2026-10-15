@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
+import 'package:li_on/core/widgets/progress/custom_progress_indicator.dart';
 import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/features/data_room/data/data_room_repository.dart';
 import 'package:li_on/features/data_room/data/resource_recommendation.dart';
@@ -113,7 +114,7 @@ class _ResourceRecommendationSheetState
                         padding: EdgeInsets.symmetric(
                           vertical: AppSpacing.space6,
                         ),
-                        child: Center(child: CircularProgressIndicator()),
+                        child: CustomProgressIndicator(),
                       );
                     }
                     if (snapshot.hasError) {
@@ -137,7 +138,10 @@ class _ResourceRecommendationSheetState
                           vertical: AppSpacing.space6,
                         ),
                         child: Center(
-                          child: Text('추천할 자료가 없어요', style: AppTextStyle.subText),
+                          child: Text(
+                            '추천할 자료가 없어요',
+                            style: AppTextStyle.subText,
+                          ),
                         ),
                       );
                     }

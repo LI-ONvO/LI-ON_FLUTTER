@@ -10,6 +10,7 @@ import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
 import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/button/custom_elevated_button.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
+import 'package:li_on/core/widgets/progress/custom_progress_indicator.dart';
 import 'package:li_on/features/certificate_search/presentation/view_models/certificate_recommendation_view_model.dart';
 import 'package:li_on/features/my/data/profile.dart';
 import 'package:li_on/features/my/data/user_repository.dart';
@@ -56,7 +57,7 @@ class OnboardingPage extends ConsumerWidget {
             : null,
         child: questionsAsync.when(
           data: (questions) => _OnboardingForm(questions: questions),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const CustomProgressIndicator(),
           error: (error, stackTrace) => _RetryError(
             message: '질문을 불러오지 못했어요',
             onRetry: () => ref.invalidate(onboardingQuestionsProvider),
