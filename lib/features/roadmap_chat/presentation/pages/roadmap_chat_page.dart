@@ -6,10 +6,13 @@ import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
+import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_view_model.dart';
+import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_hint_provider.dart';
 import 'package:li_on/features/roadmap_chat/presentation/widgets/chat_bubble.dart';
 import 'package:li_on/features/roadmap_chat/presentation/widgets/chat_input_bar.dart';
 import 'package:li_on/features/roadmap_chat/presentation/widgets/resource_recommendation_sheet.dart';
+import 'package:li_on/features/roadmap_chat/presentation/widgets/roadmap_button_hint.dart';
 import 'package:li_on/features/roadmap_chat/presentation/widgets/roadmap_steps_sheet.dart';
 import 'package:li_on/features/roadmap_chat/presentation/widgets/typing_bubble.dart';
 
@@ -132,9 +135,20 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
     );
   }
 
-  /// 이 대화의 로드맵을 확인하는 시트를 연다. 로드맵은 세션에 붙어 만들어져,
-  /// 첫 메시지를 보내 세션이 생긴 뒤에야 버튼이 보인다.
-  void _openRoadmapSteps(BuildContext context, int sessionId) {
+  /// 이 대화의 로드맵을 확인하는 시트를 연다. 로드맵은 세션에 붙어 만들어지고
+  /// 대화에서 자격증을 알아야 만들 수 있어, 대화가 없거나 자격증이 연결되지
+  /// 않았다면 안내만 한다.
+  void _openRoadmapSteps(BuildContext context, RoadmapChatState state) {
+    ref.read(roadmapHintProvider.notifier).dismiss();
+    final int? sessionId = state.sessionId;
+    if (sessionId == null || state.jmCd == null) {
+      CustomSnackbar.show(
+        context,
+        message: '자격증을 알아야 로드맵을 확인할 수 있어요.\n대화를 통해 자격증을 알려주세요.',
+        type: SnackbarType.error,
+      );
+      return;
+    }
     showAppBottomSheet<void>(
       context: context,
       builder: (_) => RoadmapStepsSheet(sessionId: sessionId),
@@ -152,6 +166,8 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
     );
     final RoadmapChatState state = ref.watch(provider);
     final RoadmapChatViewModel viewModel = ref.read(provider.notifier);
+    final bool canOpenRoadmap = state.sessionId != null && state.jmCd != null;
+    final bool showHint = ref.watch(roadmapHintProvider);
 
     ref.listen(provider, (previous, next) {
       if (previous?.messages.length != next.messages.length) {
@@ -164,18 +180,35 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
         title: '${widget.certificateName} 로드맵',
         showBackButton: !widget.isRootChat,
         actions: [
-          if (state.sessionId != null) ...[
+          if (widget.historyId == null) ...[
             GestureDetector(
-              onTap: () => _openRoadmapSteps(context, state.sessionId!),
+              onTap: state.isBotTyping
+                  ? null
+                  : () {
+                      _controller.clear();
+                      viewModel.startNewChat();
+                    },
               behavior: HitTestBehavior.opaque,
-              child: const Icon(
-                Icons.route_outlined,
+              child: Icon(
+                Icons.add_comment_outlined,
                 size: 20,
-                color: AppColors.text,
+                color: state.isBotTyping
+                    ? AppColors.placeholder
+                    : AppColors.text,
               ),
             ),
             const SizedBox(width: AppSpacing.space3),
           ],
+          GestureDetector(
+            onTap: () => _openRoadmapSteps(context, state),
+            behavior: HitTestBehavior.opaque,
+            child: Icon(
+              Icons.route_outlined,
+              size: 20,
+              color: canOpenRoadmap ? AppColors.text : AppColors.placeholder,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.space3),
           if (state.jmCd != null && state.sessionId != null) ...[
             GestureDetector(
               onTap: () => _openResourceRecommendations(context, state),
@@ -204,22 +237,40 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
         enabled: !state.isBotTyping,
         onSend: () => _handleSend(viewModel),
       ),
-      child: NotificationListener<ScrollNotification>(
-        onNotification: _trackBottom,
-        child: NotificationListener<ScrollMetricsNotification>(
-          onNotification: _followBottom,
-          child: ListView.separated(
-            controller: _scrollController,
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.space3),
-            itemCount: state.messages.length + (state.isBotTyping ? 1 : 0),
-            separatorBuilder: (_, _) =>
-                const SizedBox(height: AppSpacing.space1),
-            itemBuilder: (context, index) {
-              if (index == state.messages.length) return const TypingBubble();
-              return ChatBubble(message: state.messages[index]);
-            },
+      child: Stack(
+        children: [
+          NotificationListener<ScrollNotification>(
+            onNotification: _trackBottom,
+            child: NotificationListener<ScrollMetricsNotification>(
+              onNotification: _followBottom,
+              child: ListView.separated(
+                controller: _scrollController,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSpacing.space3,
+                ),
+                itemCount: state.messages.length + (state.isBotTyping ? 1 : 0),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.space1),
+                itemBuilder: (context, index) {
+                  if (index == state.messages.length) {
+                    return const TypingBubble();
+                  }
+                  return ChatBubble(message: state.messages[index]);
+                },
+              ),
+            ),
           ),
-        ),
+          if (showHint)
+            Positioned(
+              top: 0,
+              right: 0,
+              left: AppSpacing.space6,
+              child: RoadmapButtonHint(
+                hasCertificate: state.jmCd != null,
+                onDismiss: ref.read(roadmapHintProvider.notifier).dismiss,
+              ),
+            ),
+        ],
       ),
     );
   }

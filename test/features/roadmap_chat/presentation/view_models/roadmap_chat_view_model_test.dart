@@ -101,7 +101,7 @@ void main() {
   test('새 대화는 인사말로 시작하고, 첫 메시지에 세션을 만들어 답변을 받는다', () async {
     final container = makeContainer();
 
-    const newSession = RoadmapChatSession(certificateName: 'SQLD');
+    const newSession = RoadmapChatSession(certificateName: 'SQLD', jmCd: '1');
     final provider = roadmapChatViewModelProvider(newSession);
 
     expect(container.read(provider).messages.single.text, contains('SQLD'));
@@ -111,6 +111,18 @@ void main() {
     final messages = container.read(provider).messages;
     expect(messages.length, 3);
     expect(messages.last.text, contains('세션 100의 답변'));
+  });
+
+  test('자격증이 연결되지 않은 새 대화는 탭 제목을 인사말에 넣지 않는다', () {
+    final container = makeContainer();
+    final provider = roadmapChatViewModelProvider(
+      const RoadmapChatSession(certificateName: '학습'),
+    );
+
+    expect(
+      container.read(provider).messages.single.text,
+      isNot(contains('학습 학습')),
+    );
   });
 
   test('502 실패면 같은 질문을 다시 보내라고 안내한다', () async {

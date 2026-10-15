@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/network/api_exception.dart';
+import 'package:li_on/features/certificate_search/data/certificate.dart';
+import 'package:li_on/features/certificate_search/data/certificate_repository.dart';
+import 'package:li_on/features/roadmap_chat/data/certificate_mention.dart';
 import 'package:li_on/features/roadmap_chat/data/roadmap_chat_repository.dart';
 import 'package:li_on/features/chat/data/chat_message.dart';
 import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_session.dart';
@@ -7,6 +10,9 @@ import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_cha
 
 export 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_session.dart';
 export 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_state.dart';
+
+/// 첫 메시지의 자격증을 찾느라 전송이 지연되는 시간의 상한.
+const Duration _certificateLookupTimeout = Duration(seconds: 5);
 
 /// 새 대화와 대화 내역의 각 세션별로 독립된 대화 상태를 갖는다.
 class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
@@ -35,13 +41,25 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
         ChatMessage(
           id: 0,
           sender: ChatSender.bot,
-          text:
-              '안녕하세요! ${session.certificateName} 학습 로드맵을 함께 만들어볼게요. '
-              '시험까지 남은 기간이 어느 정도인가요?',
+          text: _greeting(),
           timestamp: DateTime.now(),
         ),
       ],
     );
+  }
+
+  /// 자격증 상세를 거치지 않은 대화는 첫 메시지의 자격증 이름으로 자격증이
+  /// 연결되므로, 이름을 정확히 말하도록 예시와 함께 안내한다. 이때
+  /// certificateName은 자격증 이름이 아니라 탭 제목용 문구라 인사에 넣지 않는다.
+  String _greeting() {
+    if (session.jmCd != null) {
+      return '안녕하세요! ${session.certificateName} 학습 로드맵을 함께 만들어볼게요. '
+          '시험까지 남은 기간이 어느 정도인가요?';
+    }
+    return '안녕하세요! 학습 로드맵을 함께 만들어볼게요. '
+        '어떤 자격증이고 시험까지 남은 기간이 어느 정도인가요?\n\n'
+        '자격증 이름을 정확히 알려주셔야 로드맵을 만들 수 있어요. '
+        '예: "정보처리기사를 3개월 뒤에 준비하려고 해요"';
   }
 
   Future<void> _loadHistory(int sessionId) async {
@@ -66,6 +84,24 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
     }
   }
 
+  /// 자격증 목록을 받아 [text]에 언급된 자격증을 찾는다. 목록을 못 받거나
+  /// 오래 걸려도 메시지 전송을 막지 않도록, 실패하면 못 찾은 것으로 본다.
+  Future<Certificate?> _findMentionedCertificate(String text) async {
+    try {
+      final List<Certificate> certificates = await ref
+          .read(certificateRepositoryProvider)
+          .fetchCertificates()
+          .timeout(_certificateLookupTimeout);
+      return findMentionedCertificate(text, certificates);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 지금까지의 대화를 버리고 인사말만 있는 새 대화로 되돌린다. 서버 세션은
+  /// 첫 메시지를 보낼 때 새로 만들어진다.
+  void startNewChat() => ref.invalidateSelf();
+
   Future<void> sendMessage(String text) async {
     final String trimmed = text.trim();
     if (trimmed.isEmpty || state.isBotTyping) return;
@@ -84,10 +120,21 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
       final RoadmapChatRepository repository = ref.read(
         roadmapChatRepositoryProvider,
       );
-      final int sessionId = _sessionId ??= await repository.createSession(
-        certificateName: certificateName,
-        jmCd: session.jmCd,
-      );
+      String? jmCd = session.jmCd;
+      if (_sessionId == null) {
+        // 자격증 상세를 거치지 않은 대화는 자격증이 연결되지 않아 로드맵을
+        // 만들 수 없다. 세션은 만들 때만 자격증을 붙일 수 있어, 첫 메시지에
+        // 언급된 자격증을 찾아 같이 연결한다.
+        final Certificate? mentioned = jmCd == null
+            ? await _findMentionedCertificate(trimmed)
+            : null;
+        jmCd ??= mentioned?.id;
+        _sessionId = await repository.createSession(
+          certificateName: mentioned?.name ?? certificateName,
+          jmCd: jmCd,
+        );
+      }
+      final int sessionId = _sessionId!;
 
       final ChatMessage reply = await repository.sendMessage(
         sessionId: sessionId,
@@ -99,6 +146,7 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
         messages: [...state.messages, reply],
         isBotTyping: false,
         sessionId: sessionId,
+        jmCd: jmCd,
       );
     } catch (error) {
       // 응답에 실패해도 입력이 계속 막히지 않도록 typing 상태를 되돌리고,
