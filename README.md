@@ -8,9 +8,10 @@
 | --- | --- |
 | 인증 | 로그인, 회원가입, 이메일 인증, 입력값 검증 |
 | 자격증 탐색 | 키워드·카테고리 검색, 자격증 상세 정보, 북마크 |
-| 로드맵 | AI 로드맵 대화 UI, 대화 내역, 학습 일정을 캘린더에 추가 |
+| 로드맵 | AI 로드맵 대화, 로드맵 스텝 확인 시트, 학습 자료 추천, 대화 내역, 학습 일정을 캘린더에 추가 |
 | 자료방 | 자료 목록·필터, 상세 보기, 수정·삭제 |
 | 캘린더 | 월간·주간 보기, 일정 생성·수정·삭제, 알림과 연결 자격증 설정 |
+| 알림 | FCM 푸시 알림, 로컬 알림, 알림 탭 시 해당 화면으로 이동 |
 | 프로필 | 기본 정보와 희망 분야 편집, 로그아웃 |
 
 ## 기술 스택
@@ -18,7 +19,9 @@
 - **Framework:** Flutter, Dart `^3.12.1`
 - **State management:** Riverpod
 - **Routing:** GoRouter의 5탭 `StatefulShellRoute`
-- **Networking:** Dio, `flutter_secure_storage`
+- **Networking:** Dio, `flutter_secure_storage`, `flutter_dotenv`
+- **Notifications:** Firebase Messaging, `flutter_local_notifications`
+- **Storage / 기타:** `shared_preferences`, `url_launcher`, `app_settings`
 - **Serialization:** `json_serializable`, `build_runner`
 - **UI:** Material Design, `flutter_svg`, HelveticaNeue 폰트
 
@@ -46,6 +49,7 @@ flutter run
 ```bash
 flutter analyze
 flutter test
+flutter test integration_test   # 기기 또는 에뮬레이터 필요
 ```
 
 ### API 서버 연결하기
@@ -60,6 +64,12 @@ API_BASE_URL=https://api.example.com
 
 `.env`를 고치고 `flutter run`(핫 리스타트 `R`)만 하면 바로 반영됩니다.
 
+### 배포
+
+- CI/CD는 `codemagic.yaml`에 정의되어 있습니다.
+- 코드 푸시(패치) 배포에는 Shorebird(`shorebird.yaml`)를 사용합니다.
+- Firebase 설정은 `firebase.json`, `lib/firebase_options.dart`에 있습니다.
+
 CI는 Codemagic에서 의존성 설치, 모델 코드 생성, 정적 분석, 테스트, Android debug APK 및 iOS debug 빌드를 수행합니다.
 
 ## 프로젝트 구조
@@ -71,7 +81,9 @@ lib/
 ├── core/
 │   ├── auth/            # 로그인 세션, 사용자·토큰 갱신 모델
 │   ├── constants/       # 색상, 폰트, 간격, 공통 상수
+│   ├── model/           # 여러 기능이 공유하는 모델 (희망 분야, 자료 유형)
 │   ├── network/         # Dio 클라이언트, 인증 인터셉터, 토큰 저장소
+│   ├── notification/    # FCM 푸시, 로컬 알림, 기기 토큰 등록, 알림 이동 처리
 │   ├── router/          # GoRouter와 하단 탭 셸
 │   ├── utils/           # 폼 검증과 제출 보조 로직
 │   └── widgets/         # 공통 UI 컴포넌트
@@ -133,6 +145,6 @@ dart run build_runner build --delete-conflicting-outputs
 
 ## 테스트
 
-위젯·provider 테스트는 `test/` 디렉터리에 있습니다. 회원가입 검증, 온보딩, 자료방 CRUD 및 링크, 로드맵 자료 저장 흐름을 다룹니다.
+위젯·provider 테스트는 `test/` 디렉터리에 있습니다. 회원가입 검증, 온보딩, 자료방 CRUD 및 링크, 로드맵 자료 저장 및 스텝 시트 흐름을 다룹니다. 앱 전체 흐름은 `integration_test/app_flow_test.dart`에서 확인합니다.
 
 구체적인 수동 QA 결과는 [QA_NOTES.md](QA_NOTES.md)를 참고하세요.
