@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/network/api_client.dart';
 import 'package:li_on/core/network/api_exception.dart';
@@ -36,6 +37,11 @@ abstract class RoadmapRepository {
 
 class HttpRoadmapRepository implements RoadmapRepository {
   HttpRoadmapRepository(this.apiClient);
+
+  /// 로드맵 생성은 백엔드가 AI 서버 응답까지 기다려 기본 타임아웃(10초)보다
+  /// 오래 걸린다. 앱이 먼저 끊으면 서버에서는 생성이 이어져 재시도 시 로드맵이
+  /// 중복될 수 있어 넉넉히 둔다.
+  static const Duration _createRoadmapTimeout = Duration(seconds: 60);
 
   final ApiClient apiClient;
 
@@ -89,6 +95,7 @@ class HttpRoadmapRepository implements RoadmapRepository {
       final response = await apiClient.dio.post(
         '/api/chat/sessions/$sessionId/roadmaps',
         data: {'title': ?title},
+        options: Options(receiveTimeout: _createRoadmapTimeout),
       );
       return RoadmapDetail.fromJson(response.data);
     });

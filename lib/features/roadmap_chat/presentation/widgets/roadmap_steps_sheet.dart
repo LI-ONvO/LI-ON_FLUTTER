@@ -4,9 +4,10 @@ import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/layout/app_bottom_sheet.dart';
+import 'package:li_on/core/widgets/progress/custom_progress_indicator.dart';
 import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/features/calendar/presentation/view_models/calendar_view_model.dart';
-import 'package:li_on/features/roadmap/data/roadmap_summary.dart';
+import 'package:li_on/features/roadmap/data/roadmap_detail.dart';
 import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_steps_provider.dart';
 
 /// 목표일만 있는 스텝을 캘린더에 넣을 때 쓰는 시작 시각과 길이.
@@ -31,7 +32,7 @@ class _RoadmapStepsSheetState extends ConsumerState<RoadmapStepsSheet> {
   final Set<int> _savedIds = {};
   int? _savingId;
 
-  Future<void> _save(RoadmapSummary step) async {
+  Future<void> _save(RoadmapStep step) async {
     final DateTime? targetDate = step.targetDate;
     if (targetDate == null) return;
     setState(() => _savingId = step.id);
@@ -90,10 +91,8 @@ class _RoadmapStepsSheetState extends ConsumerState<RoadmapStepsSheet> {
                   message: '로드맵을 만들고 있어요. 잠시만 기다려주세요',
                   loading: true,
                 ),
-                error: (_, _) => _SheetMessage(
-                  message: '로드맵을 만들지 못했어요',
-                  onRetry: _retry,
-                ),
+                error: (_, _) =>
+                    _SheetMessage(message: '로드맵을 만들지 못했어요', onRetry: _retry),
                 data: (steps) {
                   if (steps.isEmpty) {
                     return _SheetMessage(
@@ -108,7 +107,7 @@ class _RoadmapStepsSheetState extends ConsumerState<RoadmapStepsSheet> {
                     child: Column(
                       spacing: AppSpacing.space2,
                       children: [
-                        for (final RoadmapSummary step in steps)
+                        for (final RoadmapStep step in steps)
                           _StepTile(
                             step: step,
                             saved:
@@ -151,7 +150,7 @@ class _SheetMessage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           spacing: AppSpacing.space2,
           children: [
-            if (loading) const CircularProgressIndicator(),
+            if (loading) const CustomProgressIndicator(),
             Text(message, style: AppTextStyle.subText),
             if (onRetry != null)
               TextButton(
@@ -178,7 +177,7 @@ class _StepTile extends StatelessWidget {
     required this.onSave,
   });
 
-  final RoadmapSummary step;
+  final RoadmapStep step;
   final bool saved;
   final bool saving;
   final VoidCallback onSave;

@@ -13,15 +13,16 @@ import '../../../../support/in_memory_calendar_repository.dart';
 /// 로드맵 API만 흉내 낸다. 쓰지 않는 메서드를 부르면 바로 실패한다.
 class _FakeRoadmapRepository implements RoadmapRepository {
   _FakeRoadmapRepository({
-    List<RoadmapSummary> existing = const [],
+    List<RoadmapStep>? existing,
     this.created = const [],
     this.failCreateTimes = 0,
   }) : _steps = existing;
 
-  List<RoadmapSummary> _steps;
+  /// 세션에 이미 있는 로드맵의 스텝. null이면 로드맵이 없다.
+  List<RoadmapStep>? _steps;
 
   /// [createRoadmap]을 부르면 서버에 생기는 스텝.
-  final List<RoadmapSummary> created;
+  final List<RoadmapStep> created;
 
   /// 처음 몇 번의 [createRoadmap] 호출을 실패시킬지.
   int failCreateTimes;
@@ -29,7 +30,14 @@ class _FakeRoadmapRepository implements RoadmapRepository {
   int createCalls = 0;
 
   @override
-  Future<List<RoadmapSummary>> fetchRoadmaps(int sessionId) async => _steps;
+  Future<List<RoadmapSummary>> fetchRoadmaps(int sessionId) async => [
+    if (_steps != null)
+      RoadmapSummary(id: 1, title: '로드맵', createdAt: DateTime(2026, 10, 1)),
+  ];
+
+  @override
+  Future<RoadmapDetail> fetchRoadmapDetail(int roadmapId) async =>
+      RoadmapDetail(id: roadmapId, title: '로드맵', steps: _steps!);
 
   @override
   Future<RoadmapDetail> createRoadmap({
@@ -39,15 +47,15 @@ class _FakeRoadmapRepository implements RoadmapRepository {
     createCalls++;
     if (createCalls <= failCreateTimes) throw StateError('생성 실패');
     _steps = created;
-    return const RoadmapDetail(id: 1, title: '로드맵', steps: []);
+    return RoadmapDetail(id: 1, title: '로드맵', steps: created);
   }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-RoadmapSummary _step(int id, int orderNo, {DateTime? targetDate}) {
-  return RoadmapSummary(
+RoadmapStep _step(int id, int orderNo, {DateTime? targetDate}) {
+  return RoadmapStep(
     id: id,
     title: '$orderNo단계',
     description: '$orderNo단계 설명',
