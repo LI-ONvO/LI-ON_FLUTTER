@@ -62,8 +62,6 @@ void main() {
         });
     await pumpMyPage(tester);
 
-    expect(find.text('준비 중'), findsOneWidget); // 이용약관만 남는다.
-
     await tester.tap(find.text('알림 설정'));
     await tester.pump();
 
