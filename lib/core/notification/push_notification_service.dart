@@ -8,7 +8,15 @@ import 'package:li_on/core/notification/local_notification_service.dart';
 /// 최상위(top-level) 함수여야 한다.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('[FCM] background message: ${message.messageId}');
+  debugPrint('[FCM] background message: ${_describe(message)}');
+}
+
+/// 수신한 [message]의 제목·본문·data를 로그로 남기기 위한 문자열.
+String _describe(RemoteMessage message) {
+  final RemoteNotification? notification = message.notification;
+  return 'id=${message.messageId} '
+      'title=${notification?.title} body=${notification?.body} '
+      'data=${message.data}';
 }
 
 /// Firebase Cloud Messaging 초기화와 토큰/메시지 수신을 담당한다.
@@ -55,19 +63,24 @@ class PushNotificationService {
     _messaging.onTokenRefresh.listen(onTokenRefresh);
 
     FirebaseMessaging.onMessage.listen((message) {
-      debugPrint('[FCM] foreground message: ${message.messageId}');
+      debugPrint('[FCM] foreground message: ${_describe(message)}');
       LocalNotificationService.showForeground(message);
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      debugPrint('[FCM] opened from notification: ${message.messageId}');
+      debugPrint('[FCM] opened from notification: ${_describe(message)}');
       onNotificationTap(message.data);
     });
 
     // 앱이 종료된 상태에서 알림을 눌러 켜진 경우, 그 알림은 이벤트로 오지 않고
     // 여기서만 얻을 수 있다.
     final RemoteMessage? launchMessage = await _messaging.getInitialMessage();
-    if (launchMessage != null) onNotificationTap(launchMessage.data);
+    if (launchMessage != null) {
+      debugPrint(
+        '[FCM] launched from notification: ${_describe(launchMessage)}',
+      );
+      onNotificationTap(launchMessage.data);
+    }
   }
 
   /// 현재 기기의 FCM 토큰. 로그인·로그아웃 시 서버에 등록/해제할 때 쓴다.
