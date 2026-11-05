@@ -6,6 +6,9 @@ import 'package:li_on/core/constants/spacing.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+
+  /// 제목 바로 오른쪽에 붙는 위젯.
+  final Widget? titleTrailing;
   final bool showBackButton;
   final VoidCallback? onBackPressed;
   final List<Widget> actions;
@@ -13,6 +16,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     super.key,
     required this.title,
+    this.titleTrailing,
     this.showBackButton = true,
     this.onBackPressed,
     this.actions = const [],
@@ -29,36 +33,40 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         size: preferredSize,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Text(
-                title,
-                style: AppTextStyle.section,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Row(
-                children: [
-                  if (showBackButton)
-                    _AppBarIconButton(
-                      icon: Icons.arrow_back_ios_new,
-                      size: 22,
-                      onTap:
-                          onBackPressed ??
-                          () {
-                            if (context.canPop()) {
-                              context.pop();
-                            } else {
-                              context.go('/search');
-                            }
-                          },
-                    ),
-                  const Spacer(),
-                  ...actions,
-                ],
-              ),
-            ],
+          // 제목은 가운데에 두되, 공간이 모자라면 좌우 버튼을 피해 밀리고 줄어든다.
+          child: NavigationToolbar(
+            middleSpacing: AppSpacing.space1,
+            leading: showBackButton
+                ? _AppBarIconButton(
+                    icon: Icons.arrow_back_ios_new,
+                    size: 22,
+                    onTap:
+                        onBackPressed ??
+                        () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/search');
+                          }
+                        },
+                  )
+                : null,
+            middle: Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: AppSpacing.space1,
+              children: [
+                Flexible(
+                  child: Text(
+                    title,
+                    style: AppTextStyle.section,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                ?titleTrailing,
+              ],
+            ),
+            trailing: Row(mainAxisSize: MainAxisSize.min, children: actions),
           ),
         ),
       ),
