@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/router/app_shell.dart';
+import 'package:li_on/core/router/fading_branch_container.dart';
 import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/features/auth/presentation/pages/login_page.dart';
@@ -148,9 +149,14 @@ GoRouter createAppRouter(AuthSessionController authSession) => GoRouter(
         jmCd: state.uri.queryParameters['jmCd'],
       ),
     ),
-    StatefulShellRoute.indexedStack(
+    StatefulShellRoute(
       builder: (context, state, navigationShell) =>
           AppShell(navigationShell: navigationShell),
+      navigatorContainerBuilder: (context, navigationShell, children) =>
+          FadingBranchContainer(
+            currentIndex: navigationShell.currentIndex,
+            children: children,
+          ),
       branches: [
         // 탐색 (0)
         StatefulShellBranch(
