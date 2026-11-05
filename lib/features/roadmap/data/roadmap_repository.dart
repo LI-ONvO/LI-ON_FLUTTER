@@ -19,6 +19,13 @@ abstract class RoadmapRepository {
   /// `GET /api/chat/sessions/{sessionId}` — 세션 상세(메시지 내역).
   Future<ChatSessionDetail> fetchSessionDetail(int sessionId);
 
+  /// `POST /api/chat/sessions/{sessionId}/certificates` — 자격증이 연결되지
+  /// 않은 세션에 자격증을 연결한다.
+  Future<void> selectSessionCertificate({
+    required int sessionId,
+    required String jmCd,
+  });
+
   /// `POST /api/chat/sessions/{sessionId}/messages` — 메시지 전송(AI 응답).
   Future<RoadmapMessageResult> sendMessage({
     required int sessionId,
@@ -72,6 +79,19 @@ class HttpRoadmapRepository implements RoadmapRepository {
     return guardApiCall(() async {
       final response = await apiClient.dio.get('/api/chat/sessions/$sessionId');
       return ChatSessionDetail.fromJson(response.data);
+    });
+  }
+
+  @override
+  Future<void> selectSessionCertificate({
+    required int sessionId,
+    required String jmCd,
+  }) {
+    return guardApiCall(() async {
+      await apiClient.dio.post(
+        '/api/chat/sessions/$sessionId/certificates',
+        data: {'jmCd': jmCd},
+      );
     });
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/network/api_exception.dart';
 import 'package:li_on/features/certificate_search/data/certificate.dart';
 import 'package:li_on/features/certificate_search/data/certificate_repository.dart';
+import 'package:li_on/features/chat_history/data/chat_history_repository.dart';
 import 'package:li_on/features/roadmap_chat/data/certificate_mention.dart';
 import 'package:li_on/features/roadmap_chat/data/roadmap_chat_repository.dart';
 import 'package:li_on/features/chat/data/chat_message.dart';
@@ -68,7 +69,11 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
           .read(roadmapChatRepositoryProvider)
           .fetchSessionDetail(sessionId);
       if (!ref.mounted) return;
-      state = state.copyWith(messages: detail.messages, jmCd: detail.jmCd);
+      state = state.copyWith(
+        messages: detail.messages,
+        jmCd: detail.jmCd,
+        isCertificateChecked: true,
+      );
     } catch (_) {
       if (!ref.mounted) return;
       state = state.copyWith(
@@ -101,6 +106,16 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
   /// 지금까지의 대화를 버리고 인사말만 있는 새 대화로 되돌린다. 서버 세션은
   /// 첫 메시지를 보낼 때 새로 만들어진다.
   void startNewChat() => ref.invalidateSelf();
+
+  /// 세션에 연결한 자격증을 대화에 반영한다. 대화 내역 목록의 자격증 배지도
+  /// 바뀌어야 하므로 목록을 다시 불러오게 한다.
+  void applySelectedCertificate(CertificateRef certificate) {
+    state = state.copyWith(
+      jmCd: certificate.jmCd,
+      certificateName: certificate.name,
+    );
+    ref.invalidate(chatHistoriesProvider);
+  }
 
   Future<void> sendMessage(String text) async {
     final String trimmed = text.trim();
@@ -147,6 +162,9 @@ class RoadmapChatViewModel extends Notifier<RoadmapChatState> {
         isBotTyping: false,
         sessionId: sessionId,
         jmCd: jmCd,
+        // 새 대화의 세션은 방금 위에서 만들어 자격증 연결 여부를 이미 안다.
+        isCertificateChecked:
+            state.isCertificateChecked || session.historyId == null,
       );
     } catch (error) {
       // 응답에 실패해도 입력이 계속 막히지 않도록 typing 상태를 되돌리고,

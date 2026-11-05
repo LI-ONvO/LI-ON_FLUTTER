@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:li_on/core/constants/color.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/constants/spacing.dart';
+import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
 import 'package:li_on/core/widgets/badge/custom_badge.dart';
 import 'package:li_on/core/widgets/card/custom_card.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
@@ -15,7 +16,11 @@ import 'package:li_on/features/certificate_search/presentation/view_models/certi
 import 'package:li_on/features/certificate_search/presentation/widgets/recommendation_section.dart';
 
 class CertificateSearchPage extends ConsumerStatefulWidget {
-  const CertificateSearchPage({super.key});
+  const CertificateSearchPage({super.key, this.selectForSessionId});
+
+  /// 있으면 이 채팅 세션에 연결할 자격증을 고르는 화면이 된다. 상세에서 자격증을
+  /// 선택하면 그 자격증([CertificateRef])을 결과로 돌려주며 닫힌다.
+  final int? selectForSessionId;
 
   @override
   ConsumerState<CertificateSearchPage> createState() =>
@@ -37,6 +42,21 @@ class _CertificateSearchPageState extends ConsumerState<CertificateSearchPage> {
     super.dispose();
   }
 
+  /// 자격증 상세를 연다. 자격증을 고르는 중이면 상세에서 고른 결과를 받아 이
+  /// 화면도 닫아, 채팅 화면까지 한 번에 돌아간다.
+  Future<void> _openDetail(String jmCd, String name) async {
+    final int? sessionId = widget.selectForSessionId;
+    if (sessionId == null) {
+      context.push('/search/certificate/$jmCd', extra: name);
+      return;
+    }
+    final CertificateRef? selected = await context.push<CertificateRef>(
+      '/search/certificate/$jmCd?selectForSession=$sessionId',
+      extra: name,
+    );
+    if (selected != null && mounted) context.pop(selected);
+  }
+
   @override
   Widget build(BuildContext context) {
     // 검색어가 바뀔 때마다 화면 전체가 다시 그려지지 않도록, 상태를 쓰는
@@ -47,27 +67,31 @@ class _CertificateSearchPageState extends ConsumerState<CertificateSearchPage> {
     final String userName =
         ref.watch(authSessionProvider).user?.nickname ?? '사용자';
 
+    final bool isSelecting = widget.selectForSessionId != null;
+
     return BaseScaffold(
-      appBar: null,
+      appBar: isSelecting ? const CustomAppBar(title: '자격증 선택') : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: AppSpacing.space4),
-          Text(
-            '안녕하세요, $userName님',
-            style: AppTextStyle.baseTextStyle.copyWith(
-              fontWeight: FontWeight.w500,
-              fontSize: 16,
+          if (!isSelecting) ...[
+            const SizedBox(height: AppSpacing.space4),
+            Text(
+              '안녕하세요, $userName님',
+              style: AppTextStyle.baseTextStyle.copyWith(
+                fontWeight: FontWeight.w500,
+                fontSize: 16,
+              ),
             ),
-          ),
+          ],
           // 검색 중에는 추천 카드를 접는다. 키보드가 올라온 화면에서 추천이
           // 자리를 차지하면 결과 목록이 거의 남지 않는다.
           _Collapsible(
             collapsed: _searchFocus.hasFocus,
-            child: const Column(
+            child: Column(
               children: [
-                SizedBox(height: AppSpacing.space3),
-                RecommendationSection(),
+                const SizedBox(height: AppSpacing.space3),
+                RecommendationSection(onCertificateTap: _openDetail),
               ],
             ),
           ),
@@ -143,10 +167,7 @@ class _CertificateSearchPageState extends ConsumerState<CertificateSearchPage> {
                                 if (ModalRoute.of(context)?.isCurrent != true) {
                                   return;
                                 }
-                                context.push(
-                                  '/search/certificate/${certificate.id}',
-                                  extra: certificate.name,
-                                );
+                                _openDetail(certificate.id, certificate.name);
                               },
                             );
                           },

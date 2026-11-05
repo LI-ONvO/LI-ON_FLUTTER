@@ -27,10 +27,16 @@ const double _cardWidthFraction = 0.7;
 /// 빈 목록이나 `NO_CANDIDATE_CERTIFICATE`를 주면) 안내 문구와 무작위
 /// 자격증 한 건을, 그 밖의 실패는 다시 시도 문구를 보여준다.
 class RecommendationSection extends ConsumerWidget {
-  const RecommendationSection({super.key});
+  const RecommendationSection({super.key, this.onCertificateTap});
+
+  /// 자격증 카드를 눌렀을 때의 동작. 없으면 자격증 상세로 이동한다.
+  final void Function(String jmCd, String name)? onCertificateTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final void Function(String jmCd, String name) onTap =
+        onCertificateTap ??
+        (jmCd, name) => context.push('/search/certificate/$jmCd', extra: name);
     final AsyncValue<CertificateRecommendationResult?> recommendationAsync = ref
         .watch(certificateRecommendationsProvider);
 
@@ -44,11 +50,15 @@ class RecommendationSection extends ConsumerWidget {
           );
         }
         if (result.items.isEmpty) {
-          return const _NoRecommendationFallback(
+          return _NoRecommendationFallback(
             reason: _NoRecommendationReason.noCandidate,
+            onCertificateTap: onTap,
           );
         }
-        return _RecommendationList(items: result.items);
+        return _RecommendationList(
+          items: result.items,
+          onCertificateTap: onTap,
+        );
       },
       loading: () => const SizedBox(
         height: _loadingHeight,
@@ -57,13 +67,15 @@ class RecommendationSection extends ConsumerWidget {
       error: (error, stackTrace) {
         if (error is ApiException) {
           if (error.code == 'NO_CANDIDATE_CERTIFICATE') {
-            return const _NoRecommendationFallback(
+            return _NoRecommendationFallback(
               reason: _NoRecommendationReason.noCandidate,
+              onCertificateTap: onTap,
             );
           }
           if (error.code == 'ONBOARDING_NOT_COMPLETED') {
-            return const _NoRecommendationFallback(
+            return _NoRecommendationFallback(
               reason: _NoRecommendationReason.onboardingIncomplete,
+              onCertificateTap: onTap,
             );
           }
         }
@@ -84,9 +96,13 @@ class RecommendationSection extends ConsumerWidget {
 /// 맞춰 모든 카드를 같은 높이로 늘리므로, 기기의 글자 크기·글꼴이 달라도
 /// 카드 내용이 넘치지 않는다. 폭은 화면 폭에 비례한다.
 class _RecommendationList extends StatelessWidget {
-  const _RecommendationList({required this.items});
+  const _RecommendationList({
+    required this.items,
+    required this.onCertificateTap,
+  });
 
   final List<CertificateRecommendationItem> items;
+  final void Function(String jmCd, String name) onCertificateTap;
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +118,11 @@ class _RecommendationList extends StatelessWidget {
               children: [
                 for (int i = 0; i < items.length; i++) ...[
                   if (i > 0) const SizedBox(width: AppSpacing.space2),
-                  _RecommendationCard(item: items[i], width: cardWidth),
+                  _RecommendationCard(
+                    item: items[i],
+                    width: cardWidth,
+                    onCertificateTap: onCertificateTap,
+                  ),
                 ],
               ],
             ),
@@ -127,9 +147,13 @@ enum _NoRecommendationReason {
 /// 버튼을 준다 — 실패한 요청을 그냥 재시도해 봐야 다시 같은 이유로
 /// 실패할 뿐이라, 실제로 할 수 있는 행동을 제안하는 게 낫다.
 class _NoRecommendationFallback extends ConsumerWidget {
-  const _NoRecommendationFallback({required this.reason});
+  const _NoRecommendationFallback({
+    required this.reason,
+    required this.onCertificateTap,
+  });
 
   final _NoRecommendationReason reason;
+  final void Function(String jmCd, String name) onCertificateTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -167,7 +191,10 @@ class _NoRecommendationFallback extends ConsumerWidget {
         ),
         if (randomCertificate != null) ...[
           const SizedBox(height: AppSpacing.space2),
-          _RandomCertificateCard(certificate: randomCertificate),
+          _RandomCertificateCard(
+            certificate: randomCertificate,
+            onCertificateTap: onCertificateTap,
+          ),
         ],
       ],
     );
@@ -175,19 +202,20 @@ class _NoRecommendationFallback extends ConsumerWidget {
 }
 
 class _RandomCertificateCard extends StatelessWidget {
-  const _RandomCertificateCard({required this.certificate});
+  const _RandomCertificateCard({
+    required this.certificate,
+    required this.onCertificateTap,
+  });
 
   final Certificate certificate;
+  final void Function(String jmCd, String name) onCertificateTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         if (ModalRoute.of(context)?.isCurrent != true) return;
-        context.push(
-          '/search/certificate/${certificate.id}',
-          extra: certificate.name,
-        );
+        onCertificateTap(certificate.id, certificate.name);
       },
       child: Container(
         width: 220,
@@ -254,17 +282,22 @@ class _GenerateCard extends StatelessWidget {
 }
 
 class _RecommendationCard extends StatelessWidget {
-  const _RecommendationCard({required this.item, required this.width});
+  const _RecommendationCard({
+    required this.item,
+    required this.width,
+    required this.onCertificateTap,
+  });
 
   final CertificateRecommendationItem item;
   final double width;
+  final void Function(String jmCd, String name) onCertificateTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         if (ModalRoute.of(context)?.isCurrent != true) return;
-        context.push('/search/certificate/${item.jmCd}', extra: item.name);
+        onCertificateTap(item.jmCd, item.name);
       },
       child: Container(
         width: width,

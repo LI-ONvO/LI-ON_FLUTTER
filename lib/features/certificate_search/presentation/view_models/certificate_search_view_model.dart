@@ -48,6 +48,7 @@ class CertificateSearchViewModel extends Notifier<CertificateSearchState> {
 final certificateSearchViewModelProvider =
     NotifierProvider<CertificateSearchViewModel, CertificateSearchState>(
       CertificateSearchViewModel.new,
+      dependencies: const [],
     );
 
 /// 칩으로 따로 보여줄 category 수. 이보다 드문 category는 '기타'로 묶는다.
@@ -105,4 +106,4 @@ final filteredCertificatesProvider = Provider<AsyncValue<List<Certificate>>>((
       return matchesCategory && matchesQuery;
     }).toList();
   });
-});
+}, dependencies: [certificateSearchViewModelProvider]);

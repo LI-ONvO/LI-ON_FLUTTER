@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:li_on/core/constants/font.dart';
 import 'package:li_on/core/router/app_shell.dart';
@@ -11,6 +12,7 @@ import 'package:li_on/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:li_on/features/calendar/presentation/pages/calendar_page.dart';
 import 'package:li_on/features/certificate_search/presentation/pages/certificate_detail_page.dart';
 import 'package:li_on/features/certificate_search/presentation/pages/certificate_search_page.dart';
+import 'package:li_on/features/certificate_search/presentation/view_models/certificate_search_view_model.dart';
 import 'package:li_on/features/data_room/presentation/pages/data_room_page.dart';
 import 'package:li_on/features/data_room/presentation/pages/material_detail_page.dart';
 import 'package:li_on/features/my/presentation/pages/my_page.dart';
@@ -86,6 +88,10 @@ GoRouter createAppRouter(AuthSessionController authSession) => GoRouter(
         return CertificateDetailPage(
           certificateId: certificateId,
           initialTitle: extra is String ? extra : null,
+          // 채팅 세션의 자격증을 고르는 중에 열었다면 그 세션 ID가 온다.
+          selectForSessionId: int.tryParse(
+            state.uri.queryParameters['selectForSession'] ?? '',
+          ),
         );
       },
     ),
@@ -106,6 +112,26 @@ GoRouter createAppRouter(AuthSessionController authSession) => GoRouter(
     GoRoute(
       path: '/roadmap/history',
       builder: (context, state) => const ChatHistoryPage(),
+    ),
+    // 자격증이 연결되지 않은 채팅 세션에 연결할 자격증을 고른다. 탭의 탐색 화면과
+    // 검색어·카테고리가 섞이지 않도록 검색 상태를 따로 둔다.
+    GoRoute(
+      path: '/roadmap/select-certificate',
+      builder: (context, state) {
+        final int? sessionId = int.tryParse(
+          state.uri.queryParameters['sessionId'] ?? '',
+        );
+        if (sessionId == null) {
+          return const _InvalidRoutePage(title: '자격증 선택');
+        }
+        return ProviderScope(
+          overrides: [
+            certificateSearchViewModelProvider,
+            filteredCertificatesProvider,
+          ],
+          child: CertificateSearchPage(selectForSessionId: sessionId),
+        );
+      },
     ),
     // 대화 내역에서 고른 자격증의 로드맵 대화를 연다. 셸 브랜치의 '/roadmap'과
     // 달리 자격증을 경로로 받으므로, 어떤 대화든 바로 이어서 볼 수 있다.

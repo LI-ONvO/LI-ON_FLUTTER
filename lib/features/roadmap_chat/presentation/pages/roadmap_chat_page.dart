@@ -7,6 +7,7 @@ import 'package:li_on/core/constants/spacing.dart';
 import 'package:li_on/core/widgets/app_bar/custom_app_bar.dart';
 import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
+import 'package:li_on/features/certificate_search/data/certificate.dart';
 import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_view_model.dart';
 import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_hint_provider.dart';
 import 'package:li_on/features/roadmap_chat/presentation/widgets/chat_bubble.dart';
@@ -144,7 +145,9 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
     if (sessionId == null || state.jmCd == null) {
       CustomSnackbar.show(
         context,
-        message: '자격증을 알아야 로드맵을 확인할 수 있어요.\n대화를 통해 자격증을 알려주세요.',
+        message: state.canSelectCertificate
+            ? '자격증을 알아야 로드맵을 확인할 수 있어요.\n제목 옆 + 버튼으로 자격증을 선택해주세요.'
+            : '자격증을 알아야 로드맵을 확인할 수 있어요.\n대화를 통해 자격증을 알려주세요.',
         type: SnackbarType.error,
       );
       return;
@@ -153,6 +156,20 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
       context: context,
       builder: (_) => RoadmapStepsSheet(sessionId: sessionId),
     );
+  }
+
+  /// 자격증 탐색 화면에서 이 세션에 연결할 자격증을 고르게 하고, 연결되면
+  /// 대화에 반영한다. 뒤로 나오면 고른 자격증이 없어 아무 일도 하지 않는다.
+  Future<void> _selectCertificate(
+    BuildContext context,
+    RoadmapChatViewModel viewModel,
+    int sessionId,
+  ) async {
+    if (ModalRoute.of(context)?.isCurrent != true) return;
+    final CertificateRef? selected = await context.push<CertificateRef>(
+      '/roadmap/select-certificate?sessionId=$sessionId',
+    );
+    if (selected != null) viewModel.applySelectedCertificate(selected);
   }
 
   @override
@@ -177,7 +194,23 @@ class _RoadmapChatPageState extends ConsumerState<RoadmapChatPage> {
 
     return BaseScaffold(
       appBar: CustomAppBar(
-        title: '${widget.certificateName} 로드맵',
+        title: '${state.certificateName ?? widget.certificateName} 로드맵',
+        titleTrailing: state.canSelectCertificate
+            ? Semantics(
+                button: true,
+                label: '자격증 선택',
+                child: GestureDetector(
+                  onTap: () =>
+                      _selectCertificate(context, viewModel, state.sessionId!),
+                  behavior: HitTestBehavior.opaque,
+                  child: const Icon(
+                    Icons.add,
+                    size: 20,
+                    color: AppColors.primary,
+                  ),
+                ),
+              )
+            : null,
         showBackButton: !widget.isRootChat,
         actions: [
           if (widget.historyId == null) ...[

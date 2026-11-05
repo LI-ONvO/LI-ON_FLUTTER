@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:li_on/core/network/api_exception.dart';
+import 'package:li_on/features/certificate_search/data/certificate.dart';
 import 'package:li_on/features/chat/data/chat_message.dart';
 import 'package:li_on/features/roadmap_chat/data/roadmap_chat_repository.dart';
 import 'package:li_on/features/roadmap_chat/presentation/view_models/roadmap_chat_view_model.dart';
@@ -67,6 +68,52 @@ void main() {
     addTearDown(container.dispose);
     return container;
   }
+
+  test('내역을 불러와 자격증이 없다고 확인된 뒤에야 자격증을 고를 수 있다', () async {
+    final container = makeContainer();
+    const session = RoadmapChatSession(certificateName: '기타', historyId: 1);
+    final provider = roadmapChatViewModelProvider(session);
+
+    expect(container.read(provider).canSelectCertificate, isFalse);
+
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(container.read(provider).canSelectCertificate, isTrue);
+  });
+
+  test('새 대화는 첫 메시지로 자격증 없는 세션이 만들어지면 자격증을 고를 수 있다', () async {
+    final container = makeContainer();
+    const session = RoadmapChatSession(certificateName: '학습');
+    final provider = roadmapChatViewModelProvider(session);
+
+    expect(container.read(provider).canSelectCertificate, isFalse);
+
+    await container.read(provider.notifier).sendMessage('공부하고 싶어요');
+
+    expect(container.read(provider).canSelectCertificate, isTrue);
+  });
+
+  test('자격증을 반영하면 더는 고를 수 없고 이후 메시지에도 유지된다', () async {
+    final container = makeContainer();
+    const session = RoadmapChatSession(certificateName: '기타', historyId: 1);
+    final provider = roadmapChatViewModelProvider(session);
+    container.read(provider);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+
+    container
+        .read(provider.notifier)
+        .applySelectedCertificate(
+          const CertificateRef(jmCd: 'C1', name: '정보처리기사'),
+        );
+    await container.read(provider.notifier).sendMessage('시작할게요');
+
+    final state = container.read(provider);
+    expect(state.jmCd, 'C1');
+    expect(state.certificateName, '정보처리기사');
+    expect(state.canSelectCertificate, isFalse);
+  });
 
   test('대화 내역 세션마다 해당하는 메시지를 서버에서 불러온다', () async {
     final container = makeContainer();
