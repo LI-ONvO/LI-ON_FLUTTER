@@ -14,6 +14,7 @@ import 'package:li_on/core/widgets/layout/base_scaffold.dart';
 import 'package:li_on/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:li_on/features/auth/data/auth_repository.dart';
 import 'package:li_on/core/auth/auth_session.dart';
+import 'package:li_on/core/config/app_version.dart';
 import 'package:li_on/features/certificate_search/presentation/widgets/recommendation_section.dart';
 import 'package:li_on/features/my/data/profile.dart';
 import 'package:li_on/features/my/data/user_repository.dart';
@@ -216,6 +217,12 @@ class _MyPageState extends ConsumerState<MyPage> {
               menu: '로그아웃',
               icon: Icons.exit_to_app,
               onTap: () => _logout(context),
+            ),
+            Menu(
+              menu: '앱 버전',
+              icon: Icons.info_outline,
+              // 불러오는 중이거나 실패하면 빈 칸으로 둔다.
+              statusLabel: ref.watch(appVersionLabelProvider).value ?? '',
             ),
           ],
         ),
