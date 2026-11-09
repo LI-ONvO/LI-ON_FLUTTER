@@ -32,6 +32,10 @@ final certificateRepositoryProvider = Provider<CertificateRepository>((ref) {
 class HttpCertificateRepository implements CertificateRepository {
   HttpCertificateRepository(this.apiClient);
 
+  /// 추천 생성은 백엔드가 AI 서버 응답까지 기다려 기본 타임아웃(10초)을
+  /// 넘길 수 있다.
+  static const Duration _createRecommendationsTimeout = Duration(seconds: 60);
+
   final ApiClient apiClient;
 
   /// 화면이 페이지네이션 없이 전체를 필터링하므로 마지막 페이지까지
@@ -169,6 +173,7 @@ class HttpCertificateRepository implements CertificateRepository {
       final response = await apiClient.dio.post(
         '/api/recommendations',
         data: {'size': size},
+        options: Options(receiveTimeout: _createRecommendationsTimeout),
       );
       return CertificateRecommendationResult.fromJson(response.data);
     });

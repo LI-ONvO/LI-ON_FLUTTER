@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_on/core/constants/material_category.dart';
 import 'package:li_on/core/network/api_client.dart';
@@ -55,6 +56,10 @@ final dataRoomRepositoryProvider = Provider<DataRoomRepository>((ref) {
 /// 카테고리로, 출처 세션(`session.title`)을 출처 문구로 옮겨 담는다.
 class HttpDataRoomRepository implements DataRoomRepository {
   HttpDataRoomRepository(this.apiClient);
+
+  /// 자료 추천은 백엔드가 AI 서버 응답까지 기다려 기본 타임아웃(10초)을
+  /// 넘길 수 있다.
+  static const Duration _recommendationTimeout = Duration(seconds: 60);
 
   final ApiClient apiClient;
 
@@ -178,6 +183,7 @@ class HttpDataRoomRepository implements DataRoomRepository {
       final response = await apiClient.dio.post(
         '/api/resources/recommendations',
         data: {'jmCd': jmCd, 'sessionId': sessionId, 'size': size},
+        options: Options(receiveTimeout: _recommendationTimeout),
       );
       return ResourceRecommendationResult.fromJson(response.data);
     });

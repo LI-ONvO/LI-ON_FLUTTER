@@ -50,6 +50,10 @@ class HttpRoadmapRepository implements RoadmapRepository {
   /// 중복될 수 있어 넉넉히 둔다.
   static const Duration _createRoadmapTimeout = Duration(seconds: 60);
 
+  /// 채팅 답변도 백엔드가 AI 서버 응답까지 기다리므로 기본 타임아웃(10초)으로는
+  /// 긴 답변이 중간에 끊겨 "서버 응답이 늦어지고 있어요"가 뜬다.
+  static const Duration _sendMessageTimeout = Duration(seconds: 60);
+
   final ApiClient apiClient;
 
   @override
@@ -104,6 +108,7 @@ class HttpRoadmapRepository implements RoadmapRepository {
       final response = await apiClient.dio.post(
         '/api/chat/sessions/$sessionId/messages',
         data: {'content': content},
+        options: Options(receiveTimeout: _sendMessageTimeout),
       );
       return RoadmapMessageResult.fromJson(response.data);
     });
